@@ -233,6 +233,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	 void (*func) (void*,const void*, const void*))
 {
   static int print_done = 0;
+  int reduction_done;
   gmp_randstate_t state;
    mpfr_t op1, op2, result, result_lib, result_more_prec;
    mpfr_t u, umax, umax_dir, op1max_dir, op2max_dir, max_err_near, max_err_dir;
@@ -283,13 +284,9 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
   mpcheck_set_range (range_max, ref->max);
 
   /* Check if func(e1) doesn't overflow/underflow */
+  reduction_done = 0;
   for (;;)
     {
-      /* mpfr_set_ui_2exp (op1, 1, e1, GMP_RNDN);
-      mpfr_sub_ui (op1, op1, 1, GMP_RNDN);
-      mpfr_set_ui_2exp (op2, 1, e2, GMP_RNDN);
-      mpfr_sub_ui (op2, op2, 1, GMP_RNDN); --> Gamma*/
-
       mpfr_urandomb (op1, state);
       mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
       mpfr_urandomb (op2, state);
@@ -303,6 +300,12 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	   ref->mpfr)) (result, op1, GMP_RNDN);
       if (mpfr_number_p (result))
 	break;
+      if (e1 > 0) e1 --; else e1++;
+      if (e2 > 0) e2 --; else e2++;
+      reduction_done = 1;
+    }
+  if (reduction_done)
+    {
       if (e1 > 0) e1 --; else e1++;
       if (e2 > 0) e2 --; else e2++;
     }
@@ -381,6 +384,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	      else
 		(*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
                    ref->mpfr)) (result_more_prec, op1, rnd);
+ 	      /*
+		printf ("ERROR for op1= "); mpfr_dump (op1);
+		printf ("MPFR: "); mpfr_dump (result);
+		printf ("LIB:  "); mpfr_dump (result_lib);
+		printf ("MORE: "); mpfr_dump (result_more_prec);
+		abort ();
+	      */
+	      
 	      /* Compute ULP */
 	      mpcheck_ulp (u, result_lib, result_more_prec, prec);
 	      if (rnd != GMP_RNDN)

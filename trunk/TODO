@@ -20,6 +20,6 @@
 + [from V. Lefe`vre] test the default mode (in particular the precision)
   like in http://www.vinc17.org/software/tst-ieee754.c
 + [from V. Lefe`vre] check special values too (NaN, inf, ...)
-+ Readd support for LIBMCR, Mathlib.
++ Readd support for LIBMCR.
 + Add support for Multi-precision libraries
 

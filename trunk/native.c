@@ -448,10 +448,16 @@ static mpcheck_user_func_t tab[] = {
 int main (int argc, const char *const argv[])
 {
   setup_native ();
+#ifdef LIB_INIT
+  LIB_INIT ();
+#endif
   mpcheck_init (argc, argv, prec, emin, emax,
 		new_fp, del_fp, get_fp, set_fp, set_rnd_mode,
-		RND, ALL_TEST, 0, 1000, 3); 
+		RND, ALL_TEST, 0, 10000, 2); 
   mpcheck_check (stdout, tab);
   mpcheck_clear (stdout);
+#ifdef LIB_EXIT
+  LIB_EXIT ();
+#endif
   return 0;
 }
