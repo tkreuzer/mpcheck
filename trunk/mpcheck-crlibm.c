@@ -25,7 +25,6 @@
 
 #define LIB_INIT() crlibm_init()
 #define LIB_EXIT() crlibm_exit(0)
-
 #define fptype double
 
 static void set_fp (mpfr_ptr dest, const void *fp)
