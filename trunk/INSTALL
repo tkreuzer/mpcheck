@@ -1,6 +1,12 @@
-Classic way of installing:
+You need to install:
+	GMP 4.1.0
+	MPFR 2.1.0
+
+Once they are installed, use the classic way to install this program:
 
 	./configure
 	make
 	make check
 	make install
+
+Use ./configure --help to get more options.
