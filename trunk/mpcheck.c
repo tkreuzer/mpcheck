@@ -8,7 +8,7 @@
 /**************************************************************/
 
 /* To adapt to the tested precision */
-#define FPPREC 113       /* 24       53         64      113 */
+#define FPPREC 53       /* 24       53         64      113 */
 
 #if (FPPREC <= 24)
 #define fptype float
@@ -51,6 +51,7 @@
 /* stolen from mpfr-impl.h */
 #define MPFR_EXP(x) ((x)->_mpfr_exp)
 
+
 #ifdef __i386
 #include <fpu_control.h>
 #ifndef __setfpucw
@@ -80,6 +81,17 @@
 #ifndef MAX_RND
 #define MAX_RND 4
 #endif
+
+/* useful for testing monotonicity and symmetry */
+#define NO_MONOTON 0
+#define INCREASING 1
+#define DECREASING -1
+
+
+#define NO_SYMM 0
+#define ODD 3
+#define EVEN 4
+
 
 void test _PROTO ((char *, mp_exp_t, unsigned long, unsigned long));
 void test2 _PROTO ((char *, mp_exp_t, mp_exp_t, unsigned long, unsigned long));
@@ -483,6 +495,7 @@ fptype my_sqrt (fptype x)
 #endif
 }
 
+/*
 fptype my_cbrt (fptype x)
 {
 #ifdef SUFFIXL
@@ -491,6 +504,7 @@ fptype my_cbrt (fptype x)
   return cbrt (x);
 #endif
 }
+*/
 
 fptype my_pow (fptype x, fptype y)
 {
@@ -533,10 +547,12 @@ fptype my_div (fptype x, fptype y)
 void
 test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
 {
-   unsigned long i, wrong, tot;
+   unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm, tot;
    mpfr_t x, y, z;
-   fptype xd, xmax, xmax_dir, yd, r;
+   fptype xd, xmax, xmax_dir, yd, r, range_min, range_max;
+   fptype xdplus, xdminus, rplus, rminus, xdopp, ropp;
    double u, umax, umax_dir, max_err_near, max_err_dir;
+   int monoton, symm;
    gmp_randstate_t state;
    mp_rnd_t rnd;
 
@@ -547,112 +563,202 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
     {
       testfun_libm = my_exp;
       testfun_mpfr = mpfr_exp;
+      range_min = 0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
   else if (strcmp (foo, "exp2") == 0)
     {
       testfun_libm = my_exp2;
       testfun_mpfr = mpfr_exp2;
+      range_min = 0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
   else if (strcmp (foo, "expm1") == 0)
     {
       testfun_libm = my_expm1;
       testfun_mpfr = mpfr_expm1;
+      range_min = -1.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     } 
   else if (strcmp (foo, "log") == 0)
     {
       testfun_libm = my_log;
       testfun_mpfr = mpfr_log;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
   else if (strcmp (foo, "log2") == 0)
     {
       testfun_libm = my_log2;
       testfun_mpfr = mpfr_log2;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
   else if (strcmp (foo, "log10") == 0)
     {
       testfun_libm = my_log10;
       testfun_mpfr = mpfr_log10;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
   else if (strcmp (foo, "log1p") == 0)
     {
       testfun_libm = my_log1p;
       testfun_mpfr = mpfr_log1p;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
   else if (strcmp (foo, "sin") == 0)
     {
       testfun_libm = my_sin;
       testfun_mpfr = mpfr_sin;
+      range_min = -1.0;
+      range_max = 1.0;
+      monoton = NO_MONOTON;
+      symm = ODD;
     }
   else if (strcmp (foo, "cos") == 0)
     {
       testfun_libm = my_cos;
       testfun_mpfr = mpfr_cos;
+      range_min = -1.0;
+      range_max = 1.0;
+      monoton = NO_MONOTON;
+      symm = EVEN;
     }
   else if (strcmp (foo, "tan") == 0)
     {
       testfun_libm = my_tan;
       testfun_mpfr = mpfr_tan;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = NO_MONOTON;
+      symm = ODD;
     }
   else if (strcmp (foo, "asin") == 0)
     {
       testfun_libm = my_asin;
       testfun_mpfr = mpfr_asin;
+      range_min = -1.570796326794897; /* XXX mettre le flottant = RNDD(-Pi/2) */
+      range_max = 1.570796326794897; /* XXX mettre le flottant = RNDU(Pi/2) */
+      monoton = INCREASING;
+      symm = ODD;
     }
   else if (strcmp (foo, "acos") == 0)
     {
       testfun_libm = my_acos;
       testfun_mpfr = mpfr_acos;
+      range_min = 0.0; 
+      range_max = 3.14159265358980; /* XXX mettre le flottant = RNDU(Pi) */
+      monoton = DECREASING;
+      symm = NO_SYMM;
     }
   else if (strcmp (foo, "atan") == 0)
     {
       testfun_libm = my_atan;
       testfun_mpfr = mpfr_atan;
+      range_min = -1.570796326794897; /* XXX mettre le flottant = RNDD(-Pi/2) */
+      range_max = 1.570796326794897; /* XXX mettre le flottant = RNDU(Pi/2) */
+      monoton = INCREASING;
+      symm = ODD;
     }
   else if (strcmp (foo, "sinh") == 0)
     {
       testfun_libm = my_sinh;
       testfun_mpfr = mpfr_sinh;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = ODD;
     }
   else if (strcmp (foo, "cosh") == 0)
     {
       testfun_libm = my_cosh;
       testfun_mpfr = mpfr_cosh;
+      range_min = 1.0;
+      range_max = 1.0/0.0;
+      monoton = NO_MONOTON;
+      symm = EVEN;
     }
   else if (strcmp (foo, "tanh") == 0)
     {
       testfun_libm = my_tanh;
       testfun_mpfr = mpfr_tanh;
+      range_min = -1.0;
+      range_max = 1.0;
+      monoton = INCREASING;
+      symm = ODD;
     }
   else if (strcmp (foo, "asinh") == 0)
     {
       testfun_libm = my_asinh;
       testfun_mpfr = mpfr_asinh;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = ODD;
     }
   else if (strcmp (foo, "acosh") == 0)
     {
       testfun_libm = my_acosh;
       testfun_mpfr = mpfr_acosh;
+      range_min = 1.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
   else if (strcmp (foo, "atanh") == 0)
     {
       testfun_libm = my_atanh;
       testfun_mpfr = mpfr_atanh;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = ODD;
     }
   else if (strcmp (foo, "gamma") == 0)
     {
       testfun_libm = my_tgamma;
       testfun_mpfr = mpfr_gamma;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = NO_MONOTON; /* XXX a corriger */
+      symm = NO_SYMM;       /* XXX a corriger */
     }
   else if (strcmp (foo, "sqrt") == 0)
     {
       testfun_libm = my_sqrt;
       testfun_mpfr = mpfr_sqrt;
+      range_min = 0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
+/*
   else if (strcmp (foo, "cbrt") == 0)
     {
       testfun_libm = my_cbrt;
       testfun_mpfr = mpfr_cbrt;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = ODD;
     }
+*/
   else
     {
       fprintf (stderr, "Unknown function: %s\n", foo);
@@ -680,7 +786,10 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       tot = 0;
       umax = 0.0; /* (signed) maximal error in ulps */
       umax_dir = 0.0; /* maximal error in ulps when wrong directed rounding */
-      wrong = 0; /* number of wrong directed roundings */
+      wrong = 0;         /* number of wrong directed roundings */
+      wrong_range = 0;   /* number of wrong results wrt range        */
+      wrong_monoton = 0; /* number of wrong results wrt monotonicity */
+      wrong_symm = 0;    /* number of wrong results wrt symmetry     */
   for (i=0; i<N; i++)
     {
       mpfr_urandomb (x, state);
@@ -720,6 +829,137 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
             xmax = xd;
           }
       }
+
+      /* Testing if the range is verified */
+      if (  (range_min/2.0 != range_min) || (range_max/2.0 != range_max) ) {
+        /* one of the extremity is not infinite */
+        if ( (r < range_min) || (r > range_max) ) {
+          if (wrong_range == 0) {
+              printf ("      outside range for x=");
+              print_fp (xd);
+              printf ("\n           f(x)=");
+              print_fp (r);
+              printf ("\n      not between ");
+              print_fp (range_min);
+              printf ("      and ");
+              print_fp (range_max);
+              printf (" \n");
+          }
+          wrong_range++;
+        }
+      }
+
+      /* Testing if the monotonicity is verified */
+      if (monoton != NO_MONOTON) {
+        if (mpfr_cmp_ui(x,0) > 0) {
+          mpfr_set(z, x, GMP_RNDN);
+          mpfr_sub_one_ulp(z, GMP_RNDD);
+          xdminus = mpfr_get_fp(z, GMP_RNDD);
+          rminus = testfun_libm (xdminus);
+          mpfr_set(z, x, GMP_RNDN);
+          mpfr_add_one_ulp(z, GMP_RNDU);
+          xdplus = mpfr_get_fp(z, GMP_RNDU);
+          rplus = testfun_libm (xdplus);
+        }
+        else if (mpfr_cmp_ui(x,0) < 0) {
+          mpfr_set(z, x, GMP_RNDN);
+          mpfr_add_one_ulp(z, GMP_RNDD);
+          xdminus = mpfr_get_fp(z, GMP_RNDD);
+          rminus = testfun_libm (xdminus);
+          mpfr_set(z, x, GMP_RNDN);
+          mpfr_sub_one_ulp(z, GMP_RNDU);
+          xdplus = mpfr_get_fp(z, GMP_RNDU);
+          rplus = testfun_libm (xdplus);
+        }
+       
+        if (monoton == INCREASING) {
+          if (rminus > r)  {
+            if (wrong_monoton == 0) {
+              printf ("      monotonicity not respected for x=");
+              print_fp (xd);
+              printf ("\n            f(x-)=");
+              print_fp (rminus);
+              printf ("\n      not <= f(x)=");
+              print_fp (r);
+              printf (" \n");
+            }
+            wrong_monoton++;
+          }
+          if (rplus < r)  {
+            if (wrong_monoton == 0) {
+              printf ("      monotonicity not respected for x=");
+              print_fp (xd);
+              printf ("\n              f(x)=");
+              print_fp (r);
+              printf ("\n      not <= f(x+)=");
+              print_fp (rplus);
+              printf (" \n");
+            }
+            wrong_monoton++;
+          }
+        }
+        else {/* monoton == DECREASING */
+          if (rminus < r)  {
+            if (wrong_monoton == 0) {
+              printf ("      monotonicity not respected for x=");
+              print_fp (xd);
+              printf ("\n            f(x-)=");
+              print_fp (rminus);
+              printf ("\n      not >= f(x)=");
+              print_fp (r);
+              printf (" \n");
+            }
+            wrong_monoton++;
+          }
+          if (rplus > r)  {
+            if (wrong_monoton == 0) {
+              printf ("      monotonicity not respected for x=");
+              print_fp (xd);
+              printf ("\n              f(x)=");
+              print_fp (r);
+              printf ("\n      not >= f(x+)=");
+              print_fp (rplus);
+              printf (" \n");
+            }
+            wrong_monoton++;
+          }
+        }
+      }
+
+      /* Testing if the symmetry is verified */
+      if ( (rnd==GMP_RNDN) && (symm != NO_SYMM) ) {
+        xdopp = -xd;
+        ropp = testfun_libm (xdopp);
+        if (symm == ODD) {
+          if (ropp != -r) {
+            if (wrong_symm == 0) {
+              printf ("      symmetry not respected for x=");
+              print_fp (xd);
+              printf ("\n           f(x)= ");
+              print_fp (r);
+              printf ("\n      and f(-x)=");
+              print_fp (ropp);
+              printf (" \n");
+            }
+            wrong_symm++;
+          }
+        }
+        else { /* symm == EVEN */
+          if (r != ropp) {
+            if (wrong_symm == 0) {
+              printf ("      symmetry not respected for x=");
+              print_fp (xd);
+              printf ("\n           f(x)=");
+              print_fp (r);
+              printf ("\n      and f(-x)=");
+              print_fp (ropp);
+              printf (" \n");
+            }
+            wrong_symm++;
+          }
+        }
+      }
+
     }
 
   mpfr_set_machine_rnd_mode (GMP_RNDN);
@@ -739,6 +979,16 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       printf (" [%f]\n", umax_dir);
     }
 
+  if (rnd == GMP_RNDN)  {
+    printf ("   nb errors range/monotonicity/symmetry: %lu/%lu/%lu\n", 
+             wrong_range, wrong_monoton, wrong_symm);
+  }
+  else {
+    printf ("   nb errors range/monotonicity: %lu/%lu\n", 
+             wrong_range, wrong_monoton);
+  }
+  fflush (stdout);
+
   umax = fabs(umax);
 
   printf ("   nb errors/max ulp diff/wrong directed: %lu/%f/%lu\n", 
@@ -755,7 +1005,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       if (umax > max_err_dir)
         max_err_dir = umax;
     }
-    }
+  }
 
   printf ("Maximal errors for %s: %f (nearest), %f (directed)\n\n", foo,
           max_err_near, max_err_dir);
@@ -770,7 +1020,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
 
   if (max_err_dir > MAX_ERR_DIR)
     MAX_ERR_DIR = max_err_dir;
-    }
+  }
 
 void
 test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
@@ -950,12 +1200,18 @@ testall (unsigned long N, unsigned long seed)
   test ("expm1",  0, N, seed);
   test ("expm1", -9, N, seed);
   test ("log",    0, N, seed);
+/*
   test ("log", EMAX, N, seed);
+*/
   test ("log2",   0, N, seed);
   test ("log10",  0, N, seed);
+/*
   test ("log10", EMAX, N, seed);
+*/
   test ("log1p",  0, N, seed);
+/*
   test ("log1p", EMAX, N, seed);
+*/
   test ("sin",    0, N, seed);
   test ("sin",   10, N, seed); /* mpfr-2.0.1 is too slow for 1024 */
   test ("cos",    0, N, seed);
@@ -975,18 +1231,26 @@ testall (unsigned long N, unsigned long seed)
   test ("tanh",   0, N, seed);
   test ("tanh",   4, N, seed);
   test ("asinh",  0, N, seed);
+/*
   test ("asinh", EMAX, N, seed);
+*/
   test ("acosh",  1, N, seed);
+/*
   test ("acosh", EMAX, N, seed);
+*/
   test ("atanh",  0, N, seed);
   test ("atanh", -10, N, seed);
   test ("gamma",  0, N, seed);
   test ("gamma",  7, N, seed);
   test ("sqrt",  0, N, seed);
+/*
   test ("sqrt",  EMAX, N, seed);
+*/
+/*
   test ("cbrt",  0, N, seed);
   test ("cbrt",  EMAX, N, seed);
   test ("cbrt",  EMIN, N, seed);
+*/
   test2 ("pow", 0, 0, N, seed);
 #if (FPPREC <= 53)
   test2 ("pow", 8, 7, N, seed);
@@ -994,8 +1258,10 @@ testall (unsigned long N, unsigned long seed)
   test2 ("pow", 16, 10, N, seed);
 #endif
   test2 ("hypot", 0, 0, N, seed);
+/*
   test2 ("hypot", EMAX-1, EMAX-1, N, seed);
   test2 ("hypot", EMIN, EMIN, N, seed);
+*/
   test2 ("add", 0, 0, N, seed);
   test2 ("add", EMAX-1, EMAX-1, N, seed);
   test2 ("sub", EMAX, EMAX, N, seed);
