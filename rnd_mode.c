@@ -17,6 +17,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __MPCHECK_RND_MODE
+#define __MPCHECK_RND_MODE
+
 #include "mpcheck.h"
 
 /* Functions to set/get the machine rounding mode */
@@ -176,4 +179,6 @@ int main ()
   set_rnd_mode (GMP_RNDN);
   return 0;
 }
+#endif
+
 #endif

@@ -23,6 +23,8 @@
 
 #include "crlibm.h"
 
+#include "rnd_mode.c"
+
 #define LIB_INIT() crlibm_init()
 #define LIB_EXIT() crlibm_exit(0)
 #define fptype double
@@ -38,6 +40,7 @@ static void get_fp (void *fp, mpfr_srcptr src)
 
 static void my_exp (void *dest, const void *a, const void *b)
 {
+  set_rnd_mode (GMP_RNDN);
   switch (mpcheck_rnd_mode) 
     {
     case GMP_RNDN:
@@ -56,10 +59,12 @@ static void my_exp (void *dest, const void *a, const void *b)
       abort ();
       break;
     }
+  set_rnd_mode (mpcheck_rnd_mode);
 }
 
 static void my_log (void *dest, const void *a, const void *b)
 {
+  set_rnd_mode (GMP_RNDN);
   switch (mpcheck_rnd_mode)
     {
     case GMP_RNDN:
@@ -78,9 +83,12 @@ static void my_log (void *dest, const void *a, const void *b)
       abort ();
       break;
     }
+  set_rnd_mode (mpcheck_rnd_mode);
 }
+
 static void my_sin (void *dest, const void *a, const void *b)
 {
+  set_rnd_mode (GMP_RNDN);
   switch (mpcheck_rnd_mode)
     {
     case GMP_RNDN:
@@ -99,10 +107,12 @@ static void my_sin (void *dest, const void *a, const void *b)
       abort ();
       break;
     }
+  set_rnd_mode (mpcheck_rnd_mode);
 }
 
 static void my_cos (void *dest, const void *a, const void *b)
 {
+  set_rnd_mode (GMP_RNDN);
   switch (mpcheck_rnd_mode)
     {
     case GMP_RNDN:
@@ -120,10 +130,12 @@ static void my_cos (void *dest, const void *a, const void *b)
     default:
       break;
     }
+  set_rnd_mode (mpcheck_rnd_mode);
 }
 
 static void my_tan (void *dest, const void *a, const void *b)
 {
+  set_rnd_mode (GMP_RNDN);
   switch (mpcheck_rnd_mode)
     {
     case GMP_RNDN:
@@ -141,10 +153,12 @@ static void my_tan (void *dest, const void *a, const void *b)
     default:
       break;
     }
+  set_rnd_mode (mpcheck_rnd_mode);
 }
 
 static void my_atan (void *dest, const void *a, const void *b)
 {
+  set_rnd_mode (GMP_RNDN);
   switch (mpcheck_rnd_mode)
     {
     case GMP_RNDN:
@@ -162,10 +176,12 @@ static void my_atan (void *dest, const void *a, const void *b)
     default:
       break;
     }
+  set_rnd_mode (mpcheck_rnd_mode);
 }
 
 static void my_sinh (void *dest, const void *a, const void *b)
 {
+  set_rnd_mode (GMP_RNDN);
   switch (mpcheck_rnd_mode)
     {
     case GMP_RNDN:
@@ -183,10 +199,12 @@ static void my_sinh (void *dest, const void *a, const void *b)
     default:
       break;
     }
+  set_rnd_mode (mpcheck_rnd_mode);
 }
 
 static void my_cosh (void *dest, const void *a, const void *b)
 {
+  set_rnd_mode (GMP_RNDN);
   switch (mpcheck_rnd_mode)
     {
     case GMP_RNDN:
@@ -204,6 +222,7 @@ static void my_cosh (void *dest, const void *a, const void *b)
     default:
       break;
     }
+  set_rnd_mode (mpcheck_rnd_mode);
 }
 
 static mpcheck_user_func_t tab[] = {
