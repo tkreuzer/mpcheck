@@ -44,6 +44,10 @@
 # define libmname(fct)  u ## fct
 #elif (FPPREC==113 && defined(__ia64))
 # define libmname(fct)  fct ## l
+#elif (FPPREC==24)
+# define libmname(fct)  fct ## f
+#elif (FPPREC==64)
+# define libmname(fct)  fct ## l
 #else
 # define libmname(fct)  fct
 #endif
@@ -98,13 +102,13 @@
 #endif
 
 #if defined(HAVE_TGAMMA) && !defined(tgamma)
-fptype tgamma (fptype);
+fptype libmname(tgamma) (fptype);
 #endif
 #if defined(HAVE_LOG2) && !defined(log2)
-fptype log2 (fptype);
+fptype libmname(log2) (fptype);
 #endif
 #if defined(HAVE_EXP2) && !defined(exp2)
-fptype exp2 (fptype);
+fptype libmname(exp2) (fptype);
 #endif
 
 /* stolen from mpfr-impl.h (Ugly) */
