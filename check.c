@@ -360,17 +360,12 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  (*getfp) (rop2, op2);
 	  /* Compute the result with MPFR and the LIBRARY */
 	  if (ref->NumArg == 2)
-	    {
-	      (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
-		 ref->mpfr)) (result, op1, op2, rnd); 
-	      (*func) (rresult, rop1, rop2);
-	    }
+	    (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+	       ref->mpfr)) (result, op1, op2, rnd); 
 	  else
-	    {
-	      (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
-                 ref->mpfr)) (result, op1, rnd);
-              (*func) (rresult, rop1, rop2);
-	    }
+	    (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
+	       ref->mpfr)) (result, op1, rnd);
+	  (*func) (rresult, rop1, rop2);
 	  /* Convert back the result to MPFR */
 	  (*setfp) (result_lib, rresult);
 
@@ -384,14 +379,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	      else
 		(*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
                    ref->mpfr)) (result_more_prec, op1, rnd);
- 	      /*
-		printf ("ERROR for op1= "); mpfr_dump (op1);
-		printf ("MPFR: "); mpfr_dump (result);
-		printf ("LIB:  "); mpfr_dump (result_lib);
-		printf ("MORE: "); mpfr_dump (result_more_prec);
-		abort ();
-	      */
-	      
+ 	      
 	      /* Compute ULP */
 	      mpcheck_ulp (u, result_lib, result_more_prec, prec);
 	      if (rnd != GMP_RNDN)
