@@ -1,0 +1,36 @@
+2004-04-06  Paul Zimmermann  <zimmerma@morpork>
+
+	* makefile, mpcheck.c: removed "local" directories from makefile
+	removed MATHLIB define in mpcheck.c (default is to check libm)
+
+2002-10-31  Paul Zimmermann  <zimmerma@morpork>
+
+	* mpcheck.c: replaced ifdef's by macro SUFFIXL
+	replaced XXX by correct values (hopefully)
+
+2002-10-19  Paul Zimmermann  <zimmerma@morpork>
+
+	* mpcheck.c:
+	added options to disable monotonocity, symmetry, range check
+
+2002-10-18  Paul Zimmermann  <zimmerma@morpork>
+
+	* mpcheck.c: removed commented functions
+
+	* mpcheck.c: print also values for maximal ulp difference
+
+2002-10-18  nrevol  <nrevol@morpork>
+
+	* mpcheck.c: Range incorrect for acosh, corrected.
+
+	* mpcheck.c:
+	test for range, monotonicity and symmetry added, 18-10-2002
+
+2002-10-17  Paul Zimmermann  <zimmerma@morpork>
+
+	* mpcheck.c: new version with support for long double
+
+	* makefile, mpcheck.c: New file.
+
+	* makefile, mpcheck.c: creation
+

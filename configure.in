@@ -1,0 +1,174 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT
+
+mpcheck_version=`cat $srcdir/VERSION`
+AM_INIT_AUTOMAKE(mpcheck, $mpcheck_version, [no-define])
+
+AC_ARG_WITH(gmp_include, [  --with-gmp-include=DIR  GMP include directory ], with_gmp_include=$withval)
+AC_ARG_WITH(gmp_lib, [  --with-gmp-lib=DIR      GMP lib directory ], with_gmp_lib=$withval)
+AC_ARG_WITH(gmp, [  --with-gmp=DIR          GMP install directory ], with_gmp_include=$withval/include with_gmp_lib=$withval/lib)
+
+AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=DIR  MPFR include directory ], with_mpfr_include=$withval)
+AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=DIR      MPFR lib directory ], with_mpfr_lib=$withval)
+AC_ARG_WITH(mpfr, [  --with-mpfr=DIR          MPFR install directory ], with_mpfr_include=$withval/include with_mpfr_lib=$withval/lib)
+
+test_CFLAGS=${CFLAGS+set}
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_CANONICAL_HOST
+AC_CHECK_OS
+AC_CHECK_MACHTYPE
+AC_C_CONST
+AC_C_VOLATILE
+
+dnl Well, we don't need all the MPFR tests, but it is easier.
+MPFR_CONFIGS
+AC_CHECK_HEADERS([float.h math.h stdio.h])
+
+dnl If compiler is gcc, then use some specific flags.
+dnl But don't touch user specified flags.
+if test -n "$GCC"; then
+  CFLAGS="-Wall $CFLAGS"
+fi
+dnl If it an alphaev6 add specific flags, otherwise it won't work
+case $host in
+alphaev6-*-*)
+  if test -n "$GCC"; then
+    CFLAGS="$CFLAGS -mcpu=ev6"
+  fi
+esac
+
+dnl Tests concerning the include directories.
+if test -d "$with_gmp_include"; then
+  CPPFLAGS="$CPPFLAGS -I$with_gmp_include"
+fi
+if test -d "$with_mpfr_include"; then
+  CPPFLAGS="$CPPFLAGS -I$with_mpfr_include"
+fi
+
+dnl Check for GMP
+AC_MSG_CHECKING(for gmp.h)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include "gmp.h"
+]], [[]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
+     AC_MSG_ERROR([gmp.h may be missing])
+])
+AC_MSG_CHECKING(for recent GMP)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include "gmp.h"
+#if (__GNU_MP_VERSION < 4)
+# error "min: GMP 4.0.0"
+#endif
+]], [[]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
+     AC_MSG_ERROR([GMP 4.0.0 min required])
+])
+
+dnl Check for MPFR
+AC_MSG_CHECKING(for mpfr.h)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include "gmp.h"
+#include "mpfr.h"
+]], [[]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
+     AC_MSG_ERROR([mpfr.h may be missing])
+])
+AC_MSG_CHECKING(for recent MPFR)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include "gmp.h"
+#include "mpfr.h"
+#ifndef mpfr_round_prec
+# error "min: MPFR 2.0.2"
+#endif
+]], [[]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
+     AC_MSG_ERROR([MPFR 2.0.2 min required])
+])
+
+dnl Update Libraries directory
+AC_MY_LIBS($with_mpfr_lib, mpfr)
+AC_MY_LIBS($with_gmp_lib, gmp)
+AC_CHECK_LIB(m, main, , AC_MSG_ERROR(libm not found))
+
+dnl Must be checked after including the libm
+AC_CHECK_FUNCS([tgamma])
+AC_CHECK_FUNCS([exp2])
+AC_CHECK_FUNCS([log2])
+
+dnl Check for How to set the rounding mode
+AC_MSG_CHECKING(for how to select rounding mode)
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_FENV_H
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_FENV_H]) AC_MSG_RESULT([fenv.h]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_IEEEFP_H
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_IEEEFP_H]) AC_MSG_RESULT([ieeefp.h]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_GCC_I386ASM
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_GCC_I386ASM]) AC_MSG_RESULT([i386 asm]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_SYS_FPU_H
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_SYS_FPU_H]) AC_MSG_RESULT([sys/fpu.h]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_MATH_H
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_MATH_H]) AC_MSG_RESULT([math.h]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_FLOATINGPOINT_H_1
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_FLOATINGPOINT_H_1]) AC_MSG_RESULT([floatingpoint.h (1)]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_FLOATINGPOINT_H_2
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_FLOATINGPOINT_H_2]) AC_MSG_RESULT([floatingpoint.h (2)]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_FLOAT_H_1
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_FLOAT_H_1]) AC_MSG_RESULT([float.h (1)]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_FLOAT_H_2
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_FLOAT_H_2]) AC_MSG_RESULT([float.h (2)]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_FLOAT_H_3
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_FLOAT_H_3]) AC_MSG_RESULT([float.h (3)]),
+AC_RUN_IFELSE(AC_LANG_SOURCE[[
+#define USE_FPUCONTROL_H
+#define WITHIN_CONFIGURE
+#include "rnd_mode.c"
+]], AC_DEFINE([USE_FPUCONTROL_H]) AC_MSG_RESULT([fpucontrol.h]),
+ AC_MSG_ERROR([[Can't find a way to select rounding mode.]]))))))))))))
+
+# Recent autoconf creates AC_DEFINEs of PACKAGE_VERSION etc, unfortunately
+# those -D defines in $DEFS conflict with the same defines in config.h from
+# GMP.  Unless or until autoconf gives us a better way for two closely
+# related packages to cooperate, use this hack to get rid of them from $DEFS
+# here.
+#
+if test -f confdefs.h; then
+  sed '/#define PACKAGE_/d' <confdefs.h >confdefs.tmp
+  mv confdefs.tmp confdefs.h
+fi
+
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDADD)
+AC_SUBST(LDFLAGS)
+AC_SUBST(CFLAGS)
+AC_SUBST(LDFLAGS)
+AC_SUBST(CFLAGS)
+AC_SUBST(DEFS)
+AC_OUTPUT([Makefile])
+
