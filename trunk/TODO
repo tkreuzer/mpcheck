@@ -21,3 +21,8 @@
 + deactivate directed roundings (some architectures do no support them,
   cf http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=153022), suggested
   by V. Lefe`vre
++ ambiguity between options (-...) and - sign for exponent. For example,
+  "mpcheck sqrt -16380" fails.
++ add erf
++ investigate why tests with exponent < -1010 seem to loop to sqrt, cbrt, hypot
+	with prec=64 (Athlon/Linux)
