@@ -14,7 +14,8 @@
 #define __LONG_DOUBLE_MATH
 #endif
 
-#define MATHLIB
+/* define MATHLIB to check library mathlib */
+/* #define MATHLIB */
 
 #ifdef MATHLIB
 #if (FPPREC != 53)
