@@ -210,11 +210,11 @@ main (int argc, char *argv[])
 	}
     }
 
-  printf ("**********************************************************************\n");
-  printf ("*                                                                    *\n");
-  printf ("* MpCheck version 1.1 (c) INRIA 2002, 2004, 2005 (Arenaire & Spaces) *\n");
-  printf ("*                                                                    *\n");
-  printf ("**********************************************************************\n");
+  printf ("************************************************************************\n");
+  printf ("*                                                                      *\n");
+  printf ("* MpCheck version %s (c) INRIA 2002, 2004, 2005 (Arenaire & Spaces) *\n", VERSION);
+  printf ("*                                                                      *\n");
+  printf ("************************************************************************\n");
 
 #ifdef MATHLIB
   printf ("Testing MathLib ");
