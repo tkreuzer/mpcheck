@@ -26,9 +26,12 @@ AC_ARG_WITH(gmp_include, [  --with-gmp-include=DIR  GMP include directory ], wit
 AC_ARG_WITH(gmp_lib, [  --with-gmp-lib=DIR      GMP lib directory ], with_gmp_lib=$withval)
 AC_ARG_WITH(gmp, [  --with-gmp=DIR          GMP install directory ], with_gmp_include=$withval/include with_gmp_lib=$withval/lib)
 
-AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=DIR  MPFR include directory ], with_mpfr_include=$withval)
-AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=DIR      MPFR lib directory ], with_mpfr_lib=$withval)
-AC_ARG_WITH(mpfr, [  --with-mpfr=DIR          MPFR install directory ], with_mpfr_include=$withval/include with_mpfr_lib=$withval/lib)
+AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=DIR MPFR include directory ], with_mpfr_include=$withval)
+AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=DIR     MPFR lib directory ], with_mpfr_lib=$withval)
+AC_ARG_WITH(mpfr, [  --with-mpfr=DIR         MPFR install directory ], with_mpfr_include=$withval/include with_mpfr_lib=$withval/lib)
+
+dnl AC_ARG_WITH(include, [  --with-include=DIR      DIR to add to CPPFLAGS], CPPFLAGS="$CPPFLAGS -I$withval")
+dnl AC_ARG_WITH(lib, [  --with-lib=DIR          DIR to add to LDFLAGS], LDFLAGS="$LFFLAGS -L$withval")
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -117,17 +120,17 @@ dnl Must be checked after including the libm
 AC_CHECK_FUNCS([exp exp2 exp10 expm1])
 AC_CHECK_FUNCS([sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh])
 AC_CHECK_FUNCS([log log2 log10 log1p])
-AC_CHECK_FUNCS([tgamma sqrt pow cbrt])
+AC_CHECK_FUNCS([tgamma sqrt pow cbrt erf erfc])
 
 AC_CHECK_FUNCS([expf exp2f exp10f expm1f])
 AC_CHECK_FUNCS([sinf cosf tanf asinf acosf atanf sinhf coshf tanhf asinhf acoshf atanhf])
 AC_CHECK_FUNCS([logf log2f log10f log1pf])
-AC_CHECK_FUNCS([tgammaf sqrtf powf cbrtf])
+AC_CHECK_FUNCS([tgammaf sqrtf powf cbrtf erff erfcf])
 
 AC_CHECK_FUNCS([expl exp2l exp10l expm1l])
 AC_CHECK_FUNCS([sinl cosl tanl asinl acosl atanl sinhl coshl tanhl asinhl acoshl atanhl])
 AC_CHECK_FUNCS([logl log2l log10l log1pl])
-AC_CHECK_FUNCS([tgammal sqrtl powl cbrtl])
+AC_CHECK_FUNCS([tgammal sqrtl powl cbrtl erfl erfcl])
 
 dnl Check for How to set the rounding mode
 AC_MSG_CHECKING(for how to select rounding mode)
