@@ -48,9 +48,19 @@
 #include "gmp.h"
 #include "mpfr.h"
 
+/* tgamma is not defined in some versions of math.h */
+#ifndef tgamma
+fptype tgamma _PROTO((fptype));
+#endif
+#ifndef log2
+fptype log2 _PROTO((fptype));
+#endif
+#ifndef exp2
+fptype exp2 _PROTO((fptype));
+#endif
+
 /* stolen from mpfr-impl.h */
 #define MPFR_EXP(x) ((x)->_mpfr_exp)
-
 
 #ifdef __i386
 #include <fpu_control.h>
@@ -109,6 +119,10 @@ fptype (*mpfr_get_fp) (mpfr_srcptr, mp_rnd_t) = NULL;
 void (*fprint_fp) (FILE *, fptype) = NULL;
 double MAX_ERR_NEAR = 0.0;
 double MAX_ERR_DIR = 0.0;
+int verbose = 3;
+int test_monotonicity = 1;
+int test_range = 1;
+int test_symmetry = 1;
 
 #define print_fp(x) fprint_fp(stdout, x)
 
@@ -554,8 +568,8 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
    gmp_randstate_t state;
    mp_rnd_t rnd;
 
-   printf ("Testing function %s for exponent %ld.\n", foo, e);
-   fflush (stdout);
+   if (verbose >= 2)
+     printf ("Testing function %s for exponent %ld.\n", foo, e);
   
   if (strcmp (foo, "exp") == 0)
     {
@@ -770,8 +784,8 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
 
   for (rnd=0; rnd<MAX_RND; rnd++)
     {
-      printf ("   rounding mode %s:\n", mpfr_print_rnd_mode (rnd));
-      fflush (stdout);
+      if (verbose >= 3)
+        printf ("   rounding mode %s:\n", mpfr_print_rnd_mode (rnd));
       mpfr_set_machine_rnd_mode (rnd);
 
       /* reset the seed to test the same sequence of numbers with each
@@ -786,6 +800,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       wrong_range = 0;   /* number of wrong results wrt range        */
       wrong_monoton = 0; /* number of wrong results wrt monotonicity */
       wrong_symm = 0;    /* number of wrong results wrt symmetry     */
+
   for (i=0; i<N; i++)
     {
       mpfr_urandomb (x, state);
@@ -827,7 +842,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       }
 
       /* Testing if the range is verified */
-      if (  (range_min/2.0 != range_min) || (range_max/2.0 != range_max) ) {
+      if (test_range && ((range_min/2.0 != range_min) || (range_max/2.0 != range_max) )) {
         /* one of the extremity is not infinite */
         if ( (r < range_min) || (r > range_max) ) {
           if (wrong_range == 0) {
@@ -846,7 +861,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       }
 
       /* Testing if the monotonicity is verified */
-      if (monoton != NO_MONOTON) {
+      if (test_monotonicity && (monoton != NO_MONOTON)) {
         if (mpfr_cmp_ui(x,0) > 0) {
           mpfr_set(z, x, GMP_RNDN);
           mpfr_sub_one_ulp(z, GMP_RNDD);
@@ -870,7 +885,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
        
         if (monoton == INCREASING) {
           if (rminus > r)  {
-            if (wrong_monoton == 0) {
+            if (wrong_monoton == 0 && verbose >= 3) {
               printf ("      monotonicity not respected for x=");
               print_fp (xd);
               printf ("\n            f(x-)=");
@@ -882,7 +897,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
             wrong_monoton++;
           }
           if (rplus < r)  {
-            if (wrong_monoton == 0) {
+            if (wrong_monoton == 0 && verbose >= 3) {
               printf ("      monotonicity not respected for x=");
               print_fp (xd);
               printf ("\n              f(x)=");
@@ -896,7 +911,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
         }
         else {/* monoton == DECREASING */
           if (rminus < r)  {
-            if (wrong_monoton == 0) {
+            if (wrong_monoton == 0 && verbose >= 3) {
               printf ("      monotonicity not respected for x=");
               print_fp (xd);
               printf ("\n            f(x-)=");
@@ -908,7 +923,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
             wrong_monoton++;
           }
           if (rplus > r)  {
-            if (wrong_monoton == 0) {
+            if (wrong_monoton == 0 && verbose >= 3) {
               printf ("      monotonicity not respected for x=");
               print_fp (xd);
               printf ("\n              f(x)=");
@@ -923,7 +938,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       }
 
       /* Testing if the symmetry is verified */
-      if ( (rnd==GMP_RNDN) && (symm != NO_SYMM) ) {
+      if (test_symmetry && (rnd==GMP_RNDN) && (symm != NO_SYMM) ) {
         xdopp = -xd;
         ropp = testfun_libm (xdopp);
         if (symm == ODD) {
@@ -961,42 +976,43 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
   mpfr_set_machine_rnd_mode (GMP_RNDN);
 
   /* if any difference occured, prints the maximal ulp error */
-  if (umax != 0.0)
+  if (umax != 0.0 && verbose >= 3)
   {
     printf ("      %f ulp(s) for x=", umax);
     print_fp (xmax);
     printf ("\n");
-    printf ("      [mpfr: ");
-    mpfr_set_fp (x, xmax, GMP_RNDN);
-    testfun_mpfr (y, x, rnd);
-    mpfr_out_str (stdout, 10, 0, y, GMP_RNDN);
-    printf (" libm: ");
-    print_fp (testfun_libm(xmax));
-    printf ("]\n");
+    if (verbose >= 4)
+      {
+        printf ("      [mpfr: ");
+        mpfr_set_fp (x, xmax, GMP_RNDN);
+        testfun_mpfr (y, x, rnd);
+        mpfr_out_str (stdout, 10, 0, y, GMP_RNDN);
+        printf (" libm: ");
+        print_fp (testfun_libm(xmax));
+        printf ("]\n");
+      }
   }
 
-  if (wrong != 0)
+  if (wrong != 0 && verbose >= 3)
     {
       printf ("      wrong directed rounding for x=");
       print_fp (xmax_dir);
       printf (" [%f]\n", umax_dir);
     }
 
-  if (rnd == GMP_RNDN)  {
-    printf ("   nb errors range/monotonicity/symmetry: %lu/%lu/%lu\n", 
-             wrong_range, wrong_monoton, wrong_symm);
-  }
-  else {
-    printf ("   nb errors range/monotonicity: %lu/%lu\n", 
-             wrong_range, wrong_monoton);
-  }
-  fflush (stdout);
-
   umax = fabs(umax);
 
-  printf ("   nb errors/max ulp diff/wrong directed: %lu/%f/%lu\n", 
-          tot, umax, wrong);
-  fflush (stdout);
+  if (verbose >= 3)
+    {
+      if (rnd == GMP_RNDN)
+        printf ("   nb errors range/monotonicity/symmetry: %lu/%lu/%lu\n", 
+                wrong_range, wrong_monoton, wrong_symm);
+      else
+        printf ("   nb errors range/monotonicity: %lu/%lu\n", 
+                wrong_range, wrong_monoton);
+      printf ("   nb errors/max ulp diff/wrong directed: %lu/%f/%lu\n", 
+              tot, umax, wrong);
+    }
 
   if (rnd == GMP_RNDN)
     {
@@ -1010,9 +1026,9 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
     }
   }
 
-  printf ("Maximal errors for %s: %f (nearest), %f (directed)\n\n", foo,
-          max_err_near, max_err_dir);
-  fflush (stdout);
+  printf ("Max. errors for %s [exp. %ld]: %f (nearest), %f (directed)\n", foo, e, max_err_near, max_err_dir);
+  if (verbose >= 3)
+    printf ("\n");
 
   mpfr_clear (x);
   mpfr_clear (y);
@@ -1035,8 +1051,8 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
   mp_rnd_t rnd;
   gmp_randstate_t state;
 
-  printf ("Testing function %s for exponents %ld and %ld.\n", foo, e, f);
-  fflush (stdout);
+  if (verbose >= 2)
+    printf ("Testing function %s for exponents %ld and %ld.\n", foo, e, f);
 
   if (strcmp (foo, "pow") == 0)
     {
@@ -1084,8 +1100,8 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
 
   for (rnd=0; rnd<MAX_RND; rnd++)
     {
-      printf ("   rounding mode %s:\n", mpfr_print_rnd_mode (rnd));
-      fflush (stdout);
+      if (verbose >= 3)
+        printf ("   rounding mode %s:\n", mpfr_print_rnd_mode (rnd));
       mpfr_set_machine_rnd_mode (rnd);
 
       gmp_randinit (state, GMP_RAND_ALG_LC, 128);
@@ -1141,7 +1157,7 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
 
   mpfr_set_machine_rnd_mode (GMP_RNDN);
 
-  if (umax != 0.0)
+  if (umax != 0.0 && verbose >= 3)
     {
       printf ("      %f ulp(s) for x=", umax);
       print_fp (xmax);
@@ -1150,7 +1166,7 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
       printf ("\n");
     }
 
-  if (umax_dir != 0.0)
+  if (umax_dir != 0.0 && verbose >= 3)
     {
       printf ("      wrong directed rounding for x=");
       print_fp (xmax_dir);
@@ -1161,9 +1177,9 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
 
   umax = fabs (umax);
 
-  printf ("   nb errors/max ulp diff/wrong directed: %lu/%f/%lu\n", 
-          tot, umax, wrong);
-  fflush (stdout);
+  if (verbose >= 3)
+    printf ("   nb errors/max ulp diff/wrong directed: %lu/%f/%lu\n", 
+            tot, umax, wrong);
 
   if (rnd == GMP_RNDN)
     {
@@ -1177,9 +1193,9 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
     }
     }
 
-  printf ("Maximal errors for %s: %f (nearest), %f (directed)\n", foo,
-          max_err_near, max_err_dir);
-  fflush (stdout);
+  printf ("Max. errors for %s [exp. %ld]: %f (nearest), %f (directed)\n", foo, e, max_err_near, max_err_dir);
+  if (verbose >= 3)
+    printf ("\n");
 
   mpfr_clear (x);
   mpfr_clear (y);
@@ -1203,18 +1219,13 @@ testall (unsigned long N, unsigned long seed)
   test ("expm1",  0, N, seed);
   test ("expm1", -9, N, seed);
   test ("log",    0, N, seed);
-/*
   test ("log", EMAX, N, seed);
-*/
   test ("log2",   0, N, seed);
+  test ("log2", EMAX, N, seed);
   test ("log10",  0, N, seed);
-/*
   test ("log10", EMAX, N, seed);
-*/
   test ("log1p",  0, N, seed);
-/*
   test ("log1p", EMAX, N, seed);
-*/
   test ("sin",    0, N, seed);
   test ("sin",   10, N, seed); /* mpfr-2.0.1 is too slow for 1024 */
   test ("cos",    0, N, seed);
@@ -1226,7 +1237,7 @@ testall (unsigned long N, unsigned long seed)
   test ("acos",   0, N, seed);
   test ("acos", -10, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
   test ("atan",   0, N, seed);
-  test ("atan",  53, N, seed); /* why 53 ??? */
+  test ("atan",  53, N, seed); /* why 53 ??? mpfr too slow ? */
   test ("sinh",   0, N, seed);
   test ("sinh",   9, N, seed);
   test ("cosh",   0, N, seed);
@@ -1240,9 +1251,14 @@ testall (unsigned long N, unsigned long seed)
   test ("atanh",  0, N, seed);
   test ("atanh", -10, N, seed);
   test ("gamma",  0, N, seed);
+#if (FPPREC <= 53)
   test ("gamma",  7, N, seed);
+#else
+  test ("gamma", 10, N, seed);
+#endif
   test ("sqrt",  0, N, seed);
   test ("sqrt",  EMAX, N, seed);
+  test ("sqrt",  EMIN, N, seed);
   test ("cbrt",  0, N, seed);
   test ("cbrt",  EMAX, N, seed);
   test ("cbrt",  EMIN, N, seed);
@@ -1280,18 +1296,51 @@ main (int argc, char *argv[])
   mpfr_set_emax (EMAX);
   mpfr_set_emin (EMIN);
 
-  if (strcmp (argv[1], "-seed") == 0)
+  while (argc > 1 && argv[1][0] == '-')
     {
-      seed = atoi (argv[2]);
-      argc -= 2;
-      argv += 2;
+      
+      if (strcmp (argv[1], "-seed") == 0)
+        {
+          seed = atoi (argv[2]);
+          argc -= 2;
+          argv += 2;
+        }
+      else if (strncmp (argv[1], "-verb", 4) == 0)
+        {
+          verbose = atoi (argv[2]);
+          argc -= 2;
+          argv += 2;
+        }
+      else if (strncmp (argv[1], "-mono", 4) == 0)
+        {
+          test_monotonicity = 0;
+          argc -= 1;
+          argv += 1;
+        }
+      else if (strncmp (argv[1], "-rang", 4) == 0)
+        {
+          test_range = 0;
+          argc -= 1;
+          argv += 1;
+        }
+      else if (strncmp (argv[1], "-symm", 4) == 0)
+        {
+          test_symmetry = 0;
+          argc -= 1;
+          argv += 1;
+        }
     }
 
   if (argc == 1 || argc == 3)
     {
-      fprintf (stderr, "Usage: mpcheck [-seed s] N\n");
-      fprintf (stderr, "Usage: mpcheck [-seed s] <function> <exponent> [N]\n");
-      fprintf (stderr, "Usage: mpcheck [-seed s] <function> <exp1> <exp2> [N]\n");
+      fprintf (stderr, "Usage: mpcheck [options] N\n");
+      fprintf (stderr, "Usage: mpcheck [options] <function> <exponent> [N]\n");
+      fprintf (stderr, "Usage: mpcheck [options] <function> <exp1> <exp2> [N]\n");
+      fprintf (stderr, "where options are:\n");
+      fprintf (stderr, "-seed s: set random seed to s [default 1]\n");
+      fprintf (stderr, "-verb k: set verbose level to k [default 3]\n");
+      fprintf (stderr, "-range : do not test output range\n");
+      fprintf (stderr, "-mono  : do not test monotonicity\n");
       exit (1);
     }
 
