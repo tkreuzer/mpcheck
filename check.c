@@ -1,5 +1,5 @@
 /*
- * MPCHECK - Check double LIBM functions
+ * MPCHECK - Check mathematical functions
  * Copyright (C) 2002, 2004, 2005 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,6 +41,7 @@ int verbose = 3;
 int test_monotonicity = 1;
 int test_range = 1;
 int test_symmetry = 1;
+int test_dir = 1; /* test directed roundings */
 
 #if (FPPREC == 24)
 #define EXPMAX 6
@@ -65,22 +66,23 @@ testall (unsigned long N, unsigned long seed)
   test ("cos",   10, 0, N, seed);
   test ("tan",    0, 0, N, seed);
   test ("tan",   10, 0, N, seed);
-  test ("asin",   0, 0, N, seed);
-  test ("asin", -10, 0, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
-  test ("acos",   0, 0, N, seed);
-  test ("acos", -10, 0, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
   test ("atan",   0, 0, N, seed);
   test ("atan",  53, 0, N, seed); /* why 53 ??? mpfr too slow ? */
-  test ("sqrt",  0, 0, N, seed);
-  test ("sqrt",  EMAX, 0, N, seed);
-  /* seems to loop in prec=64 for exp < -1010 */
-  test ("sqrt",  (EMIN < -1010) ? -1010 : EMIN, 0, N, seed);
   test ("pow", 0, 0, N, seed);
 #if (FPPREC <= 53)
   test ("pow", POWMAX1, POWMAX2, N, seed);
 #else
   test ("pow", 16, 10, N, seed);
 #endif
+#ifndef LIBMCR /* libmcr.0.9 has only exp, log, pow, atan, sin, cos, tan */
+  test ("asin",   0, 0, N, seed);
+  test ("asin", -10, 0, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
+  test ("acos",   0, 0, N, seed);
+  test ("acos", -10, 0, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
+  test ("sqrt",  0, 0, N, seed);
+  test ("sqrt",  EMAX, 0, N, seed);
+  /* seems to loop in prec=64 for exp < -1010 */
+  test ("sqrt",  (EMIN < -1010) ? -1010 : EMIN, 0, N, seed);
   test ("add", 0, 0, N, seed);
   test ("add", EMAX-1, EMAX-1, N, seed);
   test ("sub", EMAX, EMAX, N, seed);
@@ -109,7 +111,6 @@ testall (unsigned long N, unsigned long seed)
   test ("acosh", EMAX,0, N, seed);
   test ("atanh",  0, 0, N, seed);
   test ("atanh", -10, 0, N, seed);
-  test ("gamma",  0, 0, N, seed);
   test ("cbrt",  0, 0, N, seed);
   test ("cbrt",  EMAX, 0, N, seed);
   test ("cbrt",  (EMIN < -1010) ? -1010 : EMIN, 0, N, seed);
@@ -125,11 +126,12 @@ testall (unsigned long N, unsigned long seed)
 #else
   test ("gamma", 10, 0, N, seed);
 #endif
-#endif
+#endif /* MATHLIB */
   test ("exp2",   0, 0, N, seed);
   test ("exp2",   EXPMAX, 0, N, seed);
   test ("log2",   0, 0, N, seed);
   test ("log2", EMAX,0,  N, seed);
+#endif /* LIBMCR */
 
   printf ("Maximal errors for all functions: %f (nearest), %f (directed)\n",
           MAX_ERR_NEAR, MAX_ERR_DIR);
@@ -146,6 +148,8 @@ usage ()
   fprintf (stderr, "-verb k: set verbose level to k [default 3]\n");
   fprintf (stderr, "-range : do not test output range\n");
   fprintf (stderr, "-mono  : do not test monotonicity\n");
+  fprintf (stderr, "-symm  : do not test symmetry\n");
+  fprintf (stderr, "-dir   : do not test directed rounding\n");
   fprintf (stderr, "-num  n: N\n");
   exit (1);
 }
@@ -165,14 +169,17 @@ main (int argc, char *argv[])
 
   for (i = 1 ; i < argc ; i++)
     {
-      if (argv[i][0] == '-')
+      /* options should come before the function name (if any) */
+      if (func == NULL && argv[i][0] == '-')
 	{
-	  if (strcmp (argv[1], "-mono") == 0)
+	  if (strcmp (argv[i], "-mono") == 0)
 	    test_monotonicity = 0;
-	  else if (strcmp (argv[i], "-rang") == 0)
+	  else if (strcmp (argv[i], "-range") == 0)
 	    test_range = 0;
 	  else if (strcmp (argv[i], "-symm") == 0)
 	    test_symmetry = 0;
+	  else if (strcmp (argv[i], "-dir") == 0)
+	    test_dir = 0;
 	  else if (strcmp (argv[i], "-seed") == 0)
 	    {
 	      seed = atoi (argv[i+1]);
@@ -189,10 +196,14 @@ main (int argc, char *argv[])
 	      i++;
 	    }
 	  else
-	    usage ();
+	    {
+	      fprintf (stderr, "Invalid option: %s\n", argv[i]);
+	      usage ();
+	    }
 
 	}
-      else if (isdigit(argv[i][0]))
+      /* warning: negative exponents are possible */
+      else if (isdigit (argv[i][0]) || argv[i][0] == '-')
 	{
 	  if (expc == 0)
 	    exponent = atol (argv[i]);
@@ -205,7 +216,10 @@ main (int argc, char *argv[])
       else
 	{
 	  if (func != NULL)
-	    usage ();
+	    {
+	      fprintf (stderr, "Error, only one function allowed on command line\n");
+	      usage ();
+	    }
 	  func = argv[i];
 	}
     }
@@ -218,6 +232,8 @@ main (int argc, char *argv[])
 
 #ifdef MATHLIB
   printf ("Testing MathLib ");
+#elif LIBMCR
+  printf ("Testing libmcr ");
 #else
   printf ("Testing libm ");
 #endif

@@ -80,7 +80,7 @@ test (const char *func,
   max_err_near = 0.0;
   max_err_dir = 0.0;
 
-  for (rnd=0 ; rnd < MAX_RND ; rnd++)
+  for (rnd = 0; rnd < ((test_dir) ? MAX_RND : 1); rnd++)
     {
       LOG (3, printf ("   rounding mode %s:\n", mpfr_print_rnd_mode (rnd)));
       set_rnd_mode (rnd);
@@ -372,6 +372,8 @@ test (const char *func,
 
   if (verbose >= 3)
     printf ("\n");
+
+  fflush (stdout);
   
   mpfr_clear (op1);
   mpfr_clear (op2);

@@ -1,5 +1,5 @@
 /*
- * MPCHECK - Check double LIBM functions
+ * MPCHECK - Check mathematical functions
  * Copyright (C) 2002, 2004, 2005 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
@@ -42,6 +42,8 @@
 /* Define libmname */
 #ifdef MATHLIB
 # define libmname(fct)  u ## fct
+#elif LIBMCR
+# define libmname(fct)  __libmcr_ ## fct
 #elif (FPPREC==113 && defined(__ia64))
 # define libmname(fct)  fct ## l
 #elif (FPPREC==24)
@@ -99,6 +101,8 @@
 
 #ifdef MATHLIB
 #include "MathLib.h"
+#elif LIBMCR
+#include "libmcr.h"
 #endif
 
 #if defined(HAVE_TGAMMA) && !defined(tgamma)
@@ -135,7 +139,7 @@ extern void (*fprint_fp) (FILE *, fptype);
 extern double MAX_ERR_NEAR;
 extern double MAX_ERR_DIR;
 extern int verbose ;
-extern int test_monotonicity, test_range, test_symmetry ;
+extern int test_monotonicity, test_range, test_symmetry, test_dir;
 
 #define print_fp(x) (*fprint_fp)(stdout, x)
 
