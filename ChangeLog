@@ -1,3 +1,18 @@
+2005-03-17  Patrick Pelissier  <pelissip@morpork>
+
+        * Makefile.am, check.c, configure.in, func.c, mpcheck.h, rnd_mode.c, setup.c, test.c, ulp.c:
+        Add GNU GPL notice in the files.
+        Add 'make check' to Makefile.am
+
+        * INSTALL: Improve Install Notes.
+
+        * INSTALL, README, TODO, AUTHORS: Fill in the files.
+
+2004-05-06  Patrick Pelissier  <pelissip@morpork>
+
+        * ChangeLog, NEWS, check.c, configure.in, setup.c, test.c:
+        Add the ability to select the precision.
+
 2004-05-04  Patrick Pelissier  <pelissip@morpork>
 
 	* Makefile.am, acinclude.m4, check.c, configure.in, test.c:
