@@ -970,6 +970,13 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
     printf ("      %f ulp(s) for x=", umax);
     print_fp (xmax);
     printf ("\n");
+    printf ("      [mpfr: ");
+    mpfr_set_fp (x, xmax, GMP_RNDN);
+    testfun_mpfr (y, x, rnd);
+    mpfr_out_str (stdout, 10, 0, y, GMP_RNDN);
+    printf (" libm: ");
+    print_fp (testfun_libm(xmax));
+    printf ("]\n");
   }
 
   if (wrong != 0)
