@@ -11,6 +11,7 @@ v2.0.0: Rewrite many things.
 	Default is to check all C types (float, double and long double).
 	Needs MPFR 2.2.0 (Previous release have known overflow problems).
 	Auto-restriction to non-overflow interval when checking functions.
+	Explicit support for CRLIBM, MATHLIB.
 
 V1.1.1: added support for libmcr
 	(http://www.sun.com/download/products.xml?id=41797765)
