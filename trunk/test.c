@@ -83,7 +83,7 @@ test (const char *func,
       for (i = 0; i < N ; i++)
 	{
 	  /* Get a random number */
-	  mpfr_urandomb (op1, state);
+ 	  mpfr_urandomb (op1, state);
 	  MPFR_EXP (op1) = e1;
 	  if (num == 2)
 	    {
@@ -93,6 +93,7 @@ test (const char *func,
 	  op1d = (*get_fp) (op1, GMP_RNDN);
 	  op2d = (*get_fp) (op2, GMP_RNDN);
 
+	  /*mpfr_dump (op1);*/
 	  /* Compute the MPFR / LIBM result */
 	  if (num == 2)
 	    {
@@ -107,16 +108,17 @@ test (const char *func,
 	      rlibmd = (*testfun_libm) (op1d);
 	    }
 	  rmpfrd = (*get_fp) (rmpfr, rnd);
-
 	  /* Check for correct rounding */
 	  if (rmpfrd != rlibmd)
 	    {
+	      /*printf("recompute!\n");*/
 	      /* Recompute MPFR result with more prec */
 	      if (num == 2)
 		(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
 		   testfun_mpfr)) (rmpfrref, op1, op2, rnd);
 	      else
 		(*testfun_mpfr) (rmpfrref, op1, rnd);
+
 	      u = ulp (rlibmd, rmpfrref);
 	      if (rnd != GMP_RNDN)
 		{

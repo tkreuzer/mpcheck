@@ -27,12 +27,8 @@ testall (unsigned long N, unsigned long seed)
 {
   test ("exp",    0, 0, N, seed);
   test ("exp",    9, 0, N, seed);
-  test ("exp2",   0, 0, N, seed);
-  test ("exp2",   9, 0, N, seed);
   test ("log",    0, 0, N, seed);
   test ("log", EMAX, 0, N, seed);
-  test ("log2",   0, 0, N, seed);
-  test ("log2", EMAX,0,  N, seed);
   test ("sin",    0, 0, N, seed);
   test ("sin",   10, 0, N, seed); /* mpfr-2.0.1 is too slow for 1024 */
   test ("cos",    0, 0, N, seed);
@@ -83,18 +79,23 @@ testall (unsigned long N, unsigned long seed)
   test ("atanh",  0, 0, N, seed);
   test ("atanh", -10, 0, N, seed);
   test ("gamma",  0, 0, N, seed);
-#if (FPPREC <= 53)
-  test ("gamma",  7, 0, N, seed);
-#else
-  test ("gamma", 10, 0, N, seed);
-#endif
   test ("cbrt",  0, 0, N, seed);
   test ("cbrt",  EMAX, 0, N, seed);
   test ("cbrt",  EMIN, 0, N, seed);
   test ("hypot", 0, 0, N, seed);
   test ("hypot", EMAX-1, EMAX-1, N, seed);
   test ("hypot", EMIN, EMIN, N, seed);
+  test ("gamma",  0, 0, N, seed);
+#if (FPPREC <= 53)
+  test ("gamma",  7, 0, N, seed);
+#else
+  test ("gamma", 10, 0, N, seed);
 #endif
+#endif
+  test ("exp2",   0, 0, N, seed);
+  test ("exp2",   9, 0, N, seed);
+  test ("log2",   0, 0, N, seed);
+  test ("log2", EMAX,0,  N, seed);
 
   printf ("Maximal errors for all functions: %f (nearest), %f (directed)\n",
           MAX_ERR_NEAR, MAX_ERR_DIR);

@@ -11,14 +11,16 @@
 
 /* Check for Linux only? */
 #if ((defined (__i386__) || defined (__i486__)))
-# define _FPU_EXTENDED 0x300
-# define _FPU_DOUBLE   0x200
+# define _FPU_EXTENDED 0x0300
+# define _FPU_DOUBLE   0x0200
 # define _FPU_DEFAULT  0x137f
 # define __setfpucw(cw) __asm__ ("fldcw %0" : : "m" (cw))
 # define _fpu_ieee ((_FPU_DEFAULT & (~_FPU_EXTENDED)) | _FPU_DOUBLE)
 # define set_double() __setfpucw(_fpu_ieee)
+# define set_float()  __setfpucw(_FPU_DEFAULT & (~_FPU_EXTENDED))
 #else
 # define set_double()
+# define set_float()
 #endif
 
 void
@@ -52,7 +54,7 @@ mpfr_get_float (mpfr_srcptr x, mp_rnd_t rnd)
 void
 setup ()
 {
-  fptype x, y, c, d, dj;
+  fptype x, y;
   int j;
 
   /* sets the functions set_fp and get_fp */
@@ -72,21 +74,26 @@ setup ()
 
   /* Special checking for double numbers */
 #if (FPPREC == 53)
-  set_double ();
-  x = DBL_MIN;
-  if (2.0 * (x / 2.0) != x)
-    fprintf (stderr, "WARNING: no denormalized numbers\n");
-
-  c = 1.46484375e-3;
-  dj = 1.0;
-  for (j=0; j<54; j++) dj *= 0.5;
-  d = 0.75 + dj;
-  d /= 1 << 9;
-  if (c != d)
-    {
-      fprintf (stderr, "Default seems to use extended precision\n");
-      exit (1);
-    }
+ {
+   fptype c, d, dj;
+   set_double ();
+   x = DBL_MIN;
+   if (2.0 * (x / 2.0) != x)
+     fprintf (stderr, "WARNING: no denormalized numbers\n");
+   
+   c = 1.46484375e-3;
+   dj = 1.0;
+   for (j=0; j<54; j++) dj *= 0.5;
+   d = 0.75 + dj;
+   d /= 1 << 9;
+   if (c != d)
+     {
+       fprintf (stderr, "Default seems to use extended precision\n");
+       exit (1);
+     }
+ }
+#elif (FPPREC == 24)
+ set_float ();
 #endif
 
   /* Checks that setting machine rounding mode works */
@@ -106,7 +113,8 @@ setup ()
   for (j=0; x + 1.0 != x; j++, x = 2.0 * x);
   if (j != FPPREC)
     {
-      fprintf (stderr, "Precision of fptype is not %u but %u\n", FPPREC, j);
+      fprintf (stderr, "Precision of fptype is not %u but %u\n", 
+	       FPPREC, j);
       exit (1);
     }
 
