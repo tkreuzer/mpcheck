@@ -8,24 +8,32 @@
 /**************************************************************/
 
 /* To adapt to the tested precision */
-#define FPPREC 53       /* 24       53         64       */
+#define FPPREC 113       /* 24       53         64      113 */
 
-#if (FPPREC == 24)
+#if (FPPREC <= 24)
 #define fptype float
 #define EMIN -125
 #define EMAX 128
-#elif (FPPREC == 53)
+#elif (FPPREC <= 53)
 #define fptype double
 #define EMIN -1021
 #define EMAX 1024
-#elif (FPPREC == 64)
+#elif (FPPREC <= 64)
+#if defined(__ia64)
 #define fptype extended
 #define _FPWIDETYPES /* for HP-UX */
+#else
+#define fptype long double
+#endif
 #define EMIN -16381
 #define EMAX 16384
-#elif (FPPREC == 113)
+#elif (FPPREC <= 113)
+#if defined(__ia64)
 #define _FPWIDETYPES /* for HP-UX */
+#define fptype long double
+#else
 #define fptype quad
+#endif
 #define EMIN -16381
 #define EMAX 16384
 #else
@@ -75,8 +83,8 @@
 
 void test _PROTO ((char *, mp_exp_t, unsigned long, unsigned long));
 void test2 _PROTO ((char *, mp_exp_t, mp_exp_t, unsigned long, unsigned long));
-fptype ulp_err _PROTO ((fptype, fptype, mp_rnd_t));
-fptype ulp_err2 _PROTO ((fptype, fptype, fptype, mp_rnd_t));
+double ulp_err _PROTO ((fptype, fptype, mp_rnd_t, fptype));
+double ulp_err2 _PROTO ((fptype, fptype, fptype, mp_rnd_t, fptype));
 void testall _PROTO ((unsigned long, unsigned long));
 void check_fp _PROTO ((void));
 
@@ -84,8 +92,13 @@ void check_fp _PROTO ((void));
 fptype (*testfun_libm) (fptype) = NULL;
 fptype (*testfun_libm2) (fptype, fptype) = NULL;
 int (*testfun_mpfr) () = NULL;
+int (*mpfr_set_fp) (mpfr_ptr, fptype, mp_rnd_t) = NULL;
+fptype (*mpfr_get_fp) (mpfr_srcptr, mp_rnd_t) = NULL;
+void (*fprint_fp) (FILE *, fptype) = NULL;
 double MAX_ERR_NEAR = 0.0;
 double MAX_ERR_DIR = 0.0;
+
+#define print_fp(x) fprint_fp(stdout, x)
 
 void 
 mpfr_set_machine_rnd_mode (mp_rnd_t rnd_mode)
@@ -100,12 +113,44 @@ mpfr_set_machine_rnd_mode (mp_rnd_t rnd_mode)
 }
 
 void
+fprint_d (FILE *stream, fptype x)
+{
+  fprintf (stream, "%1.20e", x);
+}
+
+void
+fprint_ld (FILE *stream, fptype x)
+{
+#if (FPPREC <= 64)
+  fprintf (stream, "%1.24Le", x);
+#else
+  fprintf (stream, "%1.38Le", x);
+#endif
+}
+
+void
 check_fp ()
 {
-  double x, y, c, d, dj;
+  fptype x, y, c, d, dj;
   int j;
 
-#if (FPPREC == 53) && defined(__i386)
+  /* sets the functions mpfr_set_fp and mpfr_get_fp */
+#if (FPPREC <= 53)
+  mpfr_set_fp = mpfr_set_d;
+  mpfr_get_fp = mpfr_get_d;
+  fprint_fp = fprint_d;
+#elif (FPPREC <= 64)
+  mpfr_set_fp = mpfr_set_ld;
+  mpfr_get_fp = mpfr_get_ld;
+  fprint_fp = fprint_ld;
+#elif (FPPREC <= 113)
+  mpfr_set_fp = mpfr_set_ld;
+  mpfr_get_fp = mpfr_get_ld;
+  fprint_fp = fprint_ld;
+#endif
+
+#if (FPPREC <= 53)
+#if defined(__i386)
   /* sets the precision to double */
   __setfpucw((_FPU_DEFAULT & (~_FPU_EXTENDED)) | _FPU_DOUBLE);
 #endif
@@ -123,7 +168,9 @@ check_fp ()
       fprintf (stderr, "default seems to use extended precision\n");
       exit (1);
     }
+#endif
 
+  /* checks that setting machine rounding mode works */
   mpfr_set_machine_rnd_mode (GMP_RNDD);
   x = 2.0; /* don't write x = sqrt (2.0) and y = sqrt (2.0) otherwise the
               compiler may optimize too much */
@@ -140,96 +187,347 @@ check_fp ()
       fprintf (stderr, "   '-mfp-rounding-mode=d -mieee-with-inexact' with gcc\n");
       exit (1);
     }
+
+  /* checks that the precision of fptype is FPPREC */
+  mpfr_set_machine_rnd_mode (GMP_RNDN);
+  x = 1.0;
+  for (j=0; x + 1.0 != x; j++, x = 2.0 * x);
+  if (j != FPPREC)
+    {
+      fprintf (stderr, "Precision of fptype is not %u but %u\n", FPPREC, j);
+      exit (1);
+    }
 }
 
-fptype ulp_err (fptype x, fptype y, mp_rnd_t rnd)
+/* computes the error in ulps between f(x) and y [computed by libm].
+   z is the value computed by mpfr. It assumes y <> z.
+ */
+double ulp_err (fptype x, fptype y, mp_rnd_t rnd, fptype z)
 {
   mpfr_t xx, yy;
   mp_exp_t expy;
-  fptype u;
+  double u;
   
-  mpfr_init2 (xx, 2 * FPPREC);
+  mpfr_init2 (xx, FPPREC);
   mpfr_init2 (yy, 2 * FPPREC);
-  /*  if (FPPREC > 53) abort (); */
-  mpfr_set_d (xx, (double) x, GMP_RNDN); /* exact for FPPREC <= 53 */
+  mpfr_set_fp (xx, x, GMP_RNDN); /* exact */
   testfun_mpfr (yy, xx, rnd);
+  
+  /* checks that the mpfr value z is correct */
+  if (mpfr_can_round (yy, 2 * FPPREC, rnd, rnd, FPPREC))
+    {
+      mpfr_set (xx, yy, rnd);
+      if (mpfr_get_fp (xx, GMP_RNDN) != z)
+        {
+          fprintf (stderr, "Error in mpfr !!!\n");
+          fprintf (stderr, "x=");
+          fprint_fp (stderr, x);
+          fprintf (stderr, " rnd=%s\n", mpfr_print_rnd_mode (rnd));
+          fprintf (stderr, "mpfr got   ");
+          fprint_fp (stderr, z);
+          fprintf (stderr, "\ninstead of ");
+          fprint_fp (stderr, mpfr_get_fp (xx, GMP_RNDN));
+          fprintf (stderr, "\n");
+          exit (1);
+        }
+    }
+
   expy = MPFR_EXP (yy);
-  mpfr_set_d (xx, (double) y, GMP_RNDN); /* exact */
+  mpfr_set_fp (xx, y, GMP_RNDN); /* exact */
   mpfr_sub (xx, xx, yy, GMP_RNDN);
   MPFR_EXP(xx) += FPPREC - expy;
-  u = (fptype) mpfr_get_d1 (xx);
+  u = mpfr_get_d (xx, GMP_RNDN);
   mpfr_clear (xx);
   mpfr_clear (yy);
   return u;
 }
 
-fptype ulp_err2 (fptype x, fptype t, fptype y, mp_rnd_t rnd)
+/* computes the error in ulps between f(x,t) and y [computed by libm],
+   where z is the value computed by mpfr.
+ */
+double ulp_err2 (fptype x, fptype t, fptype y, mp_rnd_t rnd, fptype z)
 {
   mpfr_t xx, yy, tt;
   mp_exp_t expy;
-  fptype u;
+  double u;
   
-  mpfr_init2 (xx, 2 * FPPREC);
-  mpfr_init2 (tt, 2 * FPPREC);
+  mpfr_init2 (xx, FPPREC);
+  mpfr_init2 (tt, FPPREC);
   mpfr_init2 (yy, 2 * FPPREC);
-  /*  if (FPPREC > 53) abort (); */
-  mpfr_set_d (xx, (double) x, GMP_RNDN); /* exact */
-  mpfr_set_d (tt, (double) t, GMP_RNDN); /* exact */
+  mpfr_set_fp (xx, x, GMP_RNDN); /* exact */
+  mpfr_set_fp (tt, t, GMP_RNDN); /* exact */
   testfun_mpfr (yy, xx, tt, rnd);
+
+  /* checks that the mpfr value z is correct */
+  if (mpfr_can_round (yy, 2 * FPPREC, rnd, rnd, FPPREC))
+    {
+      mpfr_set (xx, yy, rnd);
+      if (mpfr_get_fp (xx, GMP_RNDN) != z)
+        {
+          fprintf (stderr, "Error in mpfr !!!\n");
+          fprintf (stderr, "x=");
+          fprint_fp (stderr, x);
+          fprintf (stderr, " t=");
+          fprint_fp (stderr, t);
+          fprintf (stderr, " rnd=%s\n", mpfr_print_rnd_mode (rnd));
+          fprintf (stderr, "mpfr got   ");
+          fprint_fp (stderr, z);
+          fprintf (stderr, "\ninstead of ");
+          fprint_fp (stderr, mpfr_get_fp (xx, GMP_RNDN));
+          fprintf (stderr, "\n");
+          exit (1);
+        }
+    }
+
   expy = MPFR_EXP (yy);
-  mpfr_set_d (xx, (double) y, GMP_RNDN); /* exact */
+  mpfr_set_fp (xx, y, GMP_RNDN); /* exact */
   mpfr_sub (xx, xx, yy, GMP_RNDN);
   MPFR_EXP(xx) += FPPREC - expy;
-  u = (fptype) mpfr_get_d1 (xx);
+  u = mpfr_get_d (xx, GMP_RNDN);
   mpfr_clear (xx);
   mpfr_clear (tt);
   mpfr_clear (yy);
   return u;
 }
 
+#if (FPPREC==113 && defined(__ia64))
+#define SUFFIXL
+#endif
+
 fptype my_exp (fptype x)
 {
+#ifdef SUFFIXL
+  return expl (x);
+#else
   return exp (x);
+#endif
 }
 
 fptype my_exp2 (fptype x)
 {
+#ifdef SUFFIXL
+  return exp2l (x);
+#else
   return exp2 (x);
+#endif
 }
 
 fptype my_expm1 (fptype x)
 {
+#ifdef SUFFIXL
+  return expm1l (x);
+#else
   return expm1 (x);
+#endif
 }
 
 fptype my_log (fptype x)
 {
+#ifdef SUFFIXL
+  return logl (x);
+#else
   return log (x);
+#endif
+}
+
+fptype my_log2 (fptype x)
+{
+#ifdef SUFFIXL
+  return log2l (x);
+#else
+  return log2 (x);
+#endif
 }
 
 fptype my_log10 (fptype x)
 {
+#ifdef SUFFIXL
+  return log10l (x);
+#else
   return log10 (x);
+#endif
 }
 
 fptype my_log1p (fptype x)
 {
+#ifdef SUFFIXL
+  return log1pl (x);
+#else
   return log1p (x);
+#endif
 }
 
 fptype my_sin (fptype x)
 {
+#ifdef SUFFIXL
+  return sinl (x);
+#else
   return sin (x);
+#endif
+}
+
+fptype my_cos (fptype x)
+{
+#ifdef SUFFIXL
+  return cosl (x);
+#else
+  return cos (x);
+#endif
+}
+
+fptype my_tan (fptype x)
+{
+#ifdef SUFFIXL
+  return tanl (x);
+#else
+  return tan (x);
+#endif
+}
+
+fptype my_asin (fptype x)
+{
+#ifdef SUFFIXL
+  return asinl (x);
+#else
+  return asin (x);
+#endif
+}
+
+fptype my_acos (fptype x)
+{
+#ifdef SUFFIXL
+  return acosl (x);
+#else
+  return acos (x);
+#endif
+}
+
+fptype my_atan (fptype x)
+{
+#ifdef SUFFIXL
+  return atanl (x);
+#else
+  return atan (x);
+#endif
+}
+
+fptype my_sinh (fptype x)
+{
+#ifdef SUFFIXL
+  return sinhl (x);
+#else
+  return sinh (x);
+#endif
+}
+
+fptype my_cosh (fptype x)
+{
+#ifdef SUFFIXL
+  return coshl (x);
+#else
+  return cosh (x);
+#endif
+}
+
+fptype my_tanh (fptype x)
+{
+#ifdef SUFFIXL
+  return tanhl (x);
+#else
+  return tanh (x);
+#endif
+}
+
+fptype my_asinh (fptype x)
+{
+#ifdef SUFFIXL
+  return asinhl (x);
+#else
+  return asinh (x);
+#endif
+}
+
+fptype my_acosh (fptype x)
+{
+#ifdef SUFFIXL
+  return acoshl (x);
+#else
+  return acosh (x);
+#endif
+}
+
+fptype my_atanh (fptype x)
+{
+#ifdef SUFFIXL
+  return atanhl (x);
+#else
+  return atanh (x);
+#endif
 }
 
 fptype my_tgamma (fptype x)
 {
+#ifdef SUFFIXL
+  return tgammal (x);
+#else
   return tgamma (x);
+#endif
+}
+
+fptype my_sqrt (fptype x)
+{
+#ifdef SUFFIXL
+  return sqrtl (x);
+#else
+  return sqrt (x);
+#endif
+}
+
+fptype my_cbrt (fptype x)
+{
+#ifdef SUFFIXL
+  return cbrtl (x);
+#else
+  return cbrt (x);
+#endif
 }
 
 fptype my_pow (fptype x, fptype y)
 {
+#ifdef SUFFIXL
+  return powl (x, y);
+#else
   return pow (x, y);
+#endif
+}
+
+fptype my_hypot (fptype x, fptype y)
+{
+#ifdef SUFFIXL
+  return hypotl (x, y);
+#else
+  return hypot (x, y);
+#endif
+}
+
+fptype my_add (fptype x, fptype y)
+{
+  return x + y;
+}
+
+fptype my_sub (fptype x, fptype y)
+{
+  return x - y;
+}
+
+fptype my_mul (fptype x, fptype y)
+{
+  return x * y;
+}
+
+fptype my_div (fptype x, fptype y)
+{
+  return x / y;
 }
 
 void
@@ -237,8 +535,8 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
 {
    unsigned long i, wrong, tot;
    mpfr_t x, y, z;
-   fptype xd, yd, r;
-   double u, umax, xmax, max_err_near, max_err_dir;
+   fptype xd, xmax, xmax_dir, yd, r;
+   double u, umax, umax_dir, max_err_near, max_err_dir;
    gmp_randstate_t state;
    mp_rnd_t rnd;
 
@@ -265,6 +563,11 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       testfun_libm = my_log;
       testfun_mpfr = mpfr_log;
     }
+  else if (strcmp (foo, "log2") == 0)
+    {
+      testfun_libm = my_log2;
+      testfun_mpfr = mpfr_log2;
+    }
   else if (strcmp (foo, "log10") == 0)
     {
       testfun_libm = my_log10;
@@ -282,66 +585,74 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
     }
   else if (strcmp (foo, "cos") == 0)
     {
-      testfun_libm = (void*) cos;
+      testfun_libm = my_cos;
       testfun_mpfr = mpfr_cos;
     }
   else if (strcmp (foo, "tan") == 0)
     {
-      testfun_libm = (void*) tan;
+      testfun_libm = my_tan;
       testfun_mpfr = mpfr_tan;
     }
   else if (strcmp (foo, "asin") == 0)
     {
-      testfun_libm = (void*) asin;
+      testfun_libm = my_asin;
       testfun_mpfr = mpfr_asin;
     }
   else if (strcmp (foo, "acos") == 0)
     {
-      testfun_libm = (void*) acos;
+      testfun_libm = my_acos;
       testfun_mpfr = mpfr_acos;
     }
   else if (strcmp (foo, "atan") == 0)
     {
-      testfun_libm = (void*) atan;
+      testfun_libm = my_atan;
       testfun_mpfr = mpfr_atan;
     }
   else if (strcmp (foo, "sinh") == 0)
     {
-      testfun_libm = (void*) sinh;
+      testfun_libm = my_sinh;
       testfun_mpfr = mpfr_sinh;
     }
   else if (strcmp (foo, "cosh") == 0)
     {
-      testfun_libm = (void*) cosh;
+      testfun_libm = my_cosh;
       testfun_mpfr = mpfr_cosh;
     }
   else if (strcmp (foo, "tanh") == 0)
     {
-      testfun_libm = (void*) tanh;
+      testfun_libm = my_tanh;
       testfun_mpfr = mpfr_tanh;
     }
   else if (strcmp (foo, "asinh") == 0)
     {
-      testfun_libm = (void*) asinh;
+      testfun_libm = my_asinh;
       testfun_mpfr = mpfr_asinh;
     }
   else if (strcmp (foo, "acosh") == 0)
     {
-      testfun_libm = (void*) acosh;
+      testfun_libm = my_acosh;
       testfun_mpfr = mpfr_acosh;
     }
   else if (strcmp (foo, "atanh") == 0)
     {
-      testfun_libm = (void*) atanh;
+      testfun_libm = my_atanh;
       testfun_mpfr = mpfr_atanh;
     }
-#if 0
   else if (strcmp (foo, "gamma") == 0)
     {
       testfun_libm = my_tgamma;
       testfun_mpfr = mpfr_gamma;
     }
-#endif
+  else if (strcmp (foo, "sqrt") == 0)
+    {
+      testfun_libm = my_sqrt;
+      testfun_mpfr = mpfr_sqrt;
+    }
+  else if (strcmp (foo, "cbrt") == 0)
+    {
+      testfun_libm = my_cbrt;
+      testfun_mpfr = mpfr_cbrt;
+    }
   else
     {
       fprintf (stderr, "Unknown function: %s\n", foo);
@@ -367,23 +678,23 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       gmp_randseed_ui (state, seed);
 
       tot = 0;
-  umax = 0.0;
-  xmax = 0.0;
-  wrong = 0;
+      umax = 0.0; /* (signed) maximal error in ulps */
+      umax_dir = 0.0; /* maximal error in ulps when wrong directed rounding */
+      wrong = 0; /* number of wrong directed roundings */
   for (i=0; i<N; i++)
     {
       mpfr_urandomb (x, state);
       MPFR_EXP(x) = e;
       testfun_mpfr (y, x, rnd);
       /* Conversion from a mpfr to a fp number : x */
-      xd = (fptype) mpfr_get_d1 (x);
+      xd = mpfr_get_fp (x, GMP_RNDN);
       /* Conversion from a mpfr to a fp number : y */
-      yd = (fptype) mpfr_get_d1 (y);
+      yd = mpfr_get_fp (y, GMP_RNDN);
 
       r = testfun_libm (xd);
       /* check for correct rounding */
       if (yd != r) {
-        u = ulp_err (xd, r, rnd);
+        u = ulp_err (xd, r, rnd, yd);
         if (rnd != GMP_RNDN)
           {
             mp_rnd_t rnd2;
@@ -395,12 +706,10 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
             if ((rnd2 == GMP_RNDU && u < 0.0) || (rnd2 == GMP_RNDD && u > 0.0))
               {
                 wrong++;
-                if (wrong == 1)
+                if (fabs(u) > fabs(umax_dir))
                   {
-                    printf ("      wrong directed rounding for x=%1.20e"
-                            " [%f]\n", xd, u);
-                    /* printf ("      got %1.20e instead of %1.20e\n", r, yd); */
-                    fflush (stdout);
+                    umax_dir = u;
+                    xmax_dir = xd;
                   }
               }
           }
@@ -413,8 +722,22 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       }
     }
 
+  mpfr_set_machine_rnd_mode (GMP_RNDN);
+
+  /* if any difference occured, prints the maximal ulp error */
   if (umax != 0.0)
-    printf ("      %f ulp(s) for x=%1.20e\n", umax, xmax);
+  {
+    printf ("      %f ulp(s) for x=", umax);
+    print_fp (xmax);
+    printf ("\n");
+  }
+
+  if (wrong != 0)
+    {
+      printf ("      wrong directed rounding for x=");
+      print_fp (xmax_dir);
+      printf (" [%f]\n", umax_dir);
+    }
 
   umax = fabs(umax);
 
@@ -434,7 +757,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
     }
     }
 
-  printf ("Maximal errors for %s: %f (nearest), %f (directed)\n", foo,
+  printf ("Maximal errors for %s: %f (nearest), %f (directed)\n\n", foo,
           max_err_near, max_err_dir);
   fflush (stdout);
 
@@ -454,7 +777,8 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
 {
   unsigned long i, wrong, tot;
   mpfr_t x, y, z, t;
-  double xd, td, r, u, umax, xmax, tmax, max_err_near, max_err_dir;
+  double u, umax, umax_dir, max_err_near, max_err_dir;
+  fptype xd, td, r, yd, xmax, xmax_dir, tmax, tmax_dir;
   mp_rnd_t rnd;
   gmp_randstate_t state;
 
@@ -463,8 +787,33 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
 
   if (strcmp (foo, "pow") == 0)
     {
-      testfun_libm2 = (void*) pow;
+      testfun_libm2 = my_pow;
       testfun_mpfr = mpfr_pow;
+    }
+  else if (strcmp (foo, "hypot") == 0)
+    {
+      testfun_libm2 = my_hypot;
+      testfun_mpfr = mpfr_hypot;
+    }
+  else if (strcmp (foo, "add") == 0)
+    {
+      testfun_libm2 = my_add;
+      testfun_mpfr = mpfr_add;
+    }
+  else if (strcmp (foo, "sub") == 0)
+    {
+      testfun_libm2 = my_sub;
+      testfun_mpfr = mpfr_sub;
+    }
+  else if (strcmp (foo, "mul") == 0)
+    {
+      testfun_libm2 = my_mul;
+      testfun_mpfr = mpfr_mul;
+    }
+  else if (strcmp (foo, "div") == 0)
+    {
+      testfun_libm2 = my_div;
+      testfun_mpfr = mpfr_div;
     }
   else
     {
@@ -472,10 +821,10 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
       exit (1);
     }
 
-  mpfr_init2 (x, 53);
-  mpfr_init2 (y, 53);
-  mpfr_init2 (z, 53);
-  mpfr_init2 (t, 53);
+  mpfr_init2 (x, FPPREC);
+  mpfr_init2 (y, FPPREC);
+  mpfr_init2 (z, FPPREC);
+  mpfr_init2 (t, FPPREC);
 
   max_err_near = 0.0;
   max_err_dir = 0.0;
@@ -490,8 +839,7 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
       gmp_randseed_ui (state, seed);
 
   umax = 0.0;
-  xmax = 0.0;
-  tmax = 0.0;
+  umax_dir = 0.0;
   tot = 0;
   wrong = 0;
   for (i=0; i<N; i++)
@@ -501,13 +849,14 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
       mpfr_urandomb (t, state);
       MPFR_EXP(t) = f;
       testfun_mpfr (y, x, t, rnd);
-      xd = mpfr_get_d1 (x);
-      td = mpfr_get_d1 (t);
+      xd = mpfr_get_fp (x, GMP_RNDN);
+      td = mpfr_get_fp (t, GMP_RNDN);
       r = testfun_libm2 (xd, td);
 
       /* check for correct directed rounding */
-      if (mpfr_get_d1 (y) != r) {
-        u = ulp_err2 (xd, td, r, rnd);
+      yd = mpfr_get_fp (y, GMP_RNDN);
+      if (yd != r) {
+        u = ulp_err2 (xd, td, r, rnd, yd);
         if (rnd != GMP_RNDN)
           {
             mp_rnd_t rnd2;
@@ -519,11 +868,11 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
             if ((rnd2 == GMP_RNDU && u < 0.0) || (rnd2 == GMP_RNDD && u > 0.0))
               {
                 wrong++;
-                if (wrong == 1)
+                if (fabs(u) > fabs(umax_dir))
                   {
-                    printf ("      wrong directed rounding for x=%1.20e "
-                            " t=%1.20e [%f]\n", xd, td, u);
-                    fflush (stdout);
+                    umax_dir = u;
+                    xmax_dir = xd;
+                    tmax_dir = td;
                   }
               }
           }
@@ -537,8 +886,25 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
       }
     }
 
+  mpfr_set_machine_rnd_mode (GMP_RNDN);
+
   if (umax != 0.0)
-    printf ("      %f ulp(s) for x=%1.20e t=%1.20e\n", umax, xmax, tmax);
+    {
+      printf ("      %f ulp(s) for x=", umax);
+      print_fp (xmax);
+      printf (" t=");
+      print_fp (tmax);
+      printf ("\n");
+    }
+
+  if (umax_dir != 0.0)
+    {
+      printf ("      wrong directed rounding for x=");
+      print_fp (xmax_dir);
+      printf (" t=");
+      print_fp (tmax_dir);
+      printf (" [%f]\n", umax_dir);
+    }
 
   umax = fabs (umax);
 
@@ -584,11 +950,12 @@ testall (unsigned long N, unsigned long seed)
   test ("expm1",  0, N, seed);
   test ("expm1", -9, N, seed);
   test ("log",    0, N, seed);
-  test ("log", 1024, N, seed);
+  test ("log", EMAX, N, seed);
+  test ("log2",   0, N, seed);
   test ("log10",  0, N, seed);
-  test ("log10", 1024, N, seed);
+  test ("log10", EMAX, N, seed);
   test ("log1p",  0, N, seed);
-  test ("log1p", 1024, N, seed);
+  test ("log1p", EMAX, N, seed);
   test ("sin",    0, N, seed);
   test ("sin",   10, N, seed); /* mpfr-2.0.1 is too slow for 1024 */
   test ("cos",    0, N, seed);
@@ -600,7 +967,7 @@ testall (unsigned long N, unsigned long seed)
   test ("acos",   0, N, seed);
   test ("acos", -10, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
   test ("atan",   0, N, seed);
-  test ("atan",  53, N, seed);
+  test ("atan",  53, N, seed); /* why 53 ??? */
   test ("sinh",   0, N, seed);
   test ("sinh",   9, N, seed);
   test ("cosh",   0, N, seed);
@@ -608,15 +975,35 @@ testall (unsigned long N, unsigned long seed)
   test ("tanh",   0, N, seed);
   test ("tanh",   4, N, seed);
   test ("asinh",  0, N, seed);
-  test ("asinh", 1024, N, seed);
+  test ("asinh", EMAX, N, seed);
   test ("acosh",  1, N, seed);
-  test ("acosh", 1024, N, seed);
+  test ("acosh", EMAX, N, seed);
   test ("atanh",  0, N, seed);
   test ("atanh", -10, N, seed);
   test ("gamma",  0, N, seed);
   test ("gamma",  7, N, seed);
+  test ("sqrt",  0, N, seed);
+  test ("sqrt",  EMAX, N, seed);
+  test ("cbrt",  0, N, seed);
+  test ("cbrt",  EMAX, N, seed);
+  test ("cbrt",  EMIN, N, seed);
   test2 ("pow", 0, 0, N, seed);
+#if (FPPREC <= 53)
   test2 ("pow", 8, 7, N, seed);
+#else
+  test2 ("pow", 16, 10, N, seed);
+#endif
+  test2 ("hypot", 0, 0, N, seed);
+  test2 ("hypot", EMAX-1, EMAX-1, N, seed);
+  test2 ("hypot", EMIN, EMIN, N, seed);
+  test2 ("add", 0, 0, N, seed);
+  test2 ("add", EMAX-1, EMAX-1, N, seed);
+  test2 ("sub", EMAX, EMAX, N, seed);
+  test2 ("sub", 0, 0, N, seed);
+  test2 ("mul", 0, 0, N, seed);
+  test2 ("mul", EMAX/2, EMAX/2, N, seed);
+  test2 ("div", 0, 0, N, seed);
+  test2 ("div", EMAX, EMAX, N, seed);
 
   printf ("Maximal errors for all functions: %f (nearest), %f (directed)\n",
           MAX_ERR_NEAR, MAX_ERR_DIR);
@@ -641,15 +1028,21 @@ main (int argc, char *argv[])
       argv += 2;
     }
 
-  printf ("[precision=%u, seed=%u]\n", FPPREC, seed);
-
   if (argc == 1 || argc == 3)
     {
-      fprintf (stderr, "Usage: test [-seed s] N\n");
-      fprintf (stderr, "Usage: test [-seed s] <function> <exponent> [N]\n");
-      fprintf (stderr, "Usage: test [-seed s] <function> <exp1> <exp2> [N]\n");
+      fprintf (stderr, "Usage: mpcheck [-seed s] N\n");
+      fprintf (stderr, "Usage: mpcheck [-seed s] <function> <exponent> [N]\n");
+      fprintf (stderr, "Usage: mpcheck [-seed s] <function> <exp1> <exp2> [N]\n");
       exit (1);
     }
+
+  fprintf (stderr, "*******************************************************************\n");
+  fprintf (stderr, "*                                                                 *\n");
+  fprintf (stderr, "* MpCheck version 1.0 (c) INRIA 2002 (projects Arenaire & Spaces) *\n");
+  fprintf (stderr, "*                                                                 *\n");
+  fprintf (stderr, "*******************************************************************\n");
+
+  fprintf (stderr, "[precision=%u, seed=%u]\n", FPPREC, seed);
 
   if (argc == 2)
     {
@@ -659,7 +1052,12 @@ main (int argc, char *argv[])
   else
     {
       nargs = 1;
-      if (strcmp (argv[1], "pow") == 0)
+      if (strcmp (argv[1], "pow") == 0 ||
+          strcmp (argv[1], "hypot") == 0 ||
+          strcmp (argv[1], "add") == 0 ||
+          strcmp (argv[1], "sub") == 0 ||
+          strcmp (argv[1], "mul") == 0 ||
+          strcmp (argv[1], "div") == 0)
         {
           nargs = 2;
           exp2  = atoi (argv[3]);
