@@ -1,1 +1,15 @@
-This program tests the accuracy of elementary functions of the libm.
+This program tests the accuracy of elementary functions of
+mathematical libraries.
+
+By default, it tests the standard mathematical library (libm).
+
+Other libraries can be checked:
+
+- with -DMATHLIB, it checks IBM's MathLib (libultim) double-precision
+  library, which only implements rounding to nearest.
+
+- with -DLIBMCR, it checks Sun's libmcr double-precision library,
+  available at <http://www.sun.com/download/products.xml?id=41797765>.
+  Version 0.9 of libmcr implements exp, log, pow, atan, sin, cos, tan,
+  for all four standard rounding modes.
+  Add -I<libmcr>/include to CFLAGS, and <libmcr>/lib/libmcr.a to LDFLAGS.
