@@ -18,3 +18,6 @@
  */
 
 + New and proper way of Interfacing Libraries with MPFR to check them!
++ deactivate directed roundings (some architectures do no support them,
+  cf http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=153022), suggested
+  by V. Lefe`vre
