@@ -495,7 +495,6 @@ fptype my_sqrt (fptype x)
 #endif
 }
 
-/*
 fptype my_cbrt (fptype x)
 {
 #ifdef SUFFIXL
@@ -504,7 +503,6 @@ fptype my_cbrt (fptype x)
   return cbrt (x);
 #endif
 }
-*/
 
 fptype my_pow (fptype x, fptype y)
 {
@@ -748,7 +746,6 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       monoton = INCREASING;
       symm = NO_SYMM;
     }
-/*
   else if (strcmp (foo, "cbrt") == 0)
     {
       testfun_libm = my_cbrt;
@@ -758,7 +755,6 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       monoton = INCREASING;
       symm = ODD;
     }
-*/
   else
     {
       fprintf (stderr, "Unknown function: %s\n", foo);
@@ -1238,26 +1234,18 @@ testall (unsigned long N, unsigned long seed)
   test ("tanh",   0, N, seed);
   test ("tanh",   4, N, seed);
   test ("asinh",  0, N, seed);
-/*
   test ("asinh", EMAX, N, seed);
-*/
   test ("acosh",  1, N, seed);
-/*
   test ("acosh", EMAX, N, seed);
-*/
   test ("atanh",  0, N, seed);
   test ("atanh", -10, N, seed);
   test ("gamma",  0, N, seed);
   test ("gamma",  7, N, seed);
   test ("sqrt",  0, N, seed);
-/*
   test ("sqrt",  EMAX, N, seed);
-*/
-/*
   test ("cbrt",  0, N, seed);
   test ("cbrt",  EMAX, N, seed);
   test ("cbrt",  EMIN, N, seed);
-*/
   test2 ("pow", 0, 0, N, seed);
 #if (FPPREC <= 53)
   test2 ("pow", 8, 7, N, seed);
@@ -1265,10 +1253,8 @@ testall (unsigned long N, unsigned long seed)
   test2 ("pow", 16, 10, N, seed);
 #endif
   test2 ("hypot", 0, 0, N, seed);
-/*
   test2 ("hypot", EMAX-1, EMAX-1, N, seed);
   test2 ("hypot", EMIN, EMIN, N, seed);
-*/
   test2 ("add", 0, 0, N, seed);
   test2 ("add", EMAX-1, EMAX-1, N, seed);
   test2 ("sub", EMAX, EMAX, N, seed);
