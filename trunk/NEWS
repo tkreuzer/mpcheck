@@ -1,3 +1,17 @@
+v2.0.0: Rewrite many things.
+	Complete new and more flexible architecture.
+	Add real support for double, float and long double.
+	Precision of native C types is detected at run time.
+	Auto-detect the available functions at configure time.
+	Check if Rounding mode if available at compile time
+	(detecting if FE_TONEAREST is defined).
+	Check if Rounding mode if available at execution time
+	by detecting if we get at least one bit of precision
+	for exp(5.0).
+	Default is to check all C types (float, double and long double).
+	Needs MPFR 2.2.0 (Previous release have known overflow problems).
+	Auto-restriction to non-overflow interval when checking functions.
+
 V1.1.1: added support for libmcr
 	(http://www.sun.com/download/products.xml?id=41797765)
 

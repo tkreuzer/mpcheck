@@ -1,5 +1,5 @@
 /*
- * MPCHECK - Check double LIBM functions
+ * MPCHECK - Set Machine Rounding Mode
  * Copyright (C) 2002, 2004, 2005 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,18 @@
 /* Functions to set/get the machine rounding mode */
 #if defined (USE_FENV_H)
 # include <fenv.h>
+#ifdef FE_TONEAREST
 # define TONEAREST fesetround(FE_TONEAREST)
+#endif
+#ifdef FE_TOWARDZERO
 # define TOZERO    fesetround(FE_TOWARDZERO)
+#endif
+#ifdef FE_UPWARD
 # define TOINFP    fesetround(FE_UPWARD)
+#endif
+#ifdef FE_DOWNWARD
 # define TOINFM    fesetround(FE_DOWNWARD)
+#endif
 
 #elif defined (USE_SYS_FPU_H)
 # include <sys/fpu.h>
@@ -120,28 +128,48 @@ static char *out;
 #endif
 
 /* sets the machine rounding mode to the value rnd_mode */
-void 
+int 
 set_rnd_mode(mp_rnd_t rnd_mode)
 {
   switch (rnd_mode) {
-  case GMP_RNDN: TONEAREST; break;
-  case GMP_RNDZ: TOZERO; break;
-  case GMP_RNDU: TOINFP; break;
-  case GMP_RNDD: TOINFM; break;
-  default: fprintf(stderr, "invalid rounding mode\n"); exit(1);
+  case GMP_RNDN: 
+#ifdef TONEAREST
+    TONEAREST;
+    return 1;
+#else
+    return 0;
+#endif
+  case GMP_RNDZ: 
+#ifdef TOZERO
+    TOZERO;
+    return 1;
+#else
+    return 0;
+#endif
+  case GMP_RNDU:
+#ifdef TOINFP
+    TOINFP;
+    return 1;
+#else
+    return 0;
+#endif
+  case GMP_RNDD: 
+#ifdef TOINFM
+    TOINFM; 
+    return 1;
+#else
+    return 0;
+#endif
+  default:
+    fprintf(stderr, "invalid rounding mode\n"); 
+    abort ();
   }
+  return 1;
 }
 
 #ifdef WITHIN_CONFIGURE
 int main ()
 {
-  /*  volatile double x, y;
-  x = y = 2.0;
-  set_rnd_mode (GMP_RNDD);
-  x = sqrt (x);
-  set_rnd_mode (GMP_RNDU);
-  y = sqrt (y);
-  return (x == y); */
   set_rnd_mode (GMP_RNDD);
   set_rnd_mode (GMP_RNDU);
   set_rnd_mode (GMP_RNDZ);

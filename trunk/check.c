@@ -17,233 +17,647 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-
-/**************************************************************/
-/*                                                            */
-/*                                                            */
-/*     Testing the accuracy of elementary functions           */
-/*                                                            */
-/*             Projects Arenaire and Spaces                   */
-/*                                                            */
-/**************************************************************/
-
 #include "mpcheck.h"
 
-int    (*set_fp) (mpfr_ptr, fptype, mp_rnd_t) = NULL;
-fptype (*get_fp) (mpfr_srcptr, mp_rnd_t) = NULL;
-void   (*fprint_fp) (FILE *, fptype) = NULL;
+mpfr_t  mpcheck_max_err_dir, mpcheck_max_err_near;
 
-double MAX_ERR_NEAR;
-double MAX_ERR_DIR;
-
-/* Global options */
-int verbose = 3;
-int test_monotonicity = 1;
-int test_range = 1;
-int test_symmetry = 1;
-int test_dir = 1; /* test directed roundings */
-
-#if (FPPREC == 24)
-#define EXPMAX 6
-#define POWMAX1 5
-#define POWMAX2 4
-#else
-#define EXPMAX 9
-#define POWMAX1 8
-#define POWMAX2 7
-#endif
-
-void
-testall (unsigned long N, unsigned long seed)
+static void
+mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
 {
-  test ("exp",    0, 0, N, seed);
-  test ("exp",    EXPMAX, 0, N, seed);
-  test ("log",    0, 0, N, seed);
-  test ("log", EMAX, 0, N, seed);
-  test ("sin",    0, 0, N, seed);
-  test ("sin",   10, 0, N, seed); /* mpfr-2.0.1 is too slow for 1024 */
-  test ("cos",    0, 0, N, seed);
-  test ("cos",   10, 0, N, seed);
-  test ("tan",    0, 0, N, seed);
-  test ("tan",   10, 0, N, seed);
-  test ("atan",   0, 0, N, seed);
-  test ("atan",  53, 0, N, seed); /* why 53 ??? mpfr too slow ? */
-  test ("pow", 0, 0, N, seed);
-#if (FPPREC <= 53)
-  test ("pow", POWMAX1, POWMAX2, N, seed);
-#else
-  test ("pow", 16, 10, N, seed);
-#endif
-#ifndef LIBMCR /* libmcr.0.9 has only exp, log, pow, atan, sin, cos, tan */
-  test ("asin",   0, 0, N, seed);
-  test ("asin", -10, 0, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
-  test ("acos",   0, 0, N, seed);
-  test ("acos", -10, 0, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
-  test ("sqrt",  0, 0, N, seed);
-  test ("sqrt",  EMAX, 0, N, seed);
-  /* seems to loop in prec=64 for exp < -1010 */
-  test ("sqrt",  (EMIN < -1010) ? -1010 : EMIN, 0, N, seed);
-  test ("add", 0, 0, N, seed);
-  test ("add", EMAX-1, EMAX-1, N, seed);
-  test ("sub", EMAX, EMAX, N, seed);
-  test ("sub", 0, 0, N, seed);
-  test ("mul", 0, 0, N, seed);
-  test ("mul", EMAX/2, EMAX/2, N, seed);
-  test ("div", 0, 0, N, seed);
-  test ("div", EMAX, EMAX, N, seed);
-
-#ifndef MATHLIB /* mathlib does not implement those functions */
-  test ("expm1",  0, 0, N, seed);
-  test ("expm1", -EXPMAX, 0, N, seed);
-  test ("log10",  0, 0, N, seed);
-  test ("log10", EMAX, 0, N, seed);
-  test ("log1p",  0, 0, N, seed);
-  test ("log1p", EMAX, 0, N, seed);
-  test ("sinh",   0, 0, N, seed);
-  test ("sinh",   EXPMAX, 0, N, seed);
-  test ("cosh",   0, 0, N, seed);
-  test ("cosh",   EXPMAX, 0, N, seed);
-  test ("tanh",   0, 0, N, seed);
-  test ("tanh",   4, 0, N, seed);
-  test ("asinh",  0, 0, N, seed);
-  test ("asinh", EMAX, 0, N, seed);
-  test ("acosh",  1, 0, N, seed);
-  test ("acosh", EMAX,0, N, seed);
-  test ("atanh",  0, 0, N, seed);
-  test ("atanh", -10, 0, N, seed);
-  test ("cbrt",  0, 0, N, seed);
-  test ("cbrt",  EMAX, 0, N, seed);
-  test ("cbrt",  (EMIN < -1010) ? -1010 : EMIN, 0, N, seed);
-  test ("hypot", 0, 0, N, seed);
-  test ("hypot", EMAX-1, EMAX-1, N, seed);
-  test ("hypot", (EMIN < -1010) ? -1010 : EMIN, (EMIN < -1010) ? -1010 : EMIN,
-	N, seed);
-  test ("gamma",  0, 0, N, seed);
-#if (FPPREC <= 24)
-  test ("gamma",  5, 0, N, seed);
-#elif (FPPREC <= 53)
-  test ("gamma",  7, 0, N, seed);
-#else
-  test ("gamma", 10, 0, N, seed);
-#endif
-#endif /* MATHLIB */
-  test ("exp2",   0, 0, N, seed);
-  test ("exp2",   EXPMAX, 0, N, seed);
-  test ("log2",   0, 0, N, seed);
-  test ("log2", EMAX,0,  N, seed);
-#endif /* LIBMCR */
-
-  printf ("Maximal errors for all functions: %f (nearest), %f (directed)\n",
-          MAX_ERR_NEAR, MAX_ERR_DIR);
+  switch (range)
+    {
+    case RANGE_INF:
+      mpfr_set_inf (dest, 1);
+      break;
+    case RANGE_ZERO:
+      mpfr_set_ui (dest, 0, GMP_RNDU);
+      break;
+    case RANGE_ONE:
+      mpfr_set_ui (dest, 1, GMP_RNDU);
+      break;
+    case RANGE_PI2:
+      mpfr_const_pi (dest, GMP_RNDU);
+      mpfr_div_2ui (dest, dest, 1, GMP_RNDU);
+      break;
+    case -RANGE_INF:
+      mpfr_set_inf (dest, -1);
+      break;
+    case -RANGE_ZERO:
+      mpfr_set_ui (dest, 0, GMP_RNDD);
+      break;
+    case -RANGE_ONE:
+      mpfr_set_si (dest, -1, GMP_RNDD);
+      break;
+    case -RANGE_PI2:
+      mpfr_const_pi (dest, GMP_RNDU);
+      mpfr_div_2ui (dest, dest, 1, GMP_RNDU);
+      mpfr_neg (dest, dest, GMP_RNDD);
+      break;
+    default:
+      fprintf (stderr, "MPCHECK ERROR: Range undefined\n");
+      abort ();
+    }
 }
 
-void 
-usage ()
+static void
+mpcheck_ulp (mpfr_t ulp, mpfr_t library, mpfr_t reference, mp_prec_t prec)
 {
-  fprintf (stderr, "Usage: mpcheck [options]\n");
-  fprintf (stderr, "Usage: mpcheck [options] <function> <exponent>\n");
-  fprintf (stderr, "Usage: mpcheck [options] <function> <exp1> <exp2>\n");
-  fprintf (stderr, "where options are:\n");
-  fprintf (stderr, "-seed s: set random seed to s [default 1]\n");
-  fprintf (stderr, "-verb k: set verbose level to k [default 3]\n");
-  fprintf (stderr, "-range : do not test output range\n");
-  fprintf (stderr, "-mono  : do not test monotonicity\n");
-  fprintf (stderr, "-symm  : do not test symmetry\n");
-  fprintf (stderr, "-dir   : do not test directed rounding\n");
-  fprintf (stderr, "-num  n: N\n");
+  mpfr_sub (ulp, library, reference, GMP_RNDN);
+  if (mpfr_cmp_ui (ulp, 0) == 0)
+    {
+      fprintf (stderr, "MPCHECK ERROR: Ulp couldn't be 0!\n");
+      fprintf (stderr, "LIBRARY="); 
+      mpfr_out_str (stderr, 10, 0, library, GMP_RNDN);
+      fprintf (stderr, "\nREFEREN="); 
+      mpfr_out_str (stderr, 10, 0, reference, GMP_RNDN);
+      fprintf (stderr, "\n");
+      abort ();
+    }
+  if (mpfr_number_p (ulp))
+    mpfr_set_exp (ulp, mpfr_get_exp (ulp) - mpfr_get_exp (reference) + prec);
+}
+
+static void 
+usage (void)
+{
+  fprintf (stderr, 
+	   "Usage: mpcheck [options]\n"
+	   "Usage: mpcheck [options] <function> <exponent>\n"
+	   "Usage: mpcheck [options] <function> <exp1> <exp2>\n"
+	   "where options are:\n"
+	   "--seed=s    : set random seed to s [default 1]\n"
+	   "--verbose=k : set verbose level to k [default 3]\n"
+	   "--range=bool: test output range\n"
+	   "--mono=bool : test monotonicity\n"
+	   "--symm=bool : test symmetry\n"
+	   "--RNDN=bool : test Round To Nearest\n"
+	   "--RNDZ=bool : test Round To Zero\n"
+	   "--RNDD=bool : test Round To -Inf\n"
+	   "--RNDU=bool : test Round To +Inf\n"
+	   "--prec=val  : Set prec\n"
+	   "--num=n     : N\n");
   exit (1);
 }
 
+/* Global variables to avoid passing too much args to functions */
+static mp_prec_t prec;
+static mp_exp_t emin, emax;
+static void *(*new)(mp_prec_t);
+static void (*del)(void *);
+static void (*getfp)(void *, mpfr_srcptr);
+static void (*setfp)(mpfr_ptr, const void *);
+static int (*setrnd) (mp_rnd_t);
+static unsigned long N;
+static unsigned long seed;
+static mpcheck_test_e test;
+static int rnd_mode;
+static int verbose;
 
-int
-main (int argc, char *argv[])
+void
+mpcheck_init (int argc, const char *const argv[], 
+	      mp_prec_t prec2, mp_exp_t emin2, mp_exp_t emax2,
+	      void *(*new2)(mp_prec_t), void (*del2)(void *),
+	      void (*getfp2)(void *, mpfr_srcptr),
+	      void (*setfp2)(mpfr_ptr, const void *),
+	      int (*setrnd2)(mp_rnd_t),
+	      int rnd_mode2, mpcheck_test_e test2, unsigned long seed2,
+	      unsigned long N2, int verbose2)
 {
-  mp_exp_t exponent = 1, exp2 = 1;
-  unsigned long N = 1000, seed = 1;
-  int i, expc = 0;
-  const char *func = NULL;
+  char Buffer[100];
+  char *val;
+  long value;
+  int i;
+  /* Setup default values */
+  new = new2;
+  del = del2;
+  getfp = getfp2;
+  setfp = setfp2;
+  rnd_mode = rnd_mode2;
+  test = test2;
+  seed = seed2;
+  prec = prec2;
+  emin = emin2;
+  emax = emax2;
+  setrnd = setrnd2;
+  N = N2;
+  verbose = verbose2;
 
-  setup ();
-  MAX_ERR_NEAR = 0.0;
-  MAX_ERR_DIR = 0.0;
-
+  /* Read input of programs and update values if needed */
+  /* Options begin with '--' */
   for (i = 1 ; i < argc ; i++)
     {
-      /* options should come before the function name (if any) */
-      if (func == NULL && argv[i][0] == '-')
+      if (argv[i][0] == '-' && argv[i][1] == '-')
 	{
-	  if (strcmp (argv[i], "-mono") == 0)
-	    test_monotonicity = 0;
-	  else if (strcmp (argv[i], "-range") == 0)
-	    test_range = 0;
-	  else if (strcmp (argv[i], "-symm") == 0)
-	    test_symmetry = 0;
-	  else if (strcmp (argv[i], "-dir") == 0)
-	    test_dir = 0;
-	  else if (strcmp (argv[i], "-seed") == 0)
-	    {
-	      seed = atoi (argv[i+1]);
-	      i++;
-	    }
-	  else if (strcmp (argv[i], "-verb") == 0)
-	    {
-	      verbose = atoi (argv[i+1]);
-	      i++;
-	    }
-	  else if (strcmp (argv[i], "-num") == 0)
-	    {
-	      N = atoi (argv[i+1]);
-	      i++;
-	    }
+	  /* Options are --NAME or --NAME=VAL */
+	  strncpy (Buffer, argv[i]+2, 99); Buffer[99] = 0;
+	  val = strchr (Buffer, '=');
+	  if (val != NULL)
+	    *val++ = 0;
+	  value = (val == NULL || *val == 0) ? 0 : atol (val);
+	  /* Deal with them */
+	  if (strcmp (Buffer, "mono") == 0)
+	    if (value == 0) 
+	      test &= ~MPCHECK_TEST_MONOTON;
+	    else
+	      test |= MPCHECK_TEST_MONOTON;
+	  else if (strcmp (Buffer, "range") == 0)
+	    if (value == 0)
+	      test &= ~MPCHECK_TEST_RANGE;
+	    else
+	      test |= MPCHECK_TEST_RANGE;
+	  else if (strcmp (Buffer, "symm") == 0)
+	    if (value == 0)
+	      test &= ~MPCHECK_TEST_SYMM;
+	    else
+	      test |= MPCHECK_TEST_SYMM;
+	  else if (strcmp (Buffer, "RNDN") == 0)
+	    if (value == 0)
+	      rnd_mode &= ~1;
+	    else
+	      rnd_mode |= 1;
+	  else if (strcmp (Buffer, "RNDZ") == 0)
+	    if (value == 0)
+	      rnd_mode &= ~2;
+	    else
+	      rnd_mode |= 2;
+	  else if (strcmp (Buffer, "RNDU") == 0)
+	    if (value == 0)
+	      rnd_mode &= ~4;
+	    else
+	      rnd_mode |= 4;
+	  else if (strcmp (Buffer, "RNDD") == 0)
+	    if (value == 0)
+	      rnd_mode &= ~8;
+	    else
+	      rnd_mode |= 8;
+	  else if (strcmp (Buffer, "seed") == 0)
+	    seed = value;
+	  else if (strcmp (Buffer, "verbose") == 0)
+	    verbose = value;
+	  else if (strcmp (Buffer, "num") == 0)
+	    N = value;
+	  else if (strcmp (Buffer, "prec") == 0)
+	    prec = value;
 	  else
 	    {
 	      fprintf (stderr, "Invalid option: %s\n", argv[i]);
 	      usage ();
 	    }
-
-	}
-      /* warning: negative exponents are possible */
-      else if (isdigit (argv[i][0]) || argv[i][0] == '-')
-	{
-	  if (expc == 0)
-	    exponent = atol (argv[i]);
-	  else if (expc == 1)
-	    exp2 = atol (argv[i]);
-	  else 
-	    usage ();
-	  expc ++;
-	}
-      else
-	{
-	  if (func != NULL)
-	    {
-	      fprintf (stderr, "Error, only one function allowed on command line\n");
-	      usage ();
-	    }
-	  func = argv[i];
 	}
     }
 
-  printf ("************************************************************************\n");
-  printf ("*                                                                      *\n");
-  printf ("* MpCheck version %s (c) INRIA 2002, 2004, 2005 (Arenaire & Spaces) *\n", VERSION);
-  printf ("*                                                                      *\n");
-  printf ("************************************************************************\n");
-
-#ifdef MATHLIB
-  printf ("Testing MathLib ");
-#elif LIBMCR
-  printf ("Testing libmcr ");
-#else
-  printf ("Testing libm ");
-#endif
-
-  printf ("[precision=%u, seed=%lu]\n", FPPREC, seed);
-
-  if (func == NULL)
-    testall (N, seed);
-  else
-    test (func, exponent, exp2, N, seed);
-
-  return 0;
+  /* Init */
+  mpfr_inits2 (prec, mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
+  mpfr_set_ui (mpcheck_max_err_dir, 0, GMP_RNDN);
+  mpfr_set_ui (mpcheck_max_err_near, 0, GMP_RNDN);
+  mpfr_set_emin (emin);
+  mpfr_set_emax (emax);  
 }
+
+void
+mpcheck_clear (FILE *out)
+{
+  fprintf (out, "Max. errors : ");
+  mpfr_out_str (out, 10, 0,  mpcheck_max_err_near, GMP_RNDN);
+  fprintf (out, " (nearest), ");
+  mpfr_out_str (out, 10, 0, mpcheck_max_err_dir, GMP_RNDN);
+  fprintf (out, " (directed)\n");
+ 
+  mpfr_clears (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
+}
+
+void 
+mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
+	const char *const name, 
+	 void (*func) (void*,const void*, const void*))
+{
+  static int print_done = 0;
+  gmp_randstate_t state;
+   mpfr_t op1, op2, result, result_lib, result_more_prec;
+   mpfr_t u, umax, umax_dir, op1max_dir, op2max_dir, max_err_near, max_err_dir;
+   mpfr_t op1max, op2max, range_min, range_max;
+   mpfr_t xdplus, xdminus;
+   void *rop1, *rop2, *rresult;
+   mpcheck_func_t *ref;
+   unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm, tot;
+   mp_rnd_t rnd;
+
+   for (i = 0 ; mpcheck_tab[i].name != NULL ; i++)
+     if (strcmp (mpcheck_tab[i].name, name) == 0)
+       break;
+   if (mpcheck_tab[i].name == NULL)     
+     {
+      fprintf (out, "Unknown function: %s\n", name);
+      return;
+     }
+   ref = &mpcheck_tab[i];
+   
+   if (print_done == 0)
+     print_done = fprintf (out, 
+			   "[precision=%lu, seed=%lu, emin=%ld, emax=%ld]\n", 
+			   (unsigned long) prec, seed,
+			   (long) emin, (long) emax);
+
+   if (e1 == LONG_MAX)     e1 = emax - 1;
+   if (e2 == LONG_MAX)     e2 = emax -1; 
+   if (e1 == LONG_MAX-1)   e1 = emax /2;
+   if (e2 == LONG_MAX-1)   e2 = emax /2;
+   if (e1 == LONG_MAX-2)   e1 = emin;
+   if (e2 == LONG_MAX-2)   e2 = emin;
+
+  mpfr_inits2 (prec, op1, op2, result, result_lib, u, umax, umax_dir, 
+	       max_err_near, max_err_dir, op1max_dir, op2max_dir, 
+	       op1max, op2max, range_min, range_max,
+	       xdplus, xdminus, NULL);
+  mpfr_init2 (result_more_prec, prec+32);
+  gmp_randinit (state, GMP_RAND_ALG_LC, 128);
+  rop1 = (*new) (prec);
+  rop2 = (*new) (prec);
+  rresult = (*new) (prec);
+
+  mpfr_set_ui (max_err_near, 0, GMP_RNDN);
+  mpfr_set_ui (max_err_dir, 0, GMP_RNDN);
+
+  mpcheck_set_range (range_min, ref->min);
+  mpcheck_set_range (range_max, ref->max);
+
+  /* Check if func(e1) doesn't overflow/underflow */
+  for (;;)
+    {
+      /* mpfr_set_ui_2exp (op1, 1, e1, GMP_RNDN);
+      mpfr_sub_ui (op1, op1, 1, GMP_RNDN);
+      mpfr_set_ui_2exp (op2, 1, e2, GMP_RNDN);
+      mpfr_sub_ui (op2, op2, 1, GMP_RNDN); --> Gamma*/
+
+      mpfr_urandomb (op1, state);
+      mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
+      mpfr_urandomb (op2, state);
+      mpfr_mul_2si (op2, op2, e2, GMP_RNDN); 
+      
+      if (ref->NumArg == 2)
+	(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+	   ref->mpfr)) (result, op1, op2, GMP_RNDN);
+      else
+	(*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
+	   ref->mpfr)) (result, op1, GMP_RNDN);
+      if (mpfr_number_p (result))
+	break;
+      if (e1 > 0) e1 --; else e1++;
+      if (e2 > 0) e2 --; else e2++;
+    }
+
+   if (verbose >= 2)
+     {
+       if (ref->NumArg == 1)
+	 fprintf (out, "Testing function %s for exponent %ld.\n", 
+		  name, e1);
+       else
+	 fprintf (out, "Testing function %s for exponents %ld and %ld.\n", 
+		  name, e1, e2);
+     }
+
+  for (rnd = 0 ; rnd < 4; rnd++)
+    {
+      /* Skip rounding mode if not requested */
+      if ((rnd_mode & (1 << rnd)) == 0)
+	continue;
+      if (!(*setrnd) ((mp_rnd_t) rnd))
+	continue;
+
+      if (verbose >= 3)
+	fprintf (out, " rounding mode %s:\n",mpfr_print_rnd_mode (rnd));
+      
+      /* reset the seed to test the same sequence of numbers with each
+         rounding mode */
+      gmp_randseed_ui (state, seed);
+
+      mpfr_set_ui (umax, 0, GMP_RNDN);  /* (signed) maximal error in ulps */
+      mpfr_set_ui (umax_dir, 0, GMP_RNDN); /* maximal error in ulps when 
+					      wrong directed rounding */
+      mpfr_set_ui (op2max, 0, GMP_RNDN);
+      mpfr_set_ui (op2max_dir, 0, GMP_RNDN);
+
+      tot = 0;
+      wrong = 0;         /* number of wrong directed roundings */
+      wrong_range = 0;   /* number of wrong results wrt range        */
+      wrong_monoton = 0; /* number of wrong results wrt monotonicity */
+      wrong_symm = 0;    /* number of wrong results wrt symmetry     */
+
+      for (i = 0; i < N ; i++)
+	{
+	  /* Generate random numbers */
+ 	  mpfr_urandomb (op1, state);
+	  mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
+	  mpfr_urandomb (op2, state);
+	  mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
+	  /* Convert the input to the format used by the library */
+	  (*getfp) (rop1, op1);
+	  (*getfp) (rop2, op2);
+	  /* Compute the result with MPFR and the LIBRARY */
+	  if (ref->NumArg == 2)
+	    {
+	      (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+		 ref->mpfr)) (result, op1, op2, rnd); 
+	      (*func) (rresult, rop1, rop2);
+	    }
+	  else
+	    {
+	      (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
+                 ref->mpfr)) (result, op1, rnd);
+              (*func) (rresult, rop1, rop2);
+	    }
+	  /* Convert back the result to MPFR */
+	  (*setfp) (result_lib, rresult);
+
+	  /* Check for correct rounding */
+	  if (mpfr_cmp (result, result_lib) != 0)
+	    {
+	      /* Recompute MPFR result with more prec */
+	      if (ref->NumArg == 2)
+		(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+		   ref->mpfr)) (result_more_prec, op1, op2, rnd);
+	      else
+		(*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
+                   ref->mpfr)) (result_more_prec, op1, rnd);
+	      /* Compute ULP */
+	      mpcheck_ulp (u, result_lib, result_more_prec, prec);
+	      if (rnd != GMP_RNDN)
+		{
+		  mp_rnd_t rnd2;
+		  
+		  rnd2 = (rnd==GMP_RNDZ) 
+		    ? ((mpfr_sgn (result) > 0 ? GMP_RNDD : GMP_RNDU))
+		    : rnd;
+		  
+		  if ((rnd2 == GMP_RNDU && mpfr_sgn (u) < 0)
+		      || (rnd2 == GMP_RNDD && mpfr_sgn (u) > 0))
+		    {
+		      wrong ++;
+		      if (mpfr_cmpabs (u, umax_dir) > 0)
+			{
+			  mpfr_set (umax_dir, u, GMP_RNDN);
+			  mpfr_set (op1max_dir, op1, GMP_RNDN);
+			  mpfr_set (op2max_dir, op2, GMP_RNDN);
+			}
+		    }
+		}
+	      /* Error ++ */
+	      tot ++;
+	      if (mpfr_cmpabs (u, umax) > 0)
+		{
+		  mpfr_set (umax, u, GMP_RNDN);
+		  mpfr_set (op1max, op1, GMP_RNDN);
+		  mpfr_set (op2max, op2, GMP_RNDN);
+		}
+	    }
+
+	  /* Testing if the range is verified */
+	  if ((test&MPCHECK_TEST_RANGE) != 0)
+	    {
+	      if (mpfr_cmp (result_lib, range_min) < 0
+		  || mpfr_cmp (result_lib, range_max) > 0)
+		{
+		  if (wrong_range == 0 && verbose >= 3)
+		    {
+		      fprintf (out, "      outside range for x=");
+		      mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+		      fprintf (out, "\n           f(x)=");
+		      mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+		      fprintf (out, "\n      not between ");
+		      mpfr_out_str (out, 10, 0, range_min, GMP_RNDN);
+		      fprintf (out, "      and ");
+		      mpfr_out_str (out, 10, 0, range_max, GMP_RNDN);
+		      fprintf (out, " \n");
+		    }
+		  wrong_range++;
+		}
+	    }
+
+	  /* Testing if the monotonicity is verified */
+	  if (ref->NumArg == 1
+	      && (test & MPCHECK_TEST_MONOTON)
+	      && (ref->monoton != NO_MONOTON))
+	    {
+	      mpfr_set (xdminus, op1, GMP_RNDN);
+	      mpfr_nextbelow (xdminus);
+	      (*getfp) (rop1, xdminus);
+	      (*func) (rresult, rop1, rop2);
+	      (*setfp) (xdminus, rresult);
+	      
+	      mpfr_set (xdplus, op1, GMP_RNDN);
+	      mpfr_nextabove (xdplus);
+              (*getfp) (rop1, xdplus);
+              (*func) (rresult, rop1, rop2);
+              (*setfp) (xdplus, rresult);
+
+	      if (ref->monoton == INCREASING)
+		{
+		  if (mpfr_cmp (xdminus, result_lib) > 0)
+		    {
+		      if (wrong_monoton == 0 && verbose >= 3)
+			{
+			  fprintf (out, 
+				   "      monotonicity not respected for x=");
+			  mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+			  fprintf (out, "\n            f(x-)=");
+			  mpfr_out_str (out, 10, 0, xdminus, GMP_RNDN);
+			  fprintf (out, "\n      not <= f(x)=");
+			  mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+			  fprintf (out, " \n");
+			}
+		      wrong_monoton++;
+		    }
+		  if (mpfr_cmp (xdplus, result_lib) < 0)
+		    {
+		      if (wrong_monoton == 0 && verbose >= 3)
+			{
+			  fprintf (out, 
+				   "      monotonicity not respected for x=");
+			  mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+			  fprintf (out, "\n              f(x)=");
+			  mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+			  fprintf (out, "\n      not <= f(x+)=");
+			  mpfr_out_str (out, 10, 0, xdplus, GMP_RNDN);
+			  fprintf (out, " \n");
+			}
+		      wrong_monoton++;
+		    }
+		}
+	      else  /* monoton == DECREASING */
+		{
+		  if (mpfr_cmp (xdminus, result_lib) < 0)
+		    {
+		      if (wrong_monoton == 0 && verbose >= 3)
+			{
+			  fprintf (out,
+				   "      monotonicity not respected for x=");
+			  mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+			  fprintf (out, "\n            f(x-)=");
+			  mpfr_out_str (out, 10, 0, xdminus, GMP_RNDN);
+			  fprintf (out, "\n      not >= f(x)=");
+                          mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+			  fprintf (out, " \n");
+			}
+		      wrong_monoton++;
+		    }
+		  if (mpfr_cmp (xdplus, result_lib) > 0)
+		    {
+		      if (wrong_monoton == 0 && verbose >= 3)
+			{
+			  fprintf (out, 
+				   "      monotonicity not respected for x=");
+                          mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+			  fprintf (out, "\n              f(x)=");
+                          mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+			  fprintf (out, "\n      not >= f(x+)=");
+                          mpfr_out_str (out, 10, 0, xdplus, GMP_RNDN);
+			  fprintf (out, " \n");
+			}
+		      wrong_monoton++;
+		    }
+		}
+	    }
+	  
+	  /* Testing if the symmetry is verified */
+	  if (ref->NumArg == 1 && rnd == GMP_RNDN
+              && (test & MPCHECK_TEST_SYMM)!=0 && (ref->symm != NO_SYMM))
+	    {
+	      mpfr_neg (xdminus, op1, GMP_RNDN);
+              (*getfp) (rop1, xdminus);
+              (*func) (rresult, rop1, rop2);
+              (*setfp) (xdminus, rresult);
+
+	      if (ref->symm == ODD)
+		{
+		  if (mpfr_cmp3 (xdminus, result_lib, -1) != 0)
+		    {
+		      if (wrong_symm == 0 && verbose >= 3)
+			{
+			  fprintf (out, "      symmetry not respected for x=");
+                          mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+			  fprintf (out, "\n           f(x)= ");
+			  mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+			  fprintf (out, "\n      and f(-x)=");
+			  mpfr_out_str (out, 10, 0, xdminus, GMP_RNDN);
+			  fprintf (out, " \n");
+			}
+		      wrong_symm++;
+		    }
+		}
+	      else /* symm == EVEN */
+		{ 
+		  if (mpfr_cmp (result_lib, xdminus) != 0) 
+		    {
+		      if (wrong_symm == 0 && verbose >= 3) 
+			{
+			  fprintf (out, "      symmetry not respected for x=");
+			  mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+			  fprintf (out, "\n           f(x)=");
+                          mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+			  fprintf (out, "\n      and f(-x)=");
+                          mpfr_out_str (out, 10, 0, xdminus, GMP_RNDN);
+			  fprintf (out, " \n");
+			}
+		      wrong_symm++;
+		    }
+		}
+	    }
+	} /* for i to N */
+      
+      /* if any difference occured, prints the maximal ulp error */
+      if (mpfr_cmp_ui (umax, 0) != 0.0 && verbose >= 3)
+	{
+	  fprintf (out, "      ");
+	  mpfr_out_str (out, 10, 0, umax, GMP_RNDN);
+	  fprintf (out, " ulp(s) for x=");
+	  mpfr_out_str (out, 10, 0, op1max, GMP_RNDN);
+	  if (ref->NumArg == 2)
+	    {  
+	      fprintf (out, " t=");
+	      mpfr_out_str (out, 10, 0, op2max, GMP_RNDN);
+	    }
+	  fprintf (out, "\n");
+	}
+      
+      if (wrong != 0 && verbose >= 3)
+	{
+	  fprintf (out, "      wrong directed rounding for x=");
+	  mpfr_out_str (out, 10, 0, op1max_dir, GMP_RNDN);
+	  if (ref->NumArg == 2)
+	    {
+	      fprintf (out, " t=");
+	      mpfr_out_str (out, 10, 0, op2max_dir, GMP_RNDN);
+	    }
+	  fprintf (out, " [");
+	  mpfr_out_str (out, 10, 0, umax_dir, GMP_RNDN);
+	  fprintf (out, "]\n");
+	}
+      
+      mpfr_abs (umax, umax, GMP_RNDN);
+      
+      if (verbose >= 3 && ref->NumArg == 1)
+	{
+	  if (rnd == GMP_RNDN)
+	    fprintf(out, 
+		    "   nb errors range/monotonicity/symmetry: %lu/%lu/%lu\n", 
+		    wrong_range, wrong_monoton, wrong_symm);
+	  else
+	    fprintf(out, 
+		    "   nb errors range/monotonicity: %lu/%lu\n", 
+		    wrong_range, wrong_monoton);
+	}
+      if (verbose >= 3)
+	{
+	  fprintf (out, 
+		   "   nb errors/wrong directed/max ulp diff: %lu/%lu/", 
+		   tot, wrong);
+	  mpfr_out_str (out, 10, 0, umax, GMP_RNDN);
+	  fprintf (out, "\n");
+	}
+
+      if (rnd == GMP_RNDN)
+	{
+	  if (mpfr_cmp (umax, max_err_near) > 0)
+	    mpfr_set (max_err_near, umax, GMP_RNDN);
+	}
+      else
+	{
+	  if (mpfr_cmp (umax, max_err_dir) > 0)
+            mpfr_set (max_err_dir, umax, GMP_RNDN);
+	}
+      fflush (out);
+    } /* For each rnd */
+  
+  fprintf (out, "Max. errors for %s [exp. %ld]: ", name, e1);
+  mpfr_out_str (out, 10, 0, max_err_near, GMP_RNDN);
+  fprintf (out, " (nearest), ");
+  mpfr_out_str (out, 10, 0, max_err_dir, GMP_RNDN);
+  fprintf (out, " (directed)\n");
+  if (verbose >= 3)
+    fprintf (out, "\n");
+  
+  if (mpfr_cmp (max_err_near, mpcheck_max_err_near) > 0)
+    mpfr_set (mpcheck_max_err_near, max_err_near, GMP_RNDN);
+  
+  if (mpfr_cmp (max_err_dir, mpcheck_max_err_dir) > 0)
+    mpfr_set (mpcheck_max_err_dir, max_err_dir, GMP_RNDN);
+  
+  (*del) (rop1);
+  (*del) (rop2);
+  (*del) (rresult);
+  gmp_randclear (state);
+  mpfr_clears (op1, op2, result, result_lib, u, umax, umax_dir,
+               max_err_near, max_err_dir, result_more_prec, 
+	       op1max_dir, op2max_dir, op1max, op2max, range_min, 
+	       range_max, xdplus, xdminus, NULL);
+  (*setrnd) (GMP_RNDN);
+}
+
+void 
+mpcheck_check (FILE *out, mpcheck_user_func_t *tab)
+{
+  int i;
+  for (i = 0 ; tab[i].name != NULL ; i++)
+    mpcheck (out, tab[i].e1, tab[i].e2, tab[i].name, tab[i].func);
+}
+ 
