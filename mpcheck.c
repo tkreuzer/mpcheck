@@ -716,7 +716,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
     {
       testfun_libm = my_acosh;
       testfun_mpfr = mpfr_acosh;
-      range_min = 1.0;
+      range_min = 0.0;
       range_max = 1.0/0.0;
       monoton = INCREASING;
       symm = NO_SYMM;
