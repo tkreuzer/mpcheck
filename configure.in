@@ -12,6 +12,8 @@ AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=DIR  MPFR include directory ], 
 AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=DIR      MPFR lib directory ], with_mpfr_lib=$withval)
 AC_ARG_WITH(mpfr, [  --with-mpfr=DIR          MPFR install directory ], with_mpfr_include=$withval/include with_mpfr_lib=$withval/lib)
 
+AC_ARG_WITH(prec, [  --with-prec=PREC Precision to check (24, 53, 64 or 113)], AC_DEFINE_UNQUOTED([FPPREC], $withval))
+
 test_CFLAGS=${CFLAGS+set}
 
 dnl Checks for programs.
@@ -80,7 +82,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 # error "min: MPFR 2.0.2"
 #endif
 ]], [[]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
-     AC_MSG_ERROR([MPFR >= 2.0.2 required])
+     AC_MSG_ERROR([MPFR >= 2.0.3 required])
 ])
 
 dnl Update Libraries directory
