@@ -1,1 +1,6 @@
+Classic way of installing:
 
+	./configure
+	make
+	make check
+	make install
