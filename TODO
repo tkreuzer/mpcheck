@@ -17,19 +17,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-+ New and proper way of Interfacing Libraries with MPFR to check them!
 + add erf
-+ investigate why tests with exponent < -1010 seem to loop to sqrt, cbrt, hypot
-	with prec=64 (Athlon/Linux)
-+ [from V. Lefe`vre] the ISO C standard says that each of FE_DOWNWARD,
-	FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD is defined if and only if the
-	implementation supports getting and setting the represented rounding
-	direction by means of the fegetround and fesetround functions.
-	(for example on arm, only FE_TONEAREST is defined, so the configure
-	fails)
 + [from V. Lefe`vre] test the default mode (in particular the precision)
   like in http://www.vinc17.org/software/tst-ieee754.c
 + [from V. Lefe`vre] check special values too (NaN, inf, ...)
-+ [from V. Lefe`vre] allow 'd' for double instead of 53, 'f' for float,
-	'l' for long double
++ Readd support for LIBMCR, Mathlib.
++ Add support for CRLIBM
++ Add support for Multi-precision libraries
 

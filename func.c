@@ -17,90 +17,45 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-
-/**************************************************************/
-/*                                                            */
-/*                                                            */
-/*     Testing the accuracy of elementary functions           */
-/*                                                            */
-/*             Projects Arenaire and Spaces                   */
-/*                                                            */
-/**************************************************************/
-
 #include "mpcheck.h"
 
-fptype libmname(add) (fptype x, fptype y)
-{
-  return x + y;
-}
+mpcheck_func_t  mpcheck_tab[] = {
+  {"add", mpfr_add, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
+  {"sub", mpfr_sub, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
+  {"mul", mpfr_mul, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
+  {"div", mpfr_div, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
 
-fptype libmname(sub) (fptype x, fptype y)
-{
-  return x - y;
-}
+  {"sqrt", mpfr_sqrt, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
+  {"exp", mpfr_exp, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
+  {"log", mpfr_log, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM},
 
-fptype libmname(mul) (fptype x, fptype y)
-{
-  return x * y;
-}
+  {"sin", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD},
+  {"cos", mpfr_cos, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, EVEN},
+  {"tan", mpfr_tan, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD},
+  {"asin", mpfr_asin, 1, -RANGE_PI2, RANGE_PI2, INCREASING, ODD},
+  {"acos", mpfr_acos, 1, -RANGE_ZERO, RANGE_PI2, DECREASING, NO_SYMM},
+  {"atan", mpfr_atan, 1, -RANGE_PI2, RANGE_PI2, INCREASING, ODD},
 
-fptype my_div (fptype x, fptype y)
-{
-  return x / y;
-}
+  {"sinh", mpfr_sinh, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
+  {"cosh", mpfr_cosh, 1, RANGE_ONE, RANGE_INF, NO_MONOTON, EVEN},
+  {"tanh", mpfr_tanh, 1, -RANGE_ONE, RANGE_ONE, INCREASING, ODD},
+  {"asinh", mpfr_asinh, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
+  {"acosh", mpfr_acosh, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
+  {"atanh", mpfr_atanh, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
+ 
+  {"exp2", mpfr_exp2, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
+  {"log2", mpfr_log2, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM},
+  {"expm1", mpfr_expm1, 1, -RANGE_ONE, RANGE_INF, INCREASING, NO_SYMM},
+  {"log10", mpfr_log10, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM},
+  {"log1p", mpfr_log1p, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM},
 
-#ifndef LIBMCR
-#ifdef HAVE_TGAMMA
-fptype my_gamma (fptype x)
-{
-  return libmname(tgamma)(x);
-}
-#endif
-#endif
+  {"gamma", mpfr_gamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
+  {"cbrt", mpfr_cbrt, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
 
-/* Tiny macro */
-#define func(name) #name, (fptype (*)()) libmname(name), mpfr_ ## name
-
-mpcheck_func_t  FuncTab[] = {
-  {1, func(exp), 0.0, 1.0/0.0, INCREASING, NO_SYMM},
-  {1, func(log), -1.0/0.0, 1.0/0.0, INCREASING, NO_SYMM},
-  {1, func(sin), -1.0, 1.0, NO_MONOTON, ODD},
-  {1, func(cos), -1.0, 1.0, NO_MONOTON, EVEN},
-  {1, func(tan), -1.0/0.0, 1.0/0.0, NO_MONOTON, ODD},
-  {1, func(atan), -PiRoundedUp/2.0, PiRoundedUp/2.0, INCREASING, ODD},
-  {2, func(pow), -1.0/0.0, 1.0/0.0, NO_MONOTON, NO_SYMM},
-#ifndef LIBMCR
-#ifdef HAVE_EXP2
-  {1, func(exp2), 0.0, 1.0/0.0, INCREASING, NO_SYMM},
-#endif
-#ifdef HAVE_LOG2
-  {1, func(log2), -1.0/0.0, 1.0/0.0, INCREASING, NO_SYMM},
-#endif
-  {1, func(asin), -PiRoundedUp/2.0, PiRoundedUp/2.0, INCREASING, ODD},
-  {1, func(acos), 0.0, PiRoundedUp, DECREASING, NO_SYMM},
-  {1, func(sqrt), 0.0, 1.0/0.0, INCREASING, NO_SYMM},
-  {2, func(add), -1.0/0.0, 1.0/0.0, NO_MONOTON, NO_SYMM},
-  {2, func(sub), -1.0/0.0, 1.0/0.0, NO_MONOTON, NO_SYMM},
-  {2, func(mul), -1.0/0.0, 1.0/0.0, NO_MONOTON, NO_SYMM},
-  {2, "div",  (fptype (*)()) my_div, mpfr_div, -1.0/0.0, 1.0/0.0, NO_MONOTON, NO_SYMM},
-#ifndef MATHLIB
-  {1, func(expm1), -1.0, 1.0/0.0, INCREASING, NO_SYMM},
-  {1, func(log10), -1.0/0.0, 1.0/0.0, INCREASING, NO_SYMM},
-  {1, func(log1p), -1.0/0.0, 1.0/0.0, INCREASING, NO_SYMM},
-  {1, func(sinh), -1.0/0.0, 1.0/0.0, INCREASING, ODD},
-  {1, func(cosh), 1.0, 1.0/0.0, NO_MONOTON, EVEN},
-  {1, func(tanh), -1.0, 1.0, INCREASING, ODD},
-  {1, func(asinh), -1.0/0.0, 1.0/0.0, INCREASING, ODD},
-  {1, func(acosh), 0.0, 1.0/0.0, INCREASING, NO_SYMM},
-  {1, func(atanh), -1.0/0.0, 1.0/0.0, INCREASING, ODD},
-#ifdef HAVE_TGAMMA
-  {1, "gamma", (fptype (*)()) my_gamma, mpfr_gamma, -1.0/0.0, 1.0/0.0, NO_MONOTON, NO_SYMM},
-#endif
-  {1, func(cbrt), -1.0/0.0, 1.0/0.0, INCREASING, ODD},
-  {2, func(hypot), -1.0/0.0, 1.0/0.0, NO_MONOTON, NO_SYMM}
-#endif /* MATHLIB */
-#endif /* LIBMCR */
+  {"hypot", mpfr_hypot, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
+  {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
+  {NULL, NULL, 0, 0, 0, 0, 0}
 };
 
-int FuncTabNum = numberof (FuncTab);
+
 

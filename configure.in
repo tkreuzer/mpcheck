@@ -30,10 +30,6 @@ AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=DIR  MPFR include directory ], 
 AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=DIR      MPFR lib directory ], with_mpfr_lib=$withval)
 AC_ARG_WITH(mpfr, [  --with-mpfr=DIR          MPFR install directory ], with_mpfr_include=$withval/include with_mpfr_lib=$withval/lib)
 
-AC_ARG_WITH(prec, [  --with-prec=PREC Precision to check (24, 53, 64 or 113)], AC_DEFINE_UNQUOTED([FPPREC], $withval))
-
-test_CFLAGS=${CFLAGS+set}
-
 dnl Checks for programs.
 AC_PROG_CC
 AC_CANONICAL_HOST
@@ -44,12 +40,18 @@ AC_C_VOLATILE
 
 dnl Well, we don't need all the MPFR tests, but it is easier.
 MPFR_CONFIGS
-AC_CHECK_HEADERS([float.h math.h stdio.h])
+AC_CHECK_HEADERS([float.h math.h stdio.h stdlib.h limits.h])
 
 dnl If compiler is gcc, then use some specific flags.
 dnl But don't touch user specified flags.
 if test -n "$GCC"; then
   CFLAGS="-Wall $CFLAGS"
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if __GNUC__ < 3
+# error "GCC too old!"
+#endif
+]], [[]])],[CFLAGS="-std=c99 $CFLAGS"])
+
 fi
 dnl If it an alphaev6 add specific flags, otherwise it won't work
 case $host in
@@ -96,11 +98,14 @@ AC_MSG_CHECKING(for recent MPFR)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include "gmp.h"
 #include "mpfr.h"
-#ifndef mpfr_round_prec
-# error "min: MPFR 2.0.2"
+#ifndef MPFR_VERSION
+# error "min: MPFR 2.2.0"
+#endif
+#if MPFR_VERSION < MPFR_VERSION_NUM (2,2,0)
+# error "min: MPFR 2.2.0"
 #endif
 ]], [[]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
-     AC_MSG_ERROR([MPFR >= 2.0.3 required])
+     AC_MSG_ERROR([MPFR >= 2.2.0 required])
 ])
 
 dnl Update Libraries directory
@@ -109,9 +114,20 @@ AC_MY_LIBS($with_gmp_lib, gmp)
 AC_MY_LIBS($with_mpfr_lib, mpfr)
 
 dnl Must be checked after including the libm
-AC_CHECK_FUNCS([tgamma])
-AC_CHECK_FUNCS([exp2])
-AC_CHECK_FUNCS([log2])
+AC_CHECK_FUNCS([exp exp2 exp10 expm1])
+AC_CHECK_FUNCS([sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh])
+AC_CHECK_FUNCS([log log2 log10 log1p])
+AC_CHECK_FUNCS([tgamma sqrt pow cbrt])
+
+AC_CHECK_FUNCS([expf exp2f exp10f expm1f])
+AC_CHECK_FUNCS([sinf cosf tanf asinf acosf atanf sinhf coshf tanhf asinhf acoshf atanhf])
+AC_CHECK_FUNCS([logf log2f log10f log1pf])
+AC_CHECK_FUNCS([tgammaf sqrtf powf cbrtf])
+
+AC_CHECK_FUNCS([expl exp2l exp10l expm1l])
+AC_CHECK_FUNCS([sinl cosl tanl asinl acosl atanl sinhl coshl tanhl asinhl acoshl atanhl])
+AC_CHECK_FUNCS([logl log2l log10l log1pl])
+AC_CHECK_FUNCS([tgammal sqrtl powl cbrtl])
 
 dnl Check for How to set the rounding mode
 AC_MSG_CHECKING(for how to select rounding mode)

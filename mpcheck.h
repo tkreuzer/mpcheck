@@ -20,138 +20,45 @@
 #ifndef __MPCHECK__
 #define __MPCHECK__
 
-/* Define Precision to check */
-#ifndef FPPREC
-# define FPPREC 53
-#endif
-
-/* define MATHLIB to check library mathlib */
-/* #define MATHLIB */
-
-#if (FPPREC==113 && defined(__ia64))
-#define __LONG_DOUBLE_MATH
-#endif
-
-/* Check MATHLIB */
-#ifdef MATHLIB
-# if (FPPREC != 53)
-# error "MathLib only works for double precision"
-# endif 
-#endif 
-
-/* Define libmname */
-#ifdef MATHLIB
-# define libmname(fct)  u ## fct
-#elif LIBMCR
-# define libmname(fct)  __libmcr_ ## fct
-#elif (FPPREC==113 && defined(__ia64))
-# define libmname(fct)  fct ## l
-#elif (FPPREC==24)
-# define libmname(fct)  fct ## f
-#elif (FPPREC==64)
-# define libmname(fct)  fct ## l
-#else
-# define libmname(fct)  fct
-#endif
-
-/* Define internal type to use */
-#if (FPPREC == 24)
-# define fptype float
-# define EMIN -125
-# define EMAX 128
-# define PiRoundedUp 3.141592741
-#elif (FPPREC == 53)
-# define fptype double
-# define EMIN -1021
-# define EMAX 1024
-# define PiRoundedUp 3.1415926535897935601
-#elif (FPPREC == 64)
-# if defined(__ia64)
-#  define fptype extended
-#  define _FPWIDETYPES /* for HP-UX */
-# else
-#  define fptype long double
-# endif
-# define EMIN -16381
-# define EMAX 16384
-# define PiRoundedUp 3.141592653589793238462643
-#elif (FPPREC == 113)
-# if defined(__ia64)
-#  define _FPWIDETYPES /* for HP-UX */
-#  define fptype long double
-# else
-#  define fptype quad
-# endif
-# define EMIN -16381
-# define EMAX 16384
-# define PiRoundedUp 3.141592653589793238462643383279502884197
-#else
-# error "FPPREC not yet implemented"
-#endif
-
 #include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "gmp.h"
 #include "mpfr.h"
 
-#ifdef MATHLIB
-#include "MathLib.h"
-#elif LIBMCR
-#include "libmcr.h"
+#if defined (__cplusplus)
+extern "C" {
 #endif
 
-#if defined(HAVE_TGAMMA) && !defined(tgamma)
-fptype libmname(tgamma) (fptype);
-#endif
-#if defined(HAVE_LOG2) && !defined(log2)
-fptype libmname(log2) (fptype);
-#endif
-#if defined(HAVE_EXP2) && !defined(exp2)
-fptype libmname(exp2) (fptype);
-#endif
+  typedef enum {
+    MPCHECK_TEST_RANGE=1, MPCHECK_TEST_MONOTON=2, MPCHECK_TEST_SYMM=4
+  } mpcheck_test_e;
+  
+  typedef enum {
+    RANGE_INF=1, RANGE_ZERO, RANGE_ONE, RANGE_PI2
+  } mpcheck_range_e;
+  
+  typedef struct {
+    const char *const name;      /* Name of the function */
+    int        (*mpfr)();        /* MPFR function */
+    int         NumArg;          /* # of args */
+    mpcheck_range_e min, max;    /* Range */
+    int monoton;
+    int  symm;
+  } mpcheck_func_t;
+  
+  typedef struct {
+    const char *const name;
+    void (*func) (void*,const void*, const void*);
+    mp_exp_t e1, e2;
+  } mpcheck_user_func_t;
 
-/* stolen from mpfr-impl.h (Ugly) */
-#ifndef MPFR_EXP
-# define MPFR_EXP(x) ((x)->_mpfr_exp)
-#endif
-
-/* MATHLIB only implements rounding to nearest */
-#ifdef MATHLIB
-# define MAX_RND 1
-#else
-# define MAX_RND 4
-#endif
-
-extern void test (const char *, mp_exp_t, mp_exp_t, unsigned long, unsigned long);
-extern double ulp (fptype y, mpfr_ptr z);
-extern void testall (unsigned long, unsigned long);
-extern void setup (void);
-extern void set_rnd_mode (mp_rnd_t r);
-
-extern int (*set_fp) (mpfr_ptr, fptype, mp_rnd_t);
-extern fptype (*get_fp) (mpfr_srcptr, mp_rnd_t);
-extern void (*fprint_fp) (FILE *, fptype);
-extern double MAX_ERR_NEAR;
-extern double MAX_ERR_DIR;
-extern int verbose ;
-extern int test_monotonicity, test_range, test_symmetry, test_dir;
-
-#define print_fp(x) (*fprint_fp)(stdout, x)
-
-typedef struct {
-  int         NumArg;      /* # of args */
-  const char *name;        /* Name of the function */
-  fptype     (*libm)();    /* Function to check */
-  int        (*mpfr)();    /* Equivalent MPFR function */
-  fptype      min, max;    /* Range */
-  int         monoton;     /* Monotonicity property */
-  int         symm;        /* symmetry property */
-} mpcheck_func_t;
+  extern mpcheck_func_t mpcheck_tab[];
 
 /* useful for testing monotonicity and symmetry */
 #define NO_MONOTON 0
@@ -162,13 +69,27 @@ typedef struct {
 #define ODD 3
 #define EVEN 4
 
-#define numberof(x) (sizeof(x)/sizeof(x[0]))
+#define ALL_RND  15
+#define ALL_TEST 7
 
-extern mpcheck_func_t  FuncTab[];
-extern int FuncTabNum;
+  void mpcheck_init (int argc, const char *const argv[], 
+		     mp_prec_t prec2, mp_exp_t emin2, mp_exp_t emax2,
+		     void *(*new2)(mp_prec_t), void (*del2)(void *),
+		     void (*getfp2)(void *, mpfr_srcptr),
+		     void (*setfp2)(mpfr_ptr, const void *),
+		     int (*setrnd)(mp_rnd_t),
+		     int rnd_mode2, mpcheck_test_e test2, unsigned long seed2,
+		     unsigned long N2, int verbose2);
+  void mpcheck_clear (FILE *out);
+  
+  void mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
+		const char *const name, 
+		void (*func) (void*,const void*, const void*));
+  void mpcheck_check (FILE *out, mpcheck_user_func_t *tab);
 
 
-/* Log level */
-#define LOG(v, code) ( verbose >= (v) ? (void) (code) : (void) 0)
+#if defined (__cplusplus)
+}
+#endif
 
 #endif 
