@@ -29,17 +29,17 @@
 
 #include "mpcheck.h"
 
-fptype add (fptype x, fptype y)
+fptype libmname(add) (fptype x, fptype y)
 {
   return x + y;
 }
 
-fptype sub (fptype x, fptype y)
+fptype libmname(sub) (fptype x, fptype y)
 {
   return x - y;
 }
 
-fptype mul (fptype x, fptype y)
+fptype libmname(mul) (fptype x, fptype y)
 {
   return x * y;
 }

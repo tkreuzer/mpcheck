@@ -42,11 +42,21 @@ int test_monotonicity = 1;
 int test_range = 1;
 int test_symmetry = 1;
 
+#if (FPPREC == 24)
+#define EXPMAX 6
+#define POWMAX1 5
+#define POWMAX2 4
+#else
+#define EXPMAX 9
+#define POWMAX1 8
+#define POWMAX2 7
+#endif
+
 void
 testall (unsigned long N, unsigned long seed)
 {
   test ("exp",    0, 0, N, seed);
-  test ("exp",    9, 0, N, seed);
+  test ("exp",    EXPMAX, 0, N, seed);
   test ("log",    0, 0, N, seed);
   test ("log", EMAX, 0, N, seed);
   test ("sin",    0, 0, N, seed);
@@ -66,7 +76,7 @@ testall (unsigned long N, unsigned long seed)
   test ("sqrt",  EMIN, 0, N, seed);
   test ("pow", 0, 0, N, seed);
 #if (FPPREC <= 53)
-  test ("pow", 8, 7, N, seed);
+  test ("pow", POWMAX1, POWMAX2, N, seed);
 #else
   test ("pow", 16, 10, N, seed);
 #endif
@@ -81,15 +91,15 @@ testall (unsigned long N, unsigned long seed)
 
 #ifndef MATHLIB /* mathlib does not implement those functions */
   test ("expm1",  0, 0, N, seed);
-  test ("expm1", -9, 0, N, seed);
+  test ("expm1", -EXPMAX, 0, N, seed);
   test ("log10",  0, 0, N, seed);
   test ("log10", EMAX, 0, N, seed);
   test ("log1p",  0, 0, N, seed);
   test ("log1p", EMAX, 0, N, seed);
   test ("sinh",   0, 0, N, seed);
-  test ("sinh",   9, 0, N, seed);
+  test ("sinh",   EXPMAX, 0, N, seed);
   test ("cosh",   0, 0, N, seed);
-  test ("cosh",   9, 0, N, seed);
+  test ("cosh",   EXPMAX, 0, N, seed);
   test ("tanh",   0, 0, N, seed);
   test ("tanh",   4, 0, N, seed);
   test ("asinh",  0, 0, N, seed);
@@ -106,14 +116,16 @@ testall (unsigned long N, unsigned long seed)
   test ("hypot", EMAX-1, EMAX-1, N, seed);
   test ("hypot", EMIN, EMIN, N, seed);
   test ("gamma",  0, 0, N, seed);
-#if (FPPREC <= 53)
+#if (FPPREC <= 24)
+  test ("gamma",  5, 0, N, seed);
+#elif (FPPREC <= 53)
   test ("gamma",  7, 0, N, seed);
 #else
   test ("gamma", 10, 0, N, seed);
 #endif
 #endif
   test ("exp2",   0, 0, N, seed);
-  test ("exp2",   9, 0, N, seed);
+  test ("exp2",   EXPMAX, 0, N, seed);
   test ("log2",   0, 0, N, seed);
   test ("log2", EMAX,0,  N, seed);
 

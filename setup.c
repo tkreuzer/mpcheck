@@ -53,7 +53,7 @@ void
 fprint_ld (FILE *stream, fptype x)
 {
 #if (FPPREC <= 64)
-  fprintf (stream, "%1.24Le", x);
+  fprintf (stream, "%1.24Le", (long double) x);
 #else
   fprintf (stream, "%1.38Le", x);
 #endif
