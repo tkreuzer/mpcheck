@@ -320,6 +320,12 @@ static void my_pow (void *dest, const void *a, const void *b)
   *(fptype*) dest = NAME(pow) (*(fptype*)a, *(fptype*)b);
 }
 #endif
+#if HAVE_ERF
+static void my_erf (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(erf) (*(fptype*)a);
+}
+#endif
 
 static mpcheck_user_func_t tab[] = {
   {"add", my_add, 0, 0},
@@ -429,7 +435,10 @@ static mpcheck_user_func_t tab[] = {
   {"pow", my_pow, 0, 0},
   {"pow", my_pow, 5, 4},
   /* {"pow", my_pow, 16, 10},  old snapshot of MPFR 2.2.0 are even too buggy*/
-
+#endif
+#if HAVE_ERF
+  {"erf", my_erf, 0, 0},
+  {"erf", my_erf, 9, 0},
 #endif
   {NULL, NULL, 0, 0}
 };

@@ -70,6 +70,10 @@
 #define HAVE_POW HAVE_POWF
 #undef HAVE_CBRT
 #define HAVE_CBRT HAVE_CBRTF
+#undef HAVE_ERF
+#define HAVE_ERF HAVE_ERFF
+#undef HAVE_ERFC
+#define HAVE_ERFC HAVE_ERFCF
 
 static void set_fp (mpfr_ptr dest, const void *fp)
 {

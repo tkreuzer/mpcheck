@@ -51,6 +51,7 @@ mpcheck_func_t  mpcheck_tab[] = {
 
   {"gamma", mpfr_gamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
   {"cbrt", mpfr_cbrt, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
+  {"erf", mpfr_erf, 1, -RANGE_ONE, RANGE_ONE, INCREASING, ODD},
 
   {"hypot", mpfr_hypot, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
   {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
