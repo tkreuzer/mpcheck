@@ -30,9 +30,6 @@ AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=DIR MPFR include directory ], w
 AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=DIR     MPFR lib directory ], with_mpfr_lib=$withval)
 AC_ARG_WITH(mpfr, [  --with-mpfr=DIR         MPFR install directory ], with_mpfr_include=$withval/include with_mpfr_lib=$withval/lib)
 
-dnl AC_ARG_WITH(include, [  --with-include=DIR      DIR to add to CPPFLAGS], CPPFLAGS="$CPPFLAGS -I$withval")
-dnl AC_ARG_WITH(lib, [  --with-lib=DIR          DIR to add to LDFLAGS], LDFLAGS="$LFFLAGS -L$withval")
-
 dnl Checks for programs.
 AC_PROG_CC
 AC_CANONICAL_HOST
@@ -115,6 +112,22 @@ dnl Update Libraries directory
 AC_CHECK_LIB(m, main, , AC_MSG_ERROR(libm not found))
 AC_MY_LIBS($with_gmp_lib, gmp)
 AC_MY_LIBS($with_mpfr_lib, mpfr)
+
+dnl Check for CRLIBM
+AC_MSG_CHECKING(for CRLIBM)
+old_LIBS=$LIBS
+LIBS="-lcrlibm $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include "crlibm.h"
+]], [[
+ exp_rn (2.0)
+]])],[
+ AC_DEFINE([HAVE_CRLIBM], 1, [CRLIBM was here and could be used])
+ AC_MSG_RESULT(yes)
+],[
+ LIBS=$old_LIBS
+ AC_MSG_RESULT(no)
+])
 
 dnl Must be checked after including the libm
 AC_CHECK_FUNCS([exp exp2 exp10 expm1])

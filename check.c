@@ -20,6 +20,7 @@
 #include "mpcheck.h"
 
 mpfr_t  mpcheck_max_err_dir, mpcheck_max_err_near;
+mp_rnd_t mpcheck_rnd_mode;
 
 static void
 mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
@@ -323,6 +324,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	continue;
       if (!(*setrnd) ((mp_rnd_t) rnd))
 	continue;
+      mpcheck_rnd_mode = rnd;
 
       if (verbose >= 3)
 	fprintf (out, " rounding mode %s:\n",mpfr_print_rnd_mode (rnd));
