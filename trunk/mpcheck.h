@@ -40,7 +40,7 @@ extern "C" {
   } mpcheck_test_e;
   
   typedef enum {
-    RANGE_INF=1, RANGE_ZERO, RANGE_ONE, RANGE_PI2
+    RANGE_INF=1, RANGE_ZERO, RANGE_ONE, RANGE_PI2, RANGE_TWO
   } mpcheck_range_e;
   
   typedef struct {

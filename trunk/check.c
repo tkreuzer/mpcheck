@@ -40,6 +40,9 @@ mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
       mpfr_const_pi (dest, GMP_RNDU);
       mpfr_div_2ui (dest, dest, 1, GMP_RNDU);
       break;
+    case RANGE_TWO:
+      mpfr_set_ui (dest, 2, GMP_RNDU);
+      break;
     case -RANGE_INF:
       mpfr_set_inf (dest, -1);
       break;
@@ -53,6 +56,9 @@ mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
       mpfr_const_pi (dest, GMP_RNDU);
       mpfr_div_2ui (dest, dest, 1, GMP_RNDU);
       mpfr_neg (dest, dest, GMP_RNDD);
+      break;
+    case -RANGE_TWO:
+      mpfr_set_si (dest, -2, GMP_RNDU);
       break;
     default:
       fprintf (stderr, "MPCHECK ERROR: Range undefined\n");
