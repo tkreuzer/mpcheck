@@ -1,7 +1,12 @@
-ARCH=ia64
 CC=gcc
-GMP=/users/spaces/logiciels/gmp-snap/$(ARCH)
-MPFR=/users/spaces/logiciels/mpfr-2.0.1/$(ARCH)
+
+# GMP is the directory where GMP is installed
+# gmp.h should be in $(GMP)/include and libgmp.a in $(GMP)/lib
+GMP=/usr
+
+# MPFR is the directory where MPFR is installed
+# mpfr.h should be in $(MPFR)/include and libmpfr.a in $(MPFR)/lib
+MPFR=/usr
 
 # the following is for Solaris
 #FENV=/local/logiciels/WorkShop-6/SUNWspro/WS6/include/cc
@@ -12,6 +17,9 @@ MPFR=/users/spaces/logiciels/mpfr-2.0.1/$(ARCH)
 CFLAGS= -O2 -g -ffloat-store
 
 mpcheck: mpcheck.c makefile
-	$(CC) $(CFLAGS) -I$(GMP)/include -L$(GMP)/lib -I$(MPFR) -L$(MPFR) mpcheck.c -o mpcheck -lmpfr -lgmp -lm
+	$(CC) $(CFLAGS) -I$(GMP)/include -L$(GMP)/lib -I$(MPFR)/include -L$(MPFR)/lib mpcheck.c -o mpcheck -lmpfr -lgmp -lm
+
+clean:
+	rm mpcheck
 
 
