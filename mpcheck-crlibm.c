@@ -23,6 +23,9 @@
 
 #include "crlibm.h"
 
+#define LIB_INIT() crlibm_init()
+#define LIB_EXIT() crlibm_exit(0)
+
 #define fptype double
 
 static void set_fp (mpfr_ptr dest, const void *fp)
@@ -51,6 +54,7 @@ static void my_exp (void *dest, const void *a, const void *b)
       *(double*) dest = exp_rd (*(double*)a);
       break;
     default:
+      abort ();
       break;
     }
 }
@@ -72,6 +76,7 @@ static void my_log (void *dest, const void *a, const void *b)
       *(double*) dest = log_rd (*(double*)a);
       break;
     default:
+      abort ();
       break;
     }
 }
@@ -92,6 +97,7 @@ static void my_sin (void *dest, const void *a, const void *b)
       *(double*) dest = sin_rd (*(double*)a);
       break;
     default:
+      abort ();
       break;
     }
 }

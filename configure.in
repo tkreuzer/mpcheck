@@ -129,6 +129,22 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
  AC_MSG_RESULT(no)
 ])
 
+dnl Check for MathLib
+AC_MSG_CHECKING(for MATHLIB)
+old_LIBS=$LIBS
+LIBS="-lultim $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include "MathLib.h"
+]], [[
+ uexp (5.0);
+]])],[
+ AC_DEFINE([HAVE_MATHLIB], 1, [MATHLIB was here and could be used])
+ AC_MSG_RESULT(yes)
+],[
+ LIBS=$old_LIBS
+ AC_MSG_RESULT(no)
+])
+
 dnl Must be checked after including the libm
 AC_CHECK_FUNCS([exp exp2 exp10 expm1])
 AC_CHECK_FUNCS([sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh])
