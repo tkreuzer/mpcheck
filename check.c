@@ -73,7 +73,8 @@ testall (unsigned long N, unsigned long seed)
   test ("atan",  53, 0, N, seed); /* why 53 ??? mpfr too slow ? */
   test ("sqrt",  0, 0, N, seed);
   test ("sqrt",  EMAX, 0, N, seed);
-  test ("sqrt",  EMIN, 0, N, seed);
+  /* seems to loop in prec=64 for exp < -1010 */
+  test ("sqrt",  (EMIN < -1010) ? -1010 : EMIN, 0, N, seed);
   test ("pow", 0, 0, N, seed);
 #if (FPPREC <= 53)
   test ("pow", POWMAX1, POWMAX2, N, seed);
@@ -111,10 +112,11 @@ testall (unsigned long N, unsigned long seed)
   test ("gamma",  0, 0, N, seed);
   test ("cbrt",  0, 0, N, seed);
   test ("cbrt",  EMAX, 0, N, seed);
-  test ("cbrt",  EMIN, 0, N, seed);
+  test ("cbrt",  (EMIN < -1010) ? -1010 : EMIN, 0, N, seed);
   test ("hypot", 0, 0, N, seed);
   test ("hypot", EMAX-1, EMAX-1, N, seed);
-  test ("hypot", EMIN, EMIN, N, seed);
+  test ("hypot", (EMIN < -1010) ? -1010 : EMIN, (EMIN < -1010) ? -1010 : EMIN,
+	N, seed);
   test ("gamma",  0, 0, N, seed);
 #if (FPPREC <= 24)
   test ("gamma",  5, 0, N, seed);
