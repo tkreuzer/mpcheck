@@ -158,6 +158,8 @@ static void del_fp (void *fp)
 }
 
 /* Define the wrapper for the libm */
+#ifdef NAME
+
 static void my_add (void *dest, const void *a, const void *b)
 {
   *(fptype*) dest = *(fptype*)a + *(fptype*) b;
@@ -175,7 +177,6 @@ static void my_div (void *dest, const void *a, const void *b)
   *(fptype*) dest = *(fptype*)a / *(fptype*) b;
 }
 
-#ifdef NAME
 #if HAVE_SQRT
 static void my_sqrt (void *dest, const void *a, const void *b)
 {

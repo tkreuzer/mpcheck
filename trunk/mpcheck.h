@@ -59,6 +59,7 @@ extern "C" {
   } mpcheck_user_func_t;
 
   extern mpcheck_func_t mpcheck_tab[];
+  extern mp_rnd_t mpcheck_rnd_mode;
 
 /* useful for testing monotonicity and symmetry */
 #define NO_MONOTON 0
