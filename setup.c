@@ -98,7 +98,7 @@ setup ()
   y = 2.0;
   y = sqrt (y);
   if (x == y)
-    fprintf (stderr, "WARNING: setting rounding modes does not work.");
+    fprintf (stderr, "WARNING: setting rounding modes doesn't seem to affect libm.\n");
 
   /* Checks that the precision of fptype is FPPREC */
   set_rnd_mode (GMP_RNDN);
