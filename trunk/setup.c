@@ -29,6 +29,7 @@
 
 #include "mpcheck.h"
 
+/* FIXME: use macros from fpu_control.h (suggested by Vincent Lefe`vre) */
 /* Check for Linux only? */
 #if ((defined (__i386__) || defined (__i486__)))
 # define _FPU_EXTENDED 0x0300
@@ -55,7 +56,7 @@ fprint_ld (FILE *stream, fptype x)
 #if (FPPREC <= 64)
   fprintf (stream, "%1.24Le", (long double) x);
 #else
-  fprintf (stream, "%1.38Le", x);
+  fprintf (stream, "%1.38Le", (long double) x);
 #endif
 }
 
