@@ -61,7 +61,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 # error "min: GMP 4.0.0"
 #endif
 ]], [[]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
-     AC_MSG_ERROR([GMP 4.0.0 min required])
+     AC_MSG_ERROR([GMP >= 4.0.0 required])
 ])
 
 dnl Check for MPFR
@@ -80,7 +80,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 # error "min: MPFR 2.0.2"
 #endif
 ]], [[]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
-     AC_MSG_ERROR([MPFR 2.0.2 min required])
+     AC_MSG_ERROR([MPFR >= 2.0.2 required])
 ])
 
 dnl Update Libraries directory
