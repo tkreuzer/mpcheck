@@ -26,21 +26,21 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"div", mpfr_div, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
 
   {"sqrt", mpfr_sqrt, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
-  {"exp", mpfr_exp, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
+  {"exp", mpfr_exp, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
   {"log", mpfr_log, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM},
 
   {"sin", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD},
   {"cos", mpfr_cos, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, EVEN},
   {"tan", mpfr_tan, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD},
   {"asin", mpfr_asin, 1, -RANGE_PI2, RANGE_PI2, INCREASING, ODD},
-  {"acos", mpfr_acos, 1, -RANGE_ZERO, RANGE_PI2, DECREASING, NO_SYMM},
+  {"acos", mpfr_acos, 1, RANGE_ZERO, RANGE_PI2, DECREASING, NO_SYMM},
   {"atan", mpfr_atan, 1, -RANGE_PI2, RANGE_PI2, INCREASING, ODD},
 
   {"sinh", mpfr_sinh, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
   {"cosh", mpfr_cosh, 1, RANGE_ONE, RANGE_INF, NO_MONOTON, EVEN},
   {"tanh", mpfr_tanh, 1, -RANGE_ONE, RANGE_ONE, INCREASING, ODD},
   {"asinh", mpfr_asinh, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
-  {"acosh", mpfr_acosh, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
+  {"acosh", mpfr_acosh, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
   {"atanh", mpfr_atanh, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
  
   {"exp2", mpfr_exp2, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM},
@@ -52,7 +52,9 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"gamma", mpfr_gamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
   {"cbrt", mpfr_cbrt, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD},
   {"erf", mpfr_erf, 1, -RANGE_ONE, RANGE_ONE, INCREASING, ODD},
-
+#if 0 /* Only MPFR 2.2.0-20050401 has mpfr_erfc */
+  {"erfc", mpfr_erfc, 1, RANGE_TWO, RANGE_ZERO, DECREASING, NO_SYMM},
+#endif
   {"hypot", mpfr_hypot, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
   {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM},
   {NULL, NULL, 0, 0, 0, 0, 0}
