@@ -10,14 +10,35 @@
 /* To adapt to the tested precision */
 #define FPPREC 53       /* 24       53         64      113 */
 
+#if (FPPREC==113 && defined(__ia64))
+#define __LONG_DOUBLE_MATH
+#endif
+
+#define MATHLIB
+
+#ifdef MATHLIB
+#if (FPPREC != 53)
+#error "MathLib only works for double precision"
+#endif
+#define __tgml(fct) u ## fct
+#else
+#ifdef __LONG_DOUBLE_MATH
+#define __tgml(fct) fct ## l
+#else
+#define __tgml(fct) fct
+#endif
+#endif
+
 #if (FPPREC <= 24)
 #define fptype float
 #define EMIN -125
 #define EMAX 128
+#define PiRoundedUp 3.141592741
 #elif (FPPREC <= 53)
 #define fptype double
 #define EMIN -1021
 #define EMAX 1024
+#define PiRoundedUp 3.1415926535897935601
 #elif (FPPREC <= 64)
 #if defined(__ia64)
 #define fptype extended
@@ -27,6 +48,7 @@
 #endif
 #define EMIN -16381
 #define EMAX 16384
+#define PiRoundedUp 3.141592653589793238462643
 #elif (FPPREC <= 113)
 #if defined(__ia64)
 #define _FPWIDETYPES /* for HP-UX */
@@ -36,6 +58,7 @@
 #endif
 #define EMIN -16381
 #define EMAX 16384
+#define PiRoundedUp 3.141592653589793238462643383279502884197
 #else
 #error "not yet implemented"
 #endif
@@ -47,6 +70,9 @@
 #include <string.h>
 #include "gmp.h"
 #include "mpfr.h"
+#ifdef MATHLIB
+#include "MathLib.h"
+#endif
 
 /* tgamma is not defined in some versions of math.h */
 #ifndef tgamma
@@ -89,7 +115,11 @@ fptype exp2 _PROTO((fptype));
 #endif
 
 #ifndef MAX_RND
+#ifdef MATHLIB /* only implements rounding to nearest */
+#define MAX_RND 1
+#else
 #define MAX_RND 4
+#endif
 #endif
 
 /* useful for testing monotonicity and symmetry */
@@ -154,6 +184,18 @@ fprint_ld (FILE *stream, fptype x)
 #endif
 }
 
+int
+mpfr_set_float (mpfr_ptr x, float y, mp_rnd_t rnd)
+{
+  return mpfr_set_d (x, (double) y, rnd);
+}
+
+float
+mpfr_get_float (mpfr_srcptr x, mp_rnd_t rnd)
+{
+  return (float) mpfr_get_d (x, rnd);
+}
+
 void
 check_fp ()
 {
@@ -161,7 +203,11 @@ check_fp ()
   int j;
 
   /* sets the functions mpfr_set_fp and mpfr_get_fp */
-#if (FPPREC <= 53)
+#if (FPPREC <= 24)
+  mpfr_set_fp = mpfr_set_float;
+  mpfr_get_fp = mpfr_get_float;
+  fprint_fp = fprint_d;
+#elif (FPPREC <= 53)
   mpfr_set_fp = mpfr_set_d;
   mpfr_get_fp = mpfr_get_d;
   fprint_fp = fprint_d;
@@ -221,6 +267,30 @@ check_fp ()
   if (j != FPPREC)
     {
       fprintf (stderr, "Precision of fptype is not %u but %u\n", FPPREC, j);
+      exit (1);
+    }
+
+  /* checks that the exponents EMIN and EMAX are correct */
+  x = 0.5; /* EXP(x)=0 */
+  for (j=0; x + x != x; j++, x = 2.0 * x);
+  if (j-1 != EMAX)
+    {
+      fprintf (stderr, "maximal exponent is %d instead of %d\n", j-1, EMAX);
+      exit (1);
+    }
+  for (x=1.0, j=0; j<FPPREC; j++, x = x / 2.0);
+  x = 0.5 + x;
+  /* x = 0.5 + 2^(-FPPREC), EXP(x)=0 */
+  for (j=0; ; j--)
+    {
+      y = x;
+      x = x / 2.0;
+      if (2.0 * x != y)
+        break;
+    }
+  if (j != EMIN)
+    {
+      fprintf (stderr, "minimal exponent is %d instead of %d\n", j, EMIN);
       exit (1);
     }
 }
@@ -316,224 +386,126 @@ double ulp_err2 (fptype x, fptype t, fptype y, mp_rnd_t rnd, fptype z)
   return u;
 }
 
-#if (FPPREC==113 && defined(__ia64))
-#define SUFFIXL
-#endif
-
 fptype my_exp (fptype x)
 {
-#ifdef SUFFIXL
-  return expl (x);
-#else
-  return exp (x);
-#endif
+  return __tgml(exp) (x);
 }
 
 fptype my_exp2 (fptype x)
 {
-#ifdef SUFFIXL
-  return exp2l (x);
-#else
-  return exp2 (x);
-#endif
+  return __tgml(exp2) (x);
 }
 
+#ifndef MATHLIB /* mathlib-2.0 does not implement those */
 fptype my_expm1 (fptype x)
 {
-#ifdef SUFFIXL
-  return expm1l (x);
-#else
-  return expm1 (x);
-#endif
-}
-
-fptype my_log (fptype x)
-{
-#ifdef SUFFIXL
-  return logl (x);
-#else
-  return log (x);
-#endif
-}
-
-fptype my_log2 (fptype x)
-{
-#ifdef SUFFIXL
-  return log2l (x);
-#else
-  return log2 (x);
-#endif
+  return __tgml(expm1) (x);
 }
 
 fptype my_log10 (fptype x)
 {
-#ifdef SUFFIXL
-  return log10l (x);
-#else
-  return log10 (x);
-#endif
+  return __tgml(log10) (x);
 }
 
 fptype my_log1p (fptype x)
 {
-#ifdef SUFFIXL
-  return log1pl (x);
-#else
-  return log1p (x);
-#endif
-}
-
-fptype my_sin (fptype x)
-{
-#ifdef SUFFIXL
-  return sinl (x);
-#else
-  return sin (x);
-#endif
-}
-
-fptype my_cos (fptype x)
-{
-#ifdef SUFFIXL
-  return cosl (x);
-#else
-  return cos (x);
-#endif
-}
-
-fptype my_tan (fptype x)
-{
-#ifdef SUFFIXL
-  return tanl (x);
-#else
-  return tan (x);
-#endif
-}
-
-fptype my_asin (fptype x)
-{
-#ifdef SUFFIXL
-  return asinl (x);
-#else
-  return asin (x);
-#endif
-}
-
-fptype my_acos (fptype x)
-{
-#ifdef SUFFIXL
-  return acosl (x);
-#else
-  return acos (x);
-#endif
-}
-
-fptype my_atan (fptype x)
-{
-#ifdef SUFFIXL
-  return atanl (x);
-#else
-  return atan (x);
-#endif
+  return __tgml(log1p) (x);
 }
 
 fptype my_sinh (fptype x)
 {
-#ifdef SUFFIXL
-  return sinhl (x);
-#else
-  return sinh (x);
-#endif
+  return __tgml(sinh) (x);
 }
 
 fptype my_cosh (fptype x)
 {
-#ifdef SUFFIXL
-  return coshl (x);
-#else
-  return cosh (x);
-#endif
+  return __tgml(cosh) (x);
 }
 
 fptype my_tanh (fptype x)
 {
-#ifdef SUFFIXL
-  return tanhl (x);
-#else
-  return tanh (x);
-#endif
+  return __tgml(tanh) (x);
 }
 
 fptype my_asinh (fptype x)
 {
-#ifdef SUFFIXL
-  return asinhl (x);
-#else
-  return asinh (x);
-#endif
+  return __tgml(asinh) (x);
 }
 
 fptype my_acosh (fptype x)
 {
-#ifdef SUFFIXL
-  return acoshl (x);
-#else
-  return acosh (x);
-#endif
+  return __tgml(acosh) (x);
 }
 
 fptype my_atanh (fptype x)
 {
-#ifdef SUFFIXL
-  return atanhl (x);
-#else
-  return atanh (x);
-#endif
+  return __tgml(atanh) (x);
 }
 
 fptype my_tgamma (fptype x)
 {
-#ifdef SUFFIXL
-  return tgammal (x);
-#else
-  return tgamma (x);
-#endif
-}
-
-fptype my_sqrt (fptype x)
-{
-#ifdef SUFFIXL
-  return sqrtl (x);
-#else
-  return sqrt (x);
-#endif
+  return __tgml(tgamma) (x);
 }
 
 fptype my_cbrt (fptype x)
 {
-#ifdef SUFFIXL
-  return cbrtl (x);
-#else
-  return cbrt (x);
-#endif
-}
-
-fptype my_pow (fptype x, fptype y)
-{
-#ifdef SUFFIXL
-  return powl (x, y);
-#else
-  return pow (x, y);
-#endif
+  return __tgml(cbrt) (x);
 }
 
 fptype my_hypot (fptype x, fptype y)
 {
-#ifdef SUFFIXL
-  return hypotl (x, y);
-#else
-  return hypot (x, y);
+  return __tgml(hypot) (x, y);
+}
 #endif
+
+fptype my_log (fptype x)
+{
+  return __tgml(log) (x);
+}
+
+fptype my_log2 (fptype x)
+{
+  return __tgml(log2) (x);
+}
+
+fptype my_sin (fptype x)
+{
+  return __tgml(sin) (x);
+}
+
+fptype my_cos (fptype x)
+{
+  return __tgml(cos) (x);
+}
+
+fptype my_tan (fptype x)
+{
+  return __tgml(tan) (x);
+}
+
+fptype my_asin (fptype x)
+{
+  return __tgml(asin) (x);
+}
+
+fptype my_acos (fptype x)
+{
+  return __tgml(acos) (x);
+}
+
+fptype my_atan (fptype x)
+{
+  return __tgml(atan) (x);
+}
+
+fptype my_sqrt (fptype x)
+{
+  return __tgml(sqrt) (x);
+}
+
+fptype my_pow (fptype x, fptype y)
+{
+  return __tgml(pow) (x, y);
 }
 
 fptype my_add (fptype x, fptype y)
@@ -589,29 +561,12 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       monoton = INCREASING;
       symm = NO_SYMM;
     }
+#ifndef MATHLIB
   else if (strcmp (foo, "expm1") == 0)
     {
       testfun_libm = my_expm1;
       testfun_mpfr = mpfr_expm1;
       range_min = -1.0;
-      range_max = 1.0/0.0;
-      monoton = INCREASING;
-      symm = NO_SYMM;
-    } 
-  else if (strcmp (foo, "log") == 0)
-    {
-      testfun_libm = my_log;
-      testfun_mpfr = mpfr_log;
-      range_min = -1.0/0.0;
-      range_max = 1.0/0.0;
-      monoton = INCREASING;
-      symm = NO_SYMM;
-    }
-  else if (strcmp (foo, "log2") == 0)
-    {
-      testfun_libm = my_log2;
-      testfun_mpfr = mpfr_log2;
-      range_min = -1.0/0.0;
       range_max = 1.0/0.0;
       monoton = INCREASING;
       symm = NO_SYMM;
@@ -633,60 +588,6 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       range_max = 1.0/0.0;
       monoton = INCREASING;
       symm = NO_SYMM;
-    }
-  else if (strcmp (foo, "sin") == 0)
-    {
-      testfun_libm = my_sin;
-      testfun_mpfr = mpfr_sin;
-      range_min = -1.0;
-      range_max = 1.0;
-      monoton = NO_MONOTON;
-      symm = ODD;
-    }
-  else if (strcmp (foo, "cos") == 0)
-    {
-      testfun_libm = my_cos;
-      testfun_mpfr = mpfr_cos;
-      range_min = -1.0;
-      range_max = 1.0;
-      monoton = NO_MONOTON;
-      symm = EVEN;
-    }
-  else if (strcmp (foo, "tan") == 0)
-    {
-      testfun_libm = my_tan;
-      testfun_mpfr = mpfr_tan;
-      range_min = -1.0/0.0;
-      range_max = 1.0/0.0;
-      monoton = NO_MONOTON;
-      symm = ODD;
-    }
-  else if (strcmp (foo, "asin") == 0)
-    {
-      testfun_libm = my_asin;
-      testfun_mpfr = mpfr_asin;
-      range_min = -1.570796326794897; /* XXX mettre le flottant = RNDD(-Pi/2) */
-      range_max = 1.570796326794897; /* XXX mettre le flottant = RNDU(Pi/2) */
-      monoton = INCREASING;
-      symm = ODD;
-    }
-  else if (strcmp (foo, "acos") == 0)
-    {
-      testfun_libm = my_acos;
-      testfun_mpfr = mpfr_acos;
-      range_min = 0.0; 
-      range_max = 3.14159265358980; /* XXX mettre le flottant = RNDU(Pi) */
-      monoton = DECREASING;
-      symm = NO_SYMM;
-    }
-  else if (strcmp (foo, "atan") == 0)
-    {
-      testfun_libm = my_atan;
-      testfun_mpfr = mpfr_atan;
-      range_min = -1.570796326794897; /* XXX mettre le flottant = RNDD(-Pi/2) */
-      range_max = 1.570796326794897; /* XXX mettre le flottant = RNDU(Pi/2) */
-      monoton = INCREASING;
-      symm = ODD;
     }
   else if (strcmp (foo, "sinh") == 0)
     {
@@ -748,16 +649,7 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       testfun_mpfr = mpfr_gamma;
       range_min = -1.0/0.0;
       range_max = 1.0/0.0;
-      monoton = NO_MONOTON; /* XXX a corriger */
-      symm = NO_SYMM;       /* XXX a corriger */
-    }
-  else if (strcmp (foo, "sqrt") == 0)
-    {
-      testfun_libm = my_sqrt;
-      testfun_mpfr = mpfr_sqrt;
-      range_min = 0.0;
-      range_max = 1.0/0.0;
-      monoton = INCREASING;
+      monoton = NO_MONOTON;
       symm = NO_SYMM;
     }
   else if (strcmp (foo, "cbrt") == 0)
@@ -768,6 +660,88 @@ test (char *foo, mp_exp_t e, unsigned long N, unsigned long seed)
       range_max = 1.0/0.0;
       monoton = INCREASING;
       symm = ODD;
+    }
+#endif
+  else if (strcmp (foo, "log") == 0)
+    {
+      testfun_libm = my_log;
+      testfun_mpfr = mpfr_log;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
+    }
+  else if (strcmp (foo, "log2") == 0)
+    {
+      testfun_libm = my_log2;
+      testfun_mpfr = mpfr_log2;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
+    }
+  else if (strcmp (foo, "sin") == 0)
+    {
+      testfun_libm = my_sin;
+      testfun_mpfr = mpfr_sin;
+      range_min = -1.0;
+      range_max = 1.0;
+      monoton = NO_MONOTON;
+      symm = ODD;
+    }
+  else if (strcmp (foo, "cos") == 0)
+    {
+      testfun_libm = my_cos;
+      testfun_mpfr = mpfr_cos;
+      range_min = -1.0;
+      range_max = 1.0;
+      monoton = NO_MONOTON;
+      symm = EVEN;
+    }
+  else if (strcmp (foo, "tan") == 0)
+    {
+      testfun_libm = my_tan;
+      testfun_mpfr = mpfr_tan;
+      range_min = -1.0/0.0;
+      range_max = 1.0/0.0;
+      monoton = NO_MONOTON;
+      symm = ODD;
+    }
+  else if (strcmp (foo, "asin") == 0)
+    {
+      testfun_libm = my_asin;
+      testfun_mpfr = mpfr_asin;
+      range_min = -PiRoundedUp / 2.0;
+      range_max = PiRoundedUp / 2.0;
+      monoton = INCREASING;
+      symm = ODD;
+    }
+  else if (strcmp (foo, "acos") == 0)
+    {
+      testfun_libm = my_acos;
+      testfun_mpfr = mpfr_acos;
+      range_min = 0.0; 
+      range_max = PiRoundedUp;
+      monoton = DECREASING;
+      symm = NO_SYMM;
+    }
+  else if (strcmp (foo, "atan") == 0)
+    {
+      testfun_libm = my_atan;
+      testfun_mpfr = mpfr_atan;
+      range_min = -PiRoundedUp / 2.0;
+      range_max = PiRoundedUp / 2.0;
+      monoton = INCREASING;
+      symm = ODD;
+    }
+  else if (strcmp (foo, "sqrt") == 0)
+    {
+      testfun_libm = my_sqrt;
+      testfun_mpfr = mpfr_sqrt;
+      range_min = 0.0;
+      range_max = 1.0/0.0;
+      monoton = INCREASING;
+      symm = NO_SYMM;
     }
   else
     {
@@ -1059,11 +1033,13 @@ test2 (char *foo, mp_exp_t e, mp_exp_t f, unsigned long N, unsigned long seed)
       testfun_libm2 = my_pow;
       testfun_mpfr = mpfr_pow;
     }
+#ifndef MATHLIB
   else if (strcmp (foo, "hypot") == 0)
     {
       testfun_libm2 = my_hypot;
       testfun_mpfr = mpfr_hypot;
     }
+#endif
   else if (strcmp (foo, "add") == 0)
     {
       testfun_libm2 = my_add;
@@ -1216,16 +1192,10 @@ testall (unsigned long N, unsigned long seed)
   test ("exp",    9, N, seed);
   test ("exp2",   0, N, seed);
   test ("exp2",   9, N, seed);
-  test ("expm1",  0, N, seed);
-  test ("expm1", -9, N, seed);
   test ("log",    0, N, seed);
   test ("log", EMAX, N, seed);
   test ("log2",   0, N, seed);
   test ("log2", EMAX, N, seed);
-  test ("log10",  0, N, seed);
-  test ("log10", EMAX, N, seed);
-  test ("log1p",  0, N, seed);
-  test ("log1p", EMAX, N, seed);
   test ("sin",    0, N, seed);
   test ("sin",   10, N, seed); /* mpfr-2.0.1 is too slow for 1024 */
   test ("cos",    0, N, seed);
@@ -1238,6 +1208,30 @@ testall (unsigned long N, unsigned long seed)
   test ("acos", -10, N, seed); /* mpfr-2.0.1 is too slow for -1021 */
   test ("atan",   0, N, seed);
   test ("atan",  53, N, seed); /* why 53 ??? mpfr too slow ? */
+  test ("sqrt",  0, N, seed);
+  test ("sqrt",  EMAX, N, seed);
+  test ("sqrt",  EMIN, N, seed);
+  test2 ("pow", 0, 0, N, seed);
+#if (FPPREC <= 53)
+  test2 ("pow", 8, 7, N, seed);
+#else
+  test2 ("pow", 16, 10, N, seed);
+#endif
+  test2 ("add", 0, 0, N, seed);
+  test2 ("add", EMAX-1, EMAX-1, N, seed);
+  test2 ("sub", EMAX, EMAX, N, seed);
+  test2 ("sub", 0, 0, N, seed);
+  test2 ("mul", 0, 0, N, seed);
+  test2 ("mul", EMAX/2, EMAX/2, N, seed);
+  test2 ("div", 0, 0, N, seed);
+  test2 ("div", EMAX, EMAX, N, seed);
+#ifndef MATHLIB /* mathlib does not implement those functions */
+  test ("expm1",  0, N, seed);
+  test ("expm1", -9, N, seed);
+  test ("log10",  0, N, seed);
+  test ("log10", EMAX, N, seed);
+  test ("log1p",  0, N, seed);
+  test ("log1p", EMAX, N, seed);
   test ("sinh",   0, N, seed);
   test ("sinh",   9, N, seed);
   test ("cosh",   0, N, seed);
@@ -1256,29 +1250,13 @@ testall (unsigned long N, unsigned long seed)
 #else
   test ("gamma", 10, N, seed);
 #endif
-  test ("sqrt",  0, N, seed);
-  test ("sqrt",  EMAX, N, seed);
-  test ("sqrt",  EMIN, N, seed);
   test ("cbrt",  0, N, seed);
   test ("cbrt",  EMAX, N, seed);
   test ("cbrt",  EMIN, N, seed);
-  test2 ("pow", 0, 0, N, seed);
-#if (FPPREC <= 53)
-  test2 ("pow", 8, 7, N, seed);
-#else
-  test2 ("pow", 16, 10, N, seed);
-#endif
   test2 ("hypot", 0, 0, N, seed);
   test2 ("hypot", EMAX-1, EMAX-1, N, seed);
   test2 ("hypot", EMIN, EMIN, N, seed);
-  test2 ("add", 0, 0, N, seed);
-  test2 ("add", EMAX-1, EMAX-1, N, seed);
-  test2 ("sub", EMAX, EMAX, N, seed);
-  test2 ("sub", 0, 0, N, seed);
-  test2 ("mul", 0, 0, N, seed);
-  test2 ("mul", EMAX/2, EMAX/2, N, seed);
-  test2 ("div", 0, 0, N, seed);
-  test2 ("div", EMAX, EMAX, N, seed);
+#endif
 
   printf ("Maximal errors for all functions: %f (nearest), %f (directed)\n",
           MAX_ERR_NEAR, MAX_ERR_DIR);
@@ -1344,13 +1322,19 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  fprintf (stderr, "*******************************************************************\n");
-  fprintf (stderr, "*                                                                 *\n");
-  fprintf (stderr, "* MpCheck version 1.0 (c) INRIA 2002 (projects Arenaire & Spaces) *\n");
-  fprintf (stderr, "*                                                                 *\n");
-  fprintf (stderr, "*******************************************************************\n");
+  fprintf (stdout, "*******************************************************************\n");
+  fprintf (stdout, "*                                                                 *\n");
+  fprintf (stdout, "* MpCheck version 1.0 (c) INRIA 2002 (projects Arenaire & Spaces) *\n");
+  fprintf (stdout, "*                                                                 *\n");
+  fprintf (stdout, "*******************************************************************\n");
 
-  fprintf (stderr, "[precision=%u, seed=%u]\n", FPPREC, seed);
+#ifdef MATHLIB
+  fprintf (stdout, "Testing MathLib ");
+#else
+  fprintf (stdout, "Testing libm ");
+#endif
+
+  fprintf (stdout, "[precision=%u, seed=%u]\n", FPPREC, seed);
 
   if (argc == 2)
     {
