@@ -80,7 +80,7 @@ test (const char *func,
       wrong_monoton = 0; /* number of wrong results wrt monotonicity */
       wrong_symm = 0;    /* number of wrong results wrt symmetry     */
 
-      for (i=0; i<N; i++)
+      for (i = 0; i < N ; i++)
 	{
 	  /* Get a random number */
 	  mpfr_urandomb (op1, state);
@@ -125,7 +125,8 @@ test (const char *func,
 		  rnd2 = (rnd==GMP_RNDZ) ? (mpfr_sgn(rmpfr)>0 ? 
 					    GMP_RNDD : GMP_RNDU): rnd;
 		  
-		  if ((rnd2 == GMP_RNDU && u < 0.0) || (rnd2 == GMP_RNDD && u > 0.0))
+		  if ((rnd2 == GMP_RNDU && u < 0.0) ||
+		      (rnd2 == GMP_RNDD && u > 0.0))
 		    {
 		      wrong++;
 		      if (fabs(u) > fabs(umax_dir))

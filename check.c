@@ -13,8 +13,8 @@ int    (*set_fp) (mpfr_ptr, fptype, mp_rnd_t) = NULL;
 fptype (*get_fp) (mpfr_srcptr, mp_rnd_t) = NULL;
 void   (*fprint_fp) (FILE *, fptype) = NULL;
 
-double MAX_ERR_NEAR = 0.0;
-double MAX_ERR_DIR = 0.0;
+double MAX_ERR_NEAR;
+double MAX_ERR_DIR;
 
 /* Global options */
 int verbose = 3;
@@ -125,6 +125,8 @@ main (int argc, char *argv[])
   const char *func = NULL;
 
   setup ();
+  MAX_ERR_NEAR = 0.0;
+  MAX_ERR_DIR = 0.0;
 
   for (i = 1 ; i < argc ; i++)
     {

@@ -84,9 +84,9 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 ])
 
 dnl Update Libraries directory
-AC_MY_LIBS($with_mpfr_lib, mpfr)
-AC_MY_LIBS($with_gmp_lib, gmp)
 AC_CHECK_LIB(m, main, , AC_MSG_ERROR(libm not found))
+AC_MY_LIBS($with_gmp_lib, gmp)
+AC_MY_LIBS($with_mpfr_lib, mpfr)
 
 dnl Must be checked after including the libm
 AC_CHECK_FUNCS([tgamma])
@@ -164,8 +164,6 @@ if test -f confdefs.h; then
 fi
 
 AC_SUBST(CPPFLAGS)
-AC_SUBST(LDADD)
-AC_SUBST(LDFLAGS)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(CFLAGS)
