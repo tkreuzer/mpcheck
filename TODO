@@ -17,11 +17,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-+ add erf
 + [from V. Lefe`vre] test the default mode (in particular the precision)
   like in http://www.vinc17.org/software/tst-ieee754.c
 + [from V. Lefe`vre] check special values too (NaN, inf, ...)
 + Readd support for LIBMCR, Mathlib.
-+ Add support for CRLIBM
 + Add support for Multi-precision libraries
 
