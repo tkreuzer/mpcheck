@@ -21,6 +21,5 @@
   like in http://www.vinc17.org/software/tst-ieee754.c
 + [from V. Lefe`vre] check special values too (NaN, inf, ...)
 + Support for external check.
-+ Readd support for LIBMCR.
 + Add support for Multi-precision libraries
 
