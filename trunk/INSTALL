@@ -1,6 +1,6 @@
 You need to install:
 	GMP 4.1.0
-	MPFR 2.2.0 (Because version < 2.2.0 don't handle well overflow).
+	MPFR 2.2.0 (Because versions < 2.2.0 don't handle well overflow).
 
 If you download the CVS version, you need also the autotools.
 Run this command to generate the missing files:
@@ -14,3 +14,7 @@ Once they are installed, use the classic way to install this program:
 	make install
 
 Use ./configure --help to get more options.
+
+A more typical way is:
+ ./configure --with-mpfr=/localdisk/libs --with-gmp=/localdisk/libs CPPFLAGS="-I/localdisk/libs/include" LDFLAGS="-L/localdisk/libs/lib"
+ assuming all the libraries have been installed in /localdisk/libs/.
