@@ -27,4 +27,9 @@
 	direction by means of the fegetround and fesetround functions.
 	(for example on arm, only FE_TONEAREST is defined, so the configure
 	fails)
++ [from V. Lefe`vre] test the default mode (in particular the precision)
+  like in http://www.vinc17.org/software/tst-ieee754.c
++ [from V. Lefe`vre] check special values too (NaN, inf, ...)
++ [from V. Lefe`vre] allow 'd' for double instead of 53, 'f' for float,
+	'l' for long double
 
