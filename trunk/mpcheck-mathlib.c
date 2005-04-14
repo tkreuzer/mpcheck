@@ -56,6 +56,8 @@ static void get_fp (void *fp, mpfr_srcptr src)
 #define HAVE_ACOS 1
 #undef HAVE_ATAN
 #define HAVE_ATAN 1
+#undef HAVE_ATAN2
+#define HAVE_ATAN2 1
 #undef HAVE_SINH
 #undef HAVE_COSH
 #undef HAVE_TANH

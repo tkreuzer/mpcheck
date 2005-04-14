@@ -164,17 +164,17 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 dnl Must be checked after including the libm
 AC_CHECK_FUNCS([exp exp2 exp10 expm1])
 AC_CHECK_FUNCS([sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh])
-AC_CHECK_FUNCS([log log2 log10 log1p])
+AC_CHECK_FUNCS([log log2 log10 log1p atan2])
 AC_CHECK_FUNCS([tgamma sqrt pow cbrt erf erfc])
 
 AC_CHECK_FUNCS([expf exp2f exp10f expm1f])
 AC_CHECK_FUNCS([sinf cosf tanf asinf acosf atanf sinhf coshf tanhf asinhf acoshf atanhf])
-AC_CHECK_FUNCS([logf log2f log10f log1pf])
+AC_CHECK_FUNCS([logf log2f log10f log1pf atan2f])
 AC_CHECK_FUNCS([tgammaf sqrtf powf cbrtf erff erfcf])
 
 AC_CHECK_FUNCS([expl exp2l exp10l expm1l])
 AC_CHECK_FUNCS([sinl cosl tanl asinl acosl atanl sinhl coshl tanhl asinhl acoshl atanhl])
-AC_CHECK_FUNCS([logl log2l log10l log1pl])
+AC_CHECK_FUNCS([logl log2l log10l log1pl atan2l])
 AC_CHECK_FUNCS([tgammal sqrtl powl cbrtl erfl erfcl])
 
 dnl Check for How to set the rounding mode

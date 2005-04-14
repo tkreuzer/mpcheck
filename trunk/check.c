@@ -36,6 +36,9 @@ mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
     case RANGE_ONE:
       mpfr_set_ui (dest, 1, GMP_RNDU);
       break;
+    case RANGE_PI:
+      mpfr_const_pi (dest, GMP_RNDU);
+      break;
     case RANGE_PI2:
       mpfr_const_pi (dest, GMP_RNDU);
       mpfr_div_2ui (dest, dest, 1, GMP_RNDU);
@@ -51,6 +54,11 @@ mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
       break;
     case -RANGE_ONE:
       mpfr_set_si (dest, -1, GMP_RNDD);
+      break;
+    case -RANGE_PI:
+      mpfr_const_pi (dest, GMP_RNDU);
+      mpfr_div_2ui (dest, dest, 1, GMP_RNDU);
+      mpfr_neg (dest, dest, GMP_RNDD);
       break;
     case -RANGE_PI2:
       mpfr_const_pi (dest, GMP_RNDU);
@@ -361,6 +369,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
 	  mpfr_urandomb (op2, state);
 	  mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
+	  if (ref->signed_input == IN_POSNEG)
+	    {
+	      if ((rand () & 1) == 0)
+		mpfr_neg (op1, op1, GMP_RNDN);
+	      if ((rand () & 1) == 0)
+                mpfr_neg (op2, op2, GMP_RNDN);
+	    }
+
 	  /* Convert the input to the format used by the library */
 	  (*getfp) (rop1, op1);
 	  (*getfp) (rop2, op2);
