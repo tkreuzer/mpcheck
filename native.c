@@ -231,6 +231,12 @@ static void my_atan (void *dest, const void *a, const void *b)
   *(fptype*) dest = NAME(atan) (*(fptype*)a);
 }
 #endif
+#if HAVE_ATAN2
+static void my_atan2 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(atan2) (*(fptype*)a, *(fptype*)b);
+}
+#endif
 #if HAVE_SINH
 static void my_sinh (void *dest, const void *a, const void *b)
 {
@@ -327,6 +333,12 @@ static void my_erf (void *dest, const void *a, const void *b)
   *(fptype*) dest = NAME(erf) (*(fptype*)a);
 }
 #endif
+#if HAVE_ERFC
+static void my_erfc (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(erfc) (*(fptype*)a);
+}
+#endif
 
 static mpcheck_user_func_t tab[] = {
   {"add", my_add, 0, 0},
@@ -365,6 +377,10 @@ static mpcheck_user_func_t tab[] = {
 #if HAVE_ATAN
   {"atan", my_atan, 0, 0},
   {"atan", my_atan, 53, 0},
+#endif
+#if HAVE_ATAN2
+  {"atan2", my_atan2, 0, 0},
+  {"atan2", my_atan2, 53, 0},
 #endif
 #if HAVE_ASIN
   {"asin", my_asin, 0, 0},
@@ -440,6 +456,10 @@ static mpcheck_user_func_t tab[] = {
 #if HAVE_ERF
   {"erf", my_erf, 0, 0},
   {"erf", my_erf, 9, 0},
+#endif
+#if HAVE_ERFC
+  {"erfc", my_erfc, 0, 0},
+  {"erfc", my_erfc, 2, 0},
 #endif
   {NULL, NULL, 0, 0}
 };

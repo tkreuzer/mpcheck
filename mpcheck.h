@@ -40,7 +40,7 @@ extern "C" {
   } mpcheck_test_e;
   
   typedef enum {
-    RANGE_INF=1, RANGE_ZERO, RANGE_ONE, RANGE_PI2, RANGE_TWO
+    RANGE_INF=1, RANGE_ZERO, RANGE_ONE, RANGE_PI2, RANGE_TWO, RANGE_PI
   } mpcheck_range_e;
   
   typedef struct {
@@ -50,6 +50,7 @@ extern "C" {
     mpcheck_range_e min, max;    /* Range */
     int monoton;
     int  symm;
+    int signed_input;
   } mpcheck_func_t;
   
   typedef struct {
@@ -69,6 +70,9 @@ extern "C" {
 #define NO_SYMM 0
 #define ODD 3
 #define EVEN 4
+
+#define IN_POS 0
+#define IN_POSNEG 1
 
 #define ALL_RND  15
 #define ALL_TEST 7

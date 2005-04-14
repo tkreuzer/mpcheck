@@ -22,4 +22,5 @@
 + [from V. Lefe`vre] check special values too (NaN, inf, ...)
 + Support for external check.
 + Add support for Multi-precision libraries
++ Add support for mpfr_subnormalize.
 

@@ -60,6 +60,7 @@ static void get_fp (void *fp, mpfr_srcptr src)
 #undef HAVE_ACOSH
 #undef HAVE_ATANH
 #undef HAVE_LOG
+#undef HAVE_ATAN2
 #define HAVE_LOG 1
 #undef HAVE_LOG2
 #undef HAVE_LOG10
