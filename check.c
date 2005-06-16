@@ -6,7 +6,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,9 +19,11 @@
 
 #include "mpcheck.h"
 
-mpfr_t  mpcheck_max_err_dir, mpcheck_max_err_near;
-mp_rnd_t mpcheck_rnd_mode;
+mpfr_t    mpcheck_max_err_dir, mpcheck_max_err_near;
+mp_rnd_t  mpcheck_rnd_mode;
 
+/* Wince we can't store the range directly (we need to compute
+   it for any prec), we compute it here */
 static void
 mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
 {
@@ -80,11 +82,11 @@ mpcheck_ulp (mpfr_t ulp, mpfr_t library, mpfr_t reference, mp_prec_t prec)
   mpfr_sub (ulp, library, reference, GMP_RNDN);
   if (mpfr_cmp_ui (ulp, 0) == 0)
     {
-      fprintf (stderr, "MPCHECK ERROR: Ulp couldn't be 0!\n");
-      fprintf (stderr, "LIBRARY="); 
-      mpfr_out_str (stderr, 10, 0, library, GMP_RNDN);
-      fprintf (stderr, "\nREFEREN="); 
-      mpfr_out_str (stderr, 10, 0, reference, GMP_RNDN);
+      fprintf (stderr, "MPCHECK ERROR: Ulp can't be 0!\n");
+      fprintf (stderr, "LIB[%lu]=", mpfr_get_prec (library));
+      mpfr_out_str (stderr, 2, 0, library, GMP_RNDN);
+      fprintf (stderr, "\nREF[%lu]=", mpfr_get_prec (reference));
+      mpfr_out_str (stderr, 2, 0, reference, GMP_RNDN);
       fprintf (stderr, "\n");
       abort ();
     }
@@ -92,10 +94,10 @@ mpcheck_ulp (mpfr_t ulp, mpfr_t library, mpfr_t reference, mp_prec_t prec)
     mpfr_set_exp (ulp, mpfr_get_exp (ulp) - mpfr_get_exp (reference) + prec);
 }
 
-static void 
+static void
 usage (void)
 {
-  fprintf (stderr, 
+  fprintf (stderr,
 	   "Usage: mpcheck [options]\n"
 	   "Usage: mpcheck [options] <function> <exponent>\n"
 	   "Usage: mpcheck [options] <function> <exp1> <exp2>\n"
@@ -129,7 +131,7 @@ static int rnd_mode;
 static int verbose;
 
 void
-mpcheck_init (int argc, const char *const argv[], 
+mpcheck_init (int argc, const char *const argv[],
 	      mp_prec_t prec2, mp_exp_t emin2, mp_exp_t emax2,
 	      void *(*new2)(mp_prec_t), void (*del2)(void *),
 	      void (*getfp2)(void *, mpfr_srcptr),
@@ -142,6 +144,7 @@ mpcheck_init (int argc, const char *const argv[],
   char *val;
   long value;
   int i;
+
   /* Setup default values */
   new = new2;
   del = del2;
@@ -171,7 +174,7 @@ mpcheck_init (int argc, const char *const argv[],
 	  value = (val == NULL || *val == 0) ? 0 : atol (val);
 	  /* Deal with them */
 	  if (strcmp (Buffer, "mono") == 0)
-	    if (value == 0) 
+	    if (value == 0)
 	      test &= ~MPCHECK_TEST_MONOTON;
 	    else
 	      test |= MPCHECK_TEST_MONOTON;
@@ -222,11 +225,12 @@ mpcheck_init (int argc, const char *const argv[],
     }
 
   /* Init */
-  mpfr_inits2 (prec, mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
+  mpfr_set_emin (emin);
+  mpfr_set_emax (emax);
+  mpfr_set_default_prec (prec);
+  mpfr_inits (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
   mpfr_set_ui (mpcheck_max_err_dir, 0, GMP_RNDN);
   mpfr_set_ui (mpcheck_max_err_near, 0, GMP_RNDN);
-  mpfr_set_emin (emin);
-  mpfr_set_emax (emax);  
 }
 
 void
@@ -237,13 +241,13 @@ mpcheck_clear (FILE *out)
   fprintf (out, " (nearest), ");
   mpfr_out_str (out, 10, 0, mpcheck_max_err_dir, GMP_RNDN);
   fprintf (out, " (directed)\n");
- 
+
   mpfr_clears (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
 }
 
-void 
+void
 mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
-	const char *const name, 
+	const char *const name,
 	 void (*func) (void*,const void*, const void*))
 {
   static int print_done = 0;
@@ -261,28 +265,29 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    for (i = 0 ; mpcheck_tab[i].name != NULL ; i++)
      if (strcmp (mpcheck_tab[i].name, name) == 0)
        break;
-   if (mpcheck_tab[i].name == NULL)     
+   if (mpcheck_tab[i].name == NULL)
      {
       fprintf (out, "Unknown function: %s\n", name);
       return;
      }
    ref = &mpcheck_tab[i];
-   
+
    if (print_done == 0)
-     print_done = fprintf (out, 
-			   "[precision=%lu, seed=%lu, emin=%ld, emax=%ld]\n", 
+     print_done = fprintf (out,
+			   "[precision=%lu, seed=%lu, emin=%ld, emax=%ld]\n",
 			   (unsigned long) prec, seed,
 			   (long) emin, (long) emax);
 
+   /* Translate some absolute exponent to relative one's */
    if (e1 == LONG_MAX)     e1 = emax - 1;
-   if (e2 == LONG_MAX)     e2 = emax -1; 
+   if (e2 == LONG_MAX)     e2 = emax -1;
    if (e1 == LONG_MAX-1)   e1 = emax /2;
    if (e2 == LONG_MAX-1)   e2 = emax /2;
    if (e1 == LONG_MAX-2)   e1 = emin;
    if (e2 == LONG_MAX-2)   e2 = emin;
 
-  mpfr_inits2 (prec, op1, op2, result, result_lib, u, umax, umax_dir, 
-	       max_err_near, max_err_dir, op1max_dir, op2max_dir, 
+  mpfr_inits2 (prec, op1, op2, result, result_lib, u, umax, umax_dir,
+	       max_err_near, max_err_dir, op1max_dir, op2max_dir,
 	       op1max, op2max, range_min, range_max,
 	       xdplus, xdminus, NULL);
   mpfr_init2 (result_more_prec, prec+32);
@@ -304,8 +309,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
       mpfr_urandomb (op1, state);
       mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
       mpfr_urandomb (op2, state);
-      mpfr_mul_2si (op2, op2, e2, GMP_RNDN); 
-      
+      mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
+
       if (ref->NumArg == 2)
 	(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
 	   ref->mpfr)) (result, op1, op2, GMP_RNDN);
@@ -327,10 +332,10 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    if (verbose >= 2)
      {
        if (ref->NumArg == 1)
-	 fprintf (out, "Testing function %s for exponent %ld.\n", 
+	 fprintf (out, "Testing function %s for exponent %ld.\n",
 		  name, e1);
        else
-	 fprintf (out, "Testing function %s for exponents %ld and %ld.\n", 
+	 fprintf (out, "Testing function %s for exponents %ld and %ld.\n",
 		  name, e1, e2);
      }
 
@@ -345,7 +350,6 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 
       if (verbose >= 3)
 	fprintf (out, " rounding mode %s:\n",mpfr_print_rnd_mode (rnd));
-      
       /* reset the seed to test the same sequence of numbers with each
          rounding mode */
       gmp_randseed_ui (state, seed);
@@ -401,17 +405,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	      else
 		(*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
                    ref->mpfr)) (result_more_prec, op1, rnd);
- 	      
 	      /* Compute ULP */
 	      mpcheck_ulp (u, result_lib, result_more_prec, prec);
 	      if (rnd != GMP_RNDN)
 		{
 		  mp_rnd_t rnd2;
-		  
-		  rnd2 = (rnd==GMP_RNDZ) 
+		  rnd2 = (rnd==GMP_RNDZ)
 		    ? ((mpfr_sgn (result) > 0 ? GMP_RNDD : GMP_RNDU))
 		    : rnd;
-		  
 		  if ((rnd2 == GMP_RNDU && mpfr_sgn (u) < 0)
 		      || (rnd2 == GMP_RNDD && mpfr_sgn (u) > 0))
 		    {
