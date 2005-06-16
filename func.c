@@ -56,7 +56,7 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"erfc", mpfr_erfc, 1, RANGE_TWO, RANGE_ZERO, DECREASING, NO_SYMM,IN_POSNEG},
 
   {"hypot", mpfr_hypot, 2, -RANGE_INF, RANGE_INF,NO_MONOTON,NO_SYMM,IN_POSNEG},
-  {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
+  {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
   {NULL, NULL, 0, 0, 0, 0, 0, 0}
 };
 
