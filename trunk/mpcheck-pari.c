@@ -25,6 +25,7 @@ typedef unsigned long ulong;
 #include "pari/pari.h"
 
 static mp_prec_t prec = 0;
+static unsigned long prec_ul;
 static int count = 0;
 static unsigned long stck;
 
@@ -33,21 +34,21 @@ static void *new_fp (mp_prec_t p)
   GEN a;
 
   /* Setup internal prec */
-  if (prec == 0)
+  if (prec == 0) {
     prec = p;
-  else if (p != prec)
-    {
-      fprintf (stderr, "ERROR: Requested prec: %lu. FPTYPE prec: %lu\n",
-	       p, prec);
-      abort ();
-    }
+    prec_ul = (prec-1)/(8*sizeof (mp_limb_t))+1;
+  } else if (p != prec) {
+    fprintf (stderr, "ERROR: Requested prec: %lu. FPTYPE prec: %lu\n",
+             p, prec);
+    abort ();
+  }
 
   /* Save Pari stack */
   if (count++ == 0)
     stck = avma;
 
   /* Since PARI can't handle prec bits exactly we request a few more */
-  a = gsqrt (stoi(3), (p - 1)/BITS_IN_LONG + 1 + 2);
+  a = gsqrt (stoi(3), prec_ul + 2);
 
   return (void *) a;
 }
@@ -77,19 +78,19 @@ static void set_fp (mpfr_ptr dest, const void *fp)
   else {
     mpfr_set_si (dest, s, GMP_RNDN);
     mpfr_set_exp (dest, gexpo ((GEN) fp)+1);
-    copy_reverse (dest->_mpfr_d,
-                  & ((long*)fp)[2],
-                  (prec-1)/(8*sizeof (mp_limb_t))+1);
+    copy_reverse (dest->_mpfr_d, & ((long*)fp)[2], prec_ul);
     /* We may have copied more bit than necessary: reprec it */
     p = mpfr_get_prec (dest);
-    dest->_mpfr_prec = ((prec-1)/(8*sizeof (mp_limb_t))+1)
-      * (8*sizeof(mp_limb_t));
+    dest->_mpfr_prec = prec_ul * (8*sizeof(mp_limb_t));
     mpfr_prec_round (dest, p, mpcheck_rnd_mode);
   }
+  /* printf ("Set Fp="); output ((GEN) fp); */
 }
 
 static void get_fp (void *fp, mpfr_srcptr src)
 {
+  /*printf ("MPFR :");
+    mpfr_out_str (stdout, 10, 0, src, GMP_RNDN); putchar ('\n'); */
   if (mpfr_nan_p (src) || mpfr_inf_p (src))
     {
       printf ("Error: Pari can't handle NAN or INF\n");
@@ -98,11 +99,12 @@ static void get_fp (void *fp, mpfr_srcptr src)
   if (!mpfr_zero_p (src)) {
     setsigne (fp, mpfr_sgn (src));
     setexpo (fp, mpfr_get_exp (src)-1);
-    copy_reverse (& ((long*)fp)[2], src->_mpfr_d,
-                  (prec-1)/(8*sizeof (mp_limb_t))+1);
+    copy_reverse (& ((long*)fp)[2], src->_mpfr_d, prec_ul);
   } else {
-    gsubz (fp, fp, fp);
+    gsubz (fp, fp, fp); /* Set zero #top#! */
   }
+  /*  printf ("Get Fp=");
+      output ((GEN) fp); */
 }
 
 static int set_rnd_mode (mp_rnd_t rnd) {
@@ -122,6 +124,55 @@ void my_pari_mul (void *dest, const void *src1, const void *src2) {
 void my_pari_div (void *dest, const void *src1, const void *src2) {
   gdivz ((GEN) src1, (GEN) src2, (GEN) dest);
 }
+void my_pari_sqrt (void *dest, const void *src1, const void *src2) {
+  gsqrtz ((GEN) src1, (GEN) dest);
+}
+void my_pari_exp (void *dest, const void *src1, const void *src2) {
+  gexpz ((GEN) src1, (GEN) dest);
+}
+void my_pari_log (void *dest, const void *src1, const void *src2) {
+  glogz ((GEN) src1, (GEN) dest);
+}
+
+void my_pari_sin (void *dest, const void *src1, const void *src2) {
+  gsinz ((GEN) src1, (GEN) dest);
+}
+void my_pari_cos (void *dest, const void *src1, const void *src2) {
+  gcosz ((GEN) src1, (GEN) dest);
+}
+void my_pari_tan (void *dest, const void *src1, const void *src2) {
+  gtanz ((GEN) src1, (GEN) dest);
+}
+void my_pari_asin (void *dest, const void *src1, const void *src2) {
+  gasinz ((GEN) src1, (GEN) dest);
+}
+void my_pari_acos (void *dest, const void *src1, const void *src2) {
+  gacosz ((GEN) src1, (GEN) dest);
+}
+void my_pari_atan (void *dest, const void *src1, const void *src2) {
+  gatanz ((GEN) src1, (GEN) dest);
+}
+
+//gamma, erfc, pow
+void my_pari_gamma (void *dest, const void *src1, const void *src2) {
+  ggammaz ((GEN) src1, (GEN) dest);
+}
+/* Doesn't work very well... Does a lot of assert failed */
+void my_pari_erfc (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gerfc ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gerfcz ((GEN) src1, (GEN) dest); */
+}
+void my_pari_pow (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp = gpow ((GEN) src1, (GEN) src2, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gpowz ((GEN) src1, (GEN) src2, (GEN) dest); */
+}
 
 static mpcheck_user_func_t tab[] = {
   {"add", my_pari_add, 0, 0},
@@ -132,6 +183,34 @@ static mpcheck_user_func_t tab[] = {
   {"mul", my_pari_mul, LONG_MAX-1, LONG_MAX-1},
   {"div", my_pari_div, 0, 0},
   {"div", my_pari_div, LONG_MAX, LONG_MAX},
+  {"sqrt", my_pari_sqrt, 0, 0},
+  {"sqrt", my_pari_sqrt, LONG_MAX, 0},
+  {"sqrt", my_pari_sqrt, LONG_MAX-2, 0},
+  {"exp", my_pari_exp, 0, 0},
+  {"exp", my_pari_exp, 9, 0}, /* FIXME: Improve by autodection of overflow? */
+  {"log", my_pari_log, 0, 0},
+  {"log", my_pari_log, LONG_MAX, 0},
+  {"sin", my_pari_sin, 0, 0},
+  {"sin", my_pari_sin, 10, 0},
+  {"cos", my_pari_cos, 0, 0},
+  {"cos", my_pari_cos, 10, 0},
+  {"tan", my_pari_tan, 0, 0},
+  {"tan", my_pari_tan, 10, 0},
+  {"atan", my_pari_atan, 0, 0},
+  {"atan", my_pari_atan, 53, 0},
+  {"asin", my_pari_asin, 0, 0},
+  {"asin", my_pari_asin, -10, 0},
+  {"acos", my_pari_acos, 0, 0},
+  {"acos", my_pari_acos, -10, 0},
+  {"gamma", my_pari_gamma, 0, 0},
+  {"gamma", my_pari_gamma, 10, 0},
+  {"pow", my_pari_pow, 0, 0},
+  {"pow", my_pari_pow, 5, 4},
+  {"pow", my_pari_pow, 16, 10},
+#if 0
+  {"erfc", my_pari_erfc, 0, 0},
+  {"erfc", my_pari_erfc, 2, 0},
+#endif
   {NULL, NULL, 0, 0}
 };
 
@@ -169,9 +248,9 @@ int main (int argc, const char *argv[])
   del_fp (fp);
   prec = 0;
 
-  mpcheck_init (argc, argv, 53, -1021, 1021,
+  mpcheck_init (argc, argv, 53, -1L<<16, 1L<<16,
 		new_fp, del_fp, get_fp, set_fp, set_rnd_mode,
-		1, ALL_TEST, 0, 10000, 2);
+		ALL_RND, ALL_TEST, 0, 10000, 2);
   mpcheck_check (stdout, tab);
   mpcheck_clear (stdout);
   return 0;

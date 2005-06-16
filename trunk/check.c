@@ -380,6 +380,12 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	      if ((rand () & 1) == 0)
                 mpfr_neg (op2, op2, GMP_RNDN);
 	    }
+          /* Function which takes only positive arg
+             may have a strange behaviour for 0 */
+          else while (mpfr_zero_p (op1)) {
+            mpfr_urandomb (op1, state);
+            mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
+          }
 
 	  /* Convert the input to the format used by the library */
 	  (*getfp) (rop1, op1);
