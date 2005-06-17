@@ -1,3 +1,38 @@
+2005-06-17  Patrick Pelissier  <pelissip@morpork>
+
+	* configure.in, mpcheck-cln.cc, mpcheck-ntl.cc:
+	Improve support and error detection of CLN and NTL.
+
+	* Makefile.am, configure.in, func.c, mpcheck-cln.cc, mpcheck-ntl.cc, mpcheck-pari.c:
+	Bug fix.
+	Add support for CLN library.
+
+	* mpcheck-ntl.cc: Finish NTL interface.
+
+	* Makefile.am, configure.in, mpcheck-ntl.cc, mpcheck.h:
+	Add support for NTL library.
+
+2005-06-16  Patrick Pelissier  <pelissip@morpork>
+
+	* check.c, func.c, mpcheck-pari.c: Extended pari support.
+	Don't call with 0 as a argument if the tested
+	function supports only positive argument.
+
+	* Makefile.am, check.c, configure.in, mpcheck-pari.c:
+	Add support for PARI library.
+
+2005-04-14  Patrick Pelissier  <pelissip@morpork>
+
+	* TODO, check.c, configure.in, func.c, mpcheck-float.c, mpcheck-libmcr.c, mpcheck-longdouble.c, mpcheck-mathlib.c, mpcheck.h, native.c:
+	Update.
+	Add support for erfc and atan2.
+	Needs mpfr-2.2.0-2005-04-14.
+
+2005-04-07  Patrick Pelissier  <pelissip@morpork>
+
+	* configure.in, mpcheck-crlibm.c: Clean up some things for crlibm.
+	Add '-static' flag for GCC build.
+
 2005-03-31  Patrick Pelissier  <pelissip@morpork>
 
 	* INSTALL, config.guess, config.sub, install-sh, missing, mkinstalldirs, prepare:
