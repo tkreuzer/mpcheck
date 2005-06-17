@@ -169,7 +169,9 @@ my_pow (void *dest, const void *src1, const void *src2) {
 static mpcheck_user_func_t tab[] = {
   {"add", my_add, 0, 0},
   {"add", my_add, LONG_MAX, LONG_MAX},
+  {"add", my_add, LONG_MAX, 0},
   {"sub", my_sub, LONG_MAX, LONG_MAX},
+  {"sub", my_sub, LONG_MAX, 0},
   {"sub", my_sub, 0, 0},
   {"mul", my_mul, 0, 0},
   {"mul", my_mul, LONG_MAX-1, LONG_MAX-1},

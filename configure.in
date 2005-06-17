@@ -199,6 +199,25 @@ using namespace NTL;
 ])
 AC_LANG(C)
 
+dnl Check for CLN
+AC_MSG_CHECKING(for CLN)
+AC_LANG(C++)
+old_LIBS=$LIBS
+LIBS="-lcln $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include "cln/cln.h"
+using namespace cln;
+]], [[
+ cl_F a;
+]])],[
+ AC_DEFINE([HAVE_CLN], 1, [CLN was here and could be used])
+ AC_MSG_RESULT(yes)
+],[
+ LIBS=$old_LIBS
+ AC_MSG_RESULT(no)
+])
+AC_LANG(C)
+
 dnl Must be checked after including the libm
 AC_CHECK_FUNCS([exp exp2 exp10 expm1])
 AC_CHECK_FUNCS([sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh])

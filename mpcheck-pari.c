@@ -108,7 +108,7 @@ static void get_fp (void *fp, mpfr_srcptr src)
 }
 
 static int set_rnd_mode (mp_rnd_t rnd) {
-  return 1; /* Pari has no Rounding Mode */
+  return rnd == GMP_RNDN; /* Pari has no Rounding Mode */
 }
 
 /* Start Pari Function to check */
@@ -125,37 +125,86 @@ void my_pari_div (void *dest, const void *src1, const void *src2) {
   gdivz ((GEN) src1, (GEN) src2, (GEN) dest);
 }
 void my_pari_sqrt (void *dest, const void *src1, const void *src2) {
-  gsqrtz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gsqrt ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gsqrtz ((GEN) src1, (GEN) dest); */
 }
 void my_pari_exp (void *dest, const void *src1, const void *src2) {
-  gexpz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gexp ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gexpz ((GEN) src1, (GEN) dest); */
 }
 void my_pari_log (void *dest, const void *src1, const void *src2) {
-  glogz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = glog ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* glogz ((GEN) src1, (GEN) dest); */
 }
 
 void my_pari_sin (void *dest, const void *src1, const void *src2) {
-  gsinz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gsin ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gsinz ((GEN) src1, (GEN) dest); */
 }
 void my_pari_cos (void *dest, const void *src1, const void *src2) {
-  gcosz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gcos ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gcosz ((GEN) src1, (GEN) dest); */
 }
 void my_pari_tan (void *dest, const void *src1, const void *src2) {
-  gtanz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gtan ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gtanz ((GEN) src1, (GEN) dest); */
 }
 void my_pari_asin (void *dest, const void *src1, const void *src2) {
-  gasinz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gasin ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gasinz ((GEN) src1, (GEN) dest); */
 }
 void my_pari_acos (void *dest, const void *src1, const void *src2) {
-  gacosz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gacos ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gacosz ((GEN) src1, (GEN) dest); */
 }
 void my_pari_atan (void *dest, const void *src1, const void *src2) {
-  gatanz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gatan ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* gatanz ((GEN) src1, (GEN) dest); */
 }
 
-//gamma, erfc, pow
 void my_pari_gamma (void *dest, const void *src1, const void *src2) {
-  ggammaz ((GEN) src1, (GEN) dest);
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = ggamma ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+  /* ggammaz ((GEN) src1, (GEN) dest); */
 }
 /* Doesn't work very well... Does a lot of assert failed */
 void my_pari_erfc (void *dest, const void *src1, const void *src2) {
@@ -177,7 +226,9 @@ void my_pari_pow (void *dest, const void *src1, const void *src2) {
 static mpcheck_user_func_t tab[] = {
   {"add", my_pari_add, 0, 0},
   {"add", my_pari_add, LONG_MAX, LONG_MAX},
+  {"add", my_pari_add, LONG_MAX, 0},
   {"sub", my_pari_sub, LONG_MAX, LONG_MAX},
+  {"sub", my_pari_sub, LONG_MAX, 0},
   {"sub", my_pari_sub, 0, 0},
   {"mul", my_pari_mul, 0, 0},
   {"mul", my_pari_mul, LONG_MAX-1, LONG_MAX-1},

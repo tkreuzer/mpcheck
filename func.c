@@ -33,7 +33,7 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"cos", mpfr_cos, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, EVEN, IN_POSNEG},
   {"tan", mpfr_tan, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD, IN_POSNEG},
   {"asin", mpfr_asin, 1, -RANGE_PI2, RANGE_PI2, INCREASING, ODD, IN_POSNEG},
-  {"acos", mpfr_acos, 1, RANGE_ZERO, RANGE_PI2, DECREASING, NO_SYMM,IN_POSNEG},
+  {"acos", mpfr_acos, 1, RANGE_ZERO, RANGE_PI, DECREASING, NO_SYMM,IN_POSNEG},
   {"atan", mpfr_atan, 1, -RANGE_PI2, RANGE_PI2, INCREASING, ODD, IN_POSNEG},
   {"atan2", mpfr_atan2, 2, -RANGE_PI, RANGE_PI, NO_MONOTON, NO_SYMM,IN_POSNEG},
 
