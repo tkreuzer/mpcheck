@@ -75,9 +75,9 @@ extern "C" {
 #define IN_POSNEG 1
 
 #define ALL_RND  15
-#define ALL_TEST 7
+#define ALL_TEST ((mpcheck_test_e) 7)
 
-  void mpcheck_init (int argc, const char *const argv[], 
+  void mpcheck_init (int argc, const char *const argv[],
 		     mp_prec_t prec2, mp_exp_t emin2, mp_exp_t emax2,
 		     void *(*new2)(mp_prec_t), void (*del2)(void *),
 		     void (*getfp2)(void *, mpfr_srcptr),

@@ -32,6 +32,7 @@ AC_ARG_WITH(mpfr, [  --with-mpfr=DIR         MPFR install directory ], with_mpfr
 
 dnl Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AC_CANONICAL_HOST
 AC_CHECK_OS
 AC_CHECK_MACHTYPE
@@ -177,6 +178,26 @@ pari_init (10, 10);
  LIBS=$old_LIBS
  AC_MSG_RESULT(no)
 ])
+
+dnl Check for NTL
+AC_MSG_CHECKING(for NTL)
+AC_LANG(C++)
+old_LIBS=$LIBS
+LIBS="-lntl $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define NTL_STD_CXX
+#include "NTL/RR.h"
+using namespace NTL;
+]], [[
+ RR a;
+]])],[
+ AC_DEFINE([HAVE_NTL], 1, [NTL was here and could be used])
+ AC_MSG_RESULT(yes)
+],[
+ LIBS=$old_LIBS
+ AC_MSG_RESULT(no)
+])
+AC_LANG(C)
 
 dnl Must be checked after including the libm
 AC_CHECK_FUNCS([exp exp2 exp10 expm1])
