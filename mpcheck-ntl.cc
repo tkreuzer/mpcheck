@@ -29,14 +29,9 @@ using namespace NTL;
 
 #define MAX_PREC 8000000
 
-static mp_prec_t prec = 0;
-static unsigned long prec_ul;
-static int count = 0;
-static unsigned long stck;
 static mpz_t z;
 static ZZ zz;
 static unsigned char buffer[MAX_PREC/8]; 
-static long buffer_size;
 
 extern "C" void *
 new_fp (mp_prec_t p)
@@ -61,6 +56,7 @@ extern "C" void
 set_fp (mpfr_ptr dest, const void *fp)
 {
   RR *a = (RR*) fp;
+  int i;
 
   if (*a == 0)
     mpfr_set_ui (dest, 0, GMP_RNDN);
@@ -68,7 +64,11 @@ set_fp (mpfr_ptr dest, const void *fp)
     long size = NumBytes (a->mantissa());
     BytesFromZZ (buffer, a->mantissa (), size);
     mpz_import (z, size, -1, 1, 0, 0, buffer);
-    mpfr_set_z (dest, z, GMP_RNDN);
+    i = mpfr_set_z (dest, z, GMP_RNDN);
+    if (i!=0) {
+      printf ("mpfr_set_z should be exact\n");
+      exit (1);
+    }
     mpfr_mul_2si (dest, dest, a->exponent(), GMP_RNDN);
     if (*a < 0)
       mpfr_neg (dest, dest, GMP_RNDN);

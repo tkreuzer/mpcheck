@@ -63,7 +63,12 @@ set_fp (mpfr_ptr dest, const void *fp)
     /* idf.mantissa, idf.exponent and idf.sign */
     /* Undocumented function BUT this is what I need... */
     char *str = print_integer_to_string (16, idf.mantissa);
-    mpfr_set_str (dest, str, 16, GMP_RNDN);
+    //printf ("Str=%s\nPrec=%lu\n", str, mpfr_get_prec (dest));
+    int i = mpfr_strtofr (dest, str, NULL, 16, GMP_RNDN);
+    /* if (i != 0) { // Sometimes we get more bit than needed...
+      printf ("strtofr failed. Must be exact!\n");
+      exit (1);
+      } */
     mpfr_mul_2si (dest, dest, cl_I_to_long (idf.exponent), GMP_RNDN);
     if (idf.sign < 0)
       mpfr_neg (dest, dest, GMP_RNDN);
@@ -227,8 +232,8 @@ static mpcheck_user_func_t tab[] = {
   {"atan", my_atan, 53, 0},
   {"asin", my_asin, 0, 0},
   {"asin", my_asin, -10, 0},
-  {"acos", my_acos, 0, 0},
-  {"acos", my_acos, -10, 0},
+  //{"acos", my_acos, 0, 0}, /* Internal error: statement in file float/elem/cl_F_compare.cc, line 22 has been reached!! */
+  //{"acos", my_acos, -10, 0},
   {"sinh", my_sinh, 0, 0},
   {"sinh", my_sinh, 9, 0}, /* TODO: Improve overflow detection */
   {"cosh", my_cosh, 0, 0},
@@ -237,8 +242,8 @@ static mpcheck_user_func_t tab[] = {
   {"tanh", my_tanh, 4, 0}, 
   {"asinh", my_asinh, 0, 0},
   {"asinh", my_asinh, 9, 0}, /* TODO */
-  {"acosh", my_acosh, 1, 0},
-  {"acosh", my_acosh, 9, 0},
+  //{"acosh", my_acosh, 1, 0}, * Internal error: statement in file float/elem/cl_F_compare.cc, line 22 has been reached!! */
+  //{"acosh", my_acosh, 9, 0},
   {"atanh", my_atanh, 0, 0},
   {"atanh", my_atanh,-10, 0},
   {"pow", my_pow, 0, 0},
