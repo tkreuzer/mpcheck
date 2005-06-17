@@ -121,6 +121,51 @@ my_div (void *dest, const void *src1, const void *src2) {
   *(RR*)dest = *(const RR*)src1 / *(const RR*)src2;
 }
 
+extern "C" void 
+my_sqrt (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = sqrt (*(const RR*)src1);
+}
+
+extern "C" void 
+my_exp (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = exp (*(const RR*)src1);
+}
+
+extern "C" void 
+my_log (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = log (*(const RR*)src1);
+}
+
+extern "C" void 
+my_sin (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = sin (*(const RR*)src1);
+}
+
+extern "C" void 
+my_cos (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = cos (*(const RR*)src1);
+}
+
+extern "C" void 
+my_expm1 (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = expm1 (*(const RR*)src1);
+}
+
+extern "C" void 
+my_log1p (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = log1p (*(const RR*)src1);
+}
+
+extern "C" void 
+my_log10 (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = log10 (*(const RR*)src1);
+}
+
+extern "C" void 
+my_pow (void *dest, const void *src1, const void *src2) {
+  *(RR*)dest = pow (*(const RR*)src1, *(const RR*)src2);
+}
+
 static mpcheck_user_func_t tab[] = {
   {"add", my_add, 0, 0},
   {"add", my_add, LONG_MAX, LONG_MAX},
@@ -130,7 +175,6 @@ static mpcheck_user_func_t tab[] = {
   {"mul", my_mul, LONG_MAX-1, LONG_MAX-1},
   {"div", my_div, 0, 0},
   {"div", my_div, LONG_MAX, LONG_MAX},
-#if 0
   {"sqrt", my_sqrt, 0, 0},
   {"sqrt", my_sqrt, LONG_MAX, 0},
   {"sqrt", my_sqrt, LONG_MAX-2, 0},
@@ -142,22 +186,15 @@ static mpcheck_user_func_t tab[] = {
   {"sin", my_sin, 10, 0},
   {"cos", my_cos, 0, 0},
   {"cos", my_cos, 10, 0},
-  {"tan", my_tan, 0, 0},
-  {"tan", my_tan, 10, 0},
-  {"atan", my_atan, 0, 0},
-  {"atan", my_atan, 53, 0},
-  {"asin", my_asin, 0, 0},
-  {"asin", my_asin, -10, 0},
-  {"acos", my_acos, 0, 0},
-  {"acos", my_acos, -10, 0},
-  {"gamma", my_gamma, 0, 0},
-  {"gamma", my_gamma, 10, 0},
+  {"expm1", my_expm1, 0, 0},
+  {"expm1", my_expm1, -9, 0},
+  {"log10", my_log10, 0, 0},
+  {"log10", my_log10, LONG_MAX},
+  {"log1p", my_log1p, 0, 0},
+  {"log1p", my_log1p, LONG_MAX, 0},
   {"pow", my_pow, 0, 0},
   {"pow", my_pow, 5, 4},
   {"pow", my_pow, 16, 10},
-  {"erfc", my_erfc, 0, 0},
-  {"erfc", my_erfc, 2, 0},
-#endif
   {NULL, NULL, 0, 0}
 };
 
