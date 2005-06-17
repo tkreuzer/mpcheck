@@ -14,5 +14,12 @@ Other libraries can be checked:
 
 - CRLIBM:
 
+- PARI:
+
+- NTL:
+
+- CLN:
+
+
 It detects which libraries are present and are usable at configure time.
 
