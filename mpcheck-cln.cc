@@ -64,6 +64,10 @@ set_fp (mpfr_ptr dest, const void *fp)
     /* Undocumented function BUT this is what I need... */
     char *str = print_integer_to_string (16, idf.mantissa);
     //printf ("Str=%s\nPrec=%lu\n", str, mpfr_get_prec (dest));
+    /* Warning: When converting to integer*2^N, the integer may be out of
+       range! Fix it by temporary augment the exponent range. */
+    mp_exp_t emax = mpfr_get_emax ();
+    mpfr_set_emax (MPFR_EMAX_DEFAULT);
     int i = mpfr_strtofr (dest, str, NULL, 16, GMP_RNDN);
     /* if (i != 0) { // Sometimes we get more bit than needed...
       printf ("strtofr failed. Must be exact!\n");
@@ -72,6 +76,8 @@ set_fp (mpfr_ptr dest, const void *fp)
     mpfr_mul_2si (dest, dest, cl_I_to_long (idf.exponent), GMP_RNDN);
     if (idf.sign < 0)
       mpfr_neg (dest, dest, GMP_RNDN);
+    mpfr_set_emax (emax);
+    mpfr_check_range (dest, i, GMP_RNDN);
     free_hook (str);
   }
 }
@@ -273,7 +279,7 @@ int main (int argc, const char *argv[])
   del_fp (fp);
 
   /* Starting MPCHECK */
-  mpcheck_init (argc, argv, 53, -1L<<10, 1L<<10,
+  mpcheck_init (argc, argv, 53, -1L<<24, 1L<<24,
 		new_fp, del_fp, get_fp, set_fp, set_rnd_mode,
 		1, ALL_TEST, 0, 10000, 2);
   mpcheck_check (stdout, tab);
