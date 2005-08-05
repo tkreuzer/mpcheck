@@ -22,4 +22,5 @@
 + [from V. Lefe`vre] check special values too (NaN, inf, ...)
 + Support for external check.
 + Add support for mpfr_subnormalize.
-
++ If emax ~= prec, sometimes you can get 0 instead of the desired ulp when
+  substracting two big numbers.
