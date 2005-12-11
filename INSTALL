@@ -1,5 +1,5 @@
 You need to install:
-	GMP 4.1.0
+	GMP 4.1 or later
 	MPFR 2.2.0 (Because versions < 2.2.0 don't handle well overflow).
 
 If you download the CVS version, you need also the autotools.
