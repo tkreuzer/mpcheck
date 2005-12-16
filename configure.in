@@ -46,8 +46,8 @@ AC_CHECK_HEADERS([float.h math.h stdio.h stdlib.h limits.h])
 dnl If compiler is gcc, then use some specific flags.
 dnl But don't touch user specified flags.
 if test -n "$GCC"; then
-  CFLAGS="-Wall -static $CFLAGS"
-  CXXFLAGS="-Wall -static $CFLAGS"
+  CFLAGS="-Wall $CFLAGS"
+  CXXFLAGS="-Wall $CFLAGS"
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if __GNUC__ < 3
 # error "GCC too old!"

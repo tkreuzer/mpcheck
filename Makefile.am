@@ -10,6 +10,8 @@ mpcheck_pari_SOURCES = check.c func.c mpcheck.h mpcheck-pari.c
 mpcheck_ntl_SOURCES = check.c func.c mpcheck.h mpcheck-ntl.cc
 mpcheck_cln_SOURCES = check.c func.c mpcheck.h mpcheck-cln.cc
 
+EXTRA_DIST = VERSION rnd_mode.c native.c
+
 check: mpcheck-double mpcheck-float mpcheck-longdouble
 	./mpcheck-double
 	./mpcheck-float
