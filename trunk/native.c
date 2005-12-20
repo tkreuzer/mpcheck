@@ -467,6 +467,14 @@ static mpcheck_user_func_t tab[] = {
 
 int main (int argc, const char *const argv[])
 {
+  int i;
+
+  /* print command line */
+  fprintf (stderr, "%s", argv[0]);
+  for (i = 1; i < argc; i++)
+    fprintf (stderr, " %s", argv[i]);
+  fprintf (stderr, "\n");
+
   setup_native ();
 #ifdef LIB_INIT
   LIB_INIT ();
