@@ -237,9 +237,9 @@ void
 mpcheck_clear (FILE *out)
 {
   fprintf (out, "Max. errors : ");
-  mpfr_out_str (out, 10, 0,  mpcheck_max_err_near, GMP_RNDN);
+  mpfr_out_str (out, 10, 3,  mpcheck_max_err_near, GMP_RNDN);
   fprintf (out, " (nearest), ");
-  mpfr_out_str (out, 10, 0, mpcheck_max_err_dir, GMP_RNDN);
+  mpfr_out_str (out, 10, 3, mpcheck_max_err_dir, GMP_RNDN);
   fprintf (out, " (directed)\n");
 
   mpfr_clears (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
@@ -659,9 +659,9 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
     } /* For each rnd */
   
   fprintf (out, "Max. errors for %s [exp. %ld]: ", name, e1);
-  mpfr_out_str (out, 10, 0, max_err_near, GMP_RNDN);
+  mpfr_out_str (out, 10, 3, max_err_near, GMP_RNDN);
   fprintf (out, " (nearest), ");
-  mpfr_out_str (out, 10, 0, max_err_dir, GMP_RNDN);
+  mpfr_out_str (out, 10, 3, max_err_dir, GMP_RNDN);
   fprintf (out, " (directed)\n");
   if (verbose >= 3)
     fprintf (out, "\n");
