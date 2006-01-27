@@ -279,7 +279,7 @@ int main (int argc, const char *argv[])
   del_fp (fp);
 
   /* Starting MPCHECK */
-  mpcheck_init (argc, argv, 53, -1L<<24, 1L<<24,
+  mpcheck_init (argc, argv, 53, -1L<<10, 1L<<10,
 		new_fp, del_fp, get_fp, set_fp, set_rnd_mode,
 		1, ALL_TEST, 0, 10000, 2);
   mpcheck_check (stdout, tab);
