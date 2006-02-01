@@ -39,6 +39,8 @@ extern "C" void *
 new_fp (mp_prec_t p)
 {
   cl_F *a;
+  /* note: float_format_t is an undocumented CLN feature that sets
+     the bit precision (and not the digit precision as float_format) */
   cl_F b = cl_float (0.0, float_format_t (p));
   a = new cl_F (b);
   return (void *) a;
