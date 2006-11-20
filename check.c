@@ -99,11 +99,9 @@ usage (void)
 {
   fprintf (stderr,
 	   "Usage: mpcheck [options]\n"
-	   "Usage: mpcheck [options] <function> <exponent>\n"
-	   "Usage: mpcheck [options] <function> <exp1> <exp2>\n"
 	   "where options are:\n"
 	   "--seed=s    : set random seed to s [default 1]\n"
-	   "--verbose=k : set verbose level to k [default 3]\n"
+	   "--verbose=k : set verbose level to k [default 2]\n"
 	   "--range=bool: test output range\n"
 	   "--mono=bool : test monotonicity\n"
 	   "--symm=bool : test symmetry\n"
@@ -112,7 +110,7 @@ usage (void)
 	   "--RNDD=bool : test Round To -Inf\n"
 	   "--RNDU=bool : test Round To +Inf\n"
 	   "--prec=val  : Set prec\n"
-	   "--num=n     : N\n");
+	   "--num=n     : N [default %u]\n", DEFAULT_N);
   exit (1);
 }
 
