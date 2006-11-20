@@ -77,6 +77,8 @@ extern "C" {
 #define ALL_RND  15
 #define ALL_TEST ((mpcheck_test_e) 7)
 
+#define DEFAULT_N 10000 /* default number of tests per function */
+
   void mpcheck_init (int argc, const char *const argv[],
 		     mp_prec_t prec2, mp_exp_t emin2, mp_exp_t emax2,
 		     void *(*new2)(mp_prec_t), void (*del2)(void *),

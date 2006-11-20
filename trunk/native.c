@@ -481,7 +481,7 @@ int main (int argc, const char *const argv[])
 #endif
   mpcheck_init (argc, argv, prec, emin, emax,
 		new_fp, del_fp, get_fp, set_fp, set_rnd_mode,
-		RND, ALL_TEST, 0, 10000, 2); 
+		RND, ALL_TEST, 0, DEFAULT_N, 2); 
   mpcheck_check (stdout, tab);
   mpcheck_clear (stdout);
 #ifdef LIB_EXIT
