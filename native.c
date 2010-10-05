@@ -1,6 +1,6 @@
 /*
  * MPCHECK - Check native Math functions
- * Copyright (C) 2002, 2004, 2005 INRIA
+ * Copyright (C) 2002, 2004, 2005, 2010 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#ifdef __GNUC__
+#include <gnu/libc-version.h>
+#endif
 
 #ifndef fptype
 # error "NOT FP-TYPE selected!"
@@ -474,6 +478,11 @@ int main (int argc, const char *const argv[])
   for (i = 1; i < argc; i++)
     fprintf (stderr, " %s", argv[i]);
   fprintf (stderr, "\n");
+
+#ifdef __GNUC__
+  printf("GNU libc version: %s\n", gnu_get_libc_version ());
+  printf("GNU libc release: %s\n", gnu_get_libc_release ());
+#endif
 
   setup_native ();
 #ifdef LIB_INIT
