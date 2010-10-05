@@ -59,7 +59,6 @@ mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
       break;
     case -RANGE_PI:
       mpfr_const_pi (dest, GMP_RNDU);
-      mpfr_div_2ui (dest, dest, 1, GMP_RNDU);
       mpfr_neg (dest, dest, GMP_RNDD);
       break;
     case -RANGE_PI2:
@@ -449,6 +448,11 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 		    {
 		      fprintf (out, "      outside range for x=");
 		      mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                      if (ref->NumArg == 2)
+                        {
+                          fprintf (out, " t=");
+                          mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                        }
 		      fprintf (out, "\n           f(x)=");
 		      mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
 		      fprintf (out, "\n      not between ");
