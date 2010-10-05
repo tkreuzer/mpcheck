@@ -204,13 +204,15 @@ int main (int argc, const char *argv[])
 {
   mpfr_t x,y;
   void *fp;
+  gmp_randstate_t state;
 
   mpz_init (z);
+  gmp_randinit_default (state);
 
   /* Check if interface works */
   mpfr_inits2 (113, x, y, NULL);
   fp = new_fp (113);
-  mpfr_random (x);
+  mpfr_urandomb (x, state);
   mpfr_set (y, x, GMP_RNDN);
   get_fp (fp, x);
   set_fp (y, fp);
@@ -228,6 +230,7 @@ int main (int argc, const char *argv[])
   mpcheck_clear (stdout);
 
   mpz_clear (z);
+  gmp_randclear (state);
   return 0;
 }
 

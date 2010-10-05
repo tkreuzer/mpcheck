@@ -78,7 +78,7 @@ static void set_fp (mpfr_ptr dest, const void *fp)
   else {
     mpfr_set_si (dest, s, GMP_RNDN);
     mpfr_set_exp (dest, gexpo ((GEN) fp)+1);
-    copy_reverse (dest->_mpfr_d, & ((long*)fp)[2], prec_ul);
+    copy_reverse (dest->_mpfr_d, (mp_limb_t*) & ((long*)fp)[2], prec_ul);
     /* We may have copied more bit than necessary: reprec it */
     p = mpfr_get_prec (dest);
     dest->_mpfr_prec = prec_ul * (8*sizeof(mp_limb_t));
@@ -99,7 +99,7 @@ static void get_fp (void *fp, mpfr_srcptr src)
   if (!mpfr_zero_p (src)) {
     setsigne (fp, mpfr_sgn (src));
     setexpo (fp, mpfr_get_exp (src)-1);
-    copy_reverse (& ((long*)fp)[2], src->_mpfr_d, prec_ul);
+    copy_reverse ((mp_limb_t*) & ((long*)fp)[2], src->_mpfr_d, prec_ul);
   } else {
     gsubz (fp, fp, fp); /* Set zero #top#! */
   }
@@ -270,6 +270,7 @@ int main (int argc, const char *argv[])
 {
   mpfr_t x,y;
   void *fp;
+  gmp_randstate_t state;
 
   /* Check if Pari may work */
   if (sizeof (long) != sizeof (unsigned long)
@@ -282,11 +283,12 @@ int main (int argc, const char *argv[])
     }
 
   pari_init (40000000, 10000);
+  gmp_randinit_default (state);
 
   /* Check if interface works */
   mpfr_inits2 (113, x, y, NULL);
   fp = new_fp (113);
-  mpfr_random (x);
+  mpfr_urandomb (x, state);
   mpfr_set (y, x, GMP_RNDN);
   get_fp (fp, x);
   set_fp (y, fp);
@@ -304,6 +306,7 @@ int main (int argc, const char *argv[])
 		ALL_RND, ALL_TEST, 0, 10000, 2);
   mpcheck_check (stdout, tab);
   mpcheck_clear (stdout);
+  gmp_randclear (state);
   return 0;
 }
 
