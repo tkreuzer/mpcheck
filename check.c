@@ -215,9 +215,14 @@ mpcheck_init (int argc, const char *const argv[],
 	    prec = value;
 	  else
 	    {
-	      fprintf (stderr, "Invalid option: %s\n", argv[i]);
 	      usage ();
+	      exit(0);
 	    }
+	}
+      else
+	{
+	  usage ();
+	  exit(0);
 	}
     }
 
