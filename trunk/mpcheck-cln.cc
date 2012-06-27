@@ -265,13 +265,15 @@ int main (int argc, const char *argv[])
 {
   mpfr_t x,y;
   void *fp;
+  gmp_randstate_t rand;
 
   mpz_init (z);
+  gmp_randinit_default(rand);
 
   /* Check if interface works */
   mpfr_inits2 (1130, x, y, NULL);
   fp = new_fp (1130);
-  mpfr_random (x);
+  mpfr_urandom (x, rand, MPFR_RNDN);
   get_fp (fp, x);
   set_fp (y, fp);
   if (mpfr_cmp (x, y) != 0 || mpfr_nan_p (y)) {
