@@ -219,6 +219,31 @@ using namespace cln;
 ])
 AC_LANG(C)
 
+dnl Check for __float128
+AC_MSG_CHECKING(for __float128)
+AC_LANG(C)
+old_LIBS=$LIBS
+LIBS="-lquadmath $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define MPFR_WANT_FLOAT128 1
+#include "quadmath.h"
+#include "mpfr.h"
+]], [[
+__float128 x;
+mpfr_t fr;
+x = 12;
+x = sinq(x);
+mpfr_init(fr);
+mpfr_set_float128(fr, x, MPFR_RNDN);
+]])],[
+ AC_DEFINE([HAVE_FLOAT128], 1, [__float128 was here and could be used])
+ AC_MSG_RESULT(yes)
+],[
+ LIBS=$old_LIBS
+ AC_MSG_RESULT(no)
+])
+AC_LANG(C)
+
 dnl Must be checked after including the libm
 AC_CHECK_FUNCS([exp exp2 exp10 expm1])
 AC_CHECK_FUNCS([sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh])
