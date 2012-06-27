@@ -27,7 +27,7 @@ mp_rnd_t  mpcheck_rnd_mode;
 static void
 mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
 {
-  switch (range)
+  switch ((int) range)
     {
     case RANGE_INF:
       mpfr_set_inf (dest, 1);
