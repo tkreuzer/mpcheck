@@ -105,7 +105,7 @@ setup_native (void)
   x = 5.0;
   if (set_rnd_mode (GMP_RNDN))
     {
-      y = exp (x);
+      y = NAME(exp) (x);
       if (y > 140 && y < 160)
 	RND |= 1;
       else
@@ -113,7 +113,7 @@ setup_native (void)
     }
   if (set_rnd_mode (GMP_RNDZ))
     {
-      y = exp (x);
+      y = NAME(exp) (x);
       if (y > 140 && y < 160)
         RND |= 2;
       else
@@ -121,7 +121,7 @@ setup_native (void)
     }
   if (set_rnd_mode (GMP_RNDU))
     {
-      y = exp (x);
+      y = NAME(exp) (x);
       if (y > 140 && y < 160)
         RND |= 4;
       else
@@ -129,7 +129,7 @@ setup_native (void)
     }
   if (set_rnd_mode (GMP_RNDD))
     {
-      y = exp (x);
+      y = NAME(exp) (x);
       if (y > 140 && y < 160)
         RND |= 8;
       else
