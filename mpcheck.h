@@ -20,8 +20,8 @@
 #ifndef __MPCHECK__
 #define __MPCHECK__
 
-#include <float.h>
 #include <math.h>
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
