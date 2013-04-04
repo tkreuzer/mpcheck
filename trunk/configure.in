@@ -262,7 +262,7 @@ AC_CHECK_FUNCS([tgammal sqrtl powl cbrtl erfl erfcl])
 
 dnl Check for How to set the rounding mode
 AC_MSG_CHECKING(for how to select rounding mode)
-AC_RUN_IFELSE(AC_LANG_SOURCE[[
+AC_COMPILE_IFELSE(AC_LANG_SOURCE[[
 #define USE_FENV_H
 #define WITHIN_CONFIGURE
 #include "rnd_mode.c"
