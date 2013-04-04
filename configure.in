@@ -71,6 +71,13 @@ if test -d "$with_mpfr_include"; then
   CPPFLAGS="$CPPFLAGS -I$with_mpfr_include"
 fi
 
+dnl Check for GNU libc
+AC_MSG_CHECKING(for GNU libc)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include "gnu/libc-version.h"
+]], [[]])],[AC_DEFINE([HAVE_GLIBC], 1, [GLIBC was found])
+            AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
+
 dnl Check for GMP
 AC_MSG_CHECKING(for gmp.h)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
