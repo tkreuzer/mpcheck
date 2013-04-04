@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef __GNUC__
+#ifdef HAVE_GLIBC
 #include <gnu/libc-version.h>
 #endif
 
@@ -479,7 +479,7 @@ int main (int argc, const char *const argv[])
     fprintf (stderr, " %s", argv[i]);
   fprintf (stderr, "\n");
 
-#ifdef __GNUC__
+#ifdef HAVE_GLIBC
   printf("GNU libc version: %s\n", gnu_get_libc_version ());
   printf("GNU libc release: %s\n", gnu_get_libc_release ());
 #endif
