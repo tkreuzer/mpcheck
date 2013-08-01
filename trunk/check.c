@@ -308,9 +308,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
   reduction_done = 0;
   for (;;)
     {
-      mpfr_urandomb (op1, state);
+      /* we should ensure that 2^(e1-1) <= op1 < 2^e1 below */
+      do
+        mpfr_urandomb (op1, state);
+      while (mpfr_get_exp (op1) < 0);
       mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
-      mpfr_urandomb (op2, state);
+      /* we should ensure that 2^(e2-1) <= op1 < 2^e2 below */
+      do
+        mpfr_urandomb (op2, state);
+      while (mpfr_get_exp (op2) < 0);
       mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
 
       if (ref->NumArg == 2)
