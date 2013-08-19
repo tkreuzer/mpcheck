@@ -187,6 +187,25 @@ pari_init (10, 10);
  AC_MSG_RESULT(no)
 ])
 
+dnl Check for OpenCL
+AC_MSG_CHECKING(for OpenCL)
+old_LIBS=$LIBS
+LIBS="-lOpenCL $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include  "CL/cl.h"
+]], [[
+   cl_platform_id platform;
+   cl_device_id dev;
+   int err;
+   err = clGetPlatformIDs(1, &platform, NULL);
+]])],[
+ AC_DEFINE([HAVE_OPEN_CL], 1, [OpenCL was here and could be used])
+ AC_MSG_RESULT(yes)
+],[
+ LIBS=$old_LIBS
+ AC_MSG_RESULT(no)
+])
+
 dnl Check for NTL
 AC_MSG_CHECKING(for NTL)
 AC_LANG(C++)
