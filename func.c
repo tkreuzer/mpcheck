@@ -1,6 +1,6 @@
 /*
  * MPCHECK - Check mathematical functions
- * Copyright (C) 2002, 2004, 2005, 2010 INRIA
+ * Copyright (C) 2002, 2004, 2005, 2010, 2014 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,9 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"log", mpfr_log, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM, IN_POS},
 
   {"sin", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD, IN_POSNEG},
+  {"sincos1", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD, IN_POSNEG},
   {"cos", mpfr_cos, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, EVEN, IN_POSNEG},
+  {"sincos2", mpfr_cos, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, EVEN, IN_POSNEG},
   {"tan", mpfr_tan, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD, IN_POSNEG},
   {"asin", mpfr_asin, 1, -RANGE_PI2, RANGE_PI2, INCREASING, ODD, IN_POSNEG},
   {"acos", mpfr_acos, 1, RANGE_ZERO, RANGE_PI, DECREASING, NO_SYMM,IN_POSNEG},
@@ -47,13 +49,20 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"exp2", mpfr_exp2, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM,IN_POSNEG},
   {"log2", mpfr_log2, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM,IN_POSNEG},
   {"expm1", mpfr_expm1, 1, -RANGE_ONE, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
+  {"exp10", mpfr_exp10, 1, RANGE_ZERO, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
   {"log10", mpfr_log10, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POS},
   {"log1p", mpfr_log1p, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POS},
 
   {"gamma", mpfr_gamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POS},
+  {"lgamma", mpfr_lngamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POS},
   {"cbrt", mpfr_cbrt, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD, IN_POSNEG},
   {"erf", mpfr_erf, 1, -RANGE_ONE, RANGE_ONE, INCREASING, ODD, IN_POSNEG},
   {"erfc", mpfr_erfc, 1, RANGE_ZERO, RANGE_TWO, DECREASING, NO_SYMM,IN_POSNEG},
+
+  {"j0", mpfr_j0, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, EVEN, IN_POSNEG},
+  {"j1", mpfr_j1, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD,  IN_POSNEG},
+  {"y0", mpfr_y0, 1, RANGE_ZERO, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
+  {"y1", mpfr_y1, 1, RANGE_ZERO, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
 
   {"hypot", mpfr_hypot, 2, -RANGE_INF, RANGE_INF,NO_MONOTON,NO_SYMM,IN_POSNEG},
   {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
