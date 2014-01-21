@@ -1,6 +1,6 @@
 /*
  * MPCHECK - Check native Math functions
- * Copyright (C) 2002, 2004, 2005, 2010 INRIA
+ * Copyright (C) 2002, 2004, 2005, 2010, 2014 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,10 +205,24 @@ static void my_sin (void *dest, const void *a, const void *b)
   *(fptype*) dest = NAME(sin) (*(fptype*)a);
 }
 #endif
+#if HAVE_SINCOS
+static void my_sincos1 (void *dest, const void *a, const void *b)
+{
+  fptype dummy[1];
+  NAME(sincos) (*(fptype*)a, (fptype*) dest, (fptype*) dummy);
+}
+#endif
 #if HAVE_COS
 static void my_cos (void *dest, const void *a, const void *b)
 {
   *(fptype*) dest = NAME(cos) (*(fptype*)a);
+}
+#endif
+#if HAVE_SINCOS
+static void my_sincos2 (void *dest, const void *a, const void *b)
+{
+  fptype dummy[1];
+  NAME(sincos) (*(fptype*)a, (fptype*) dummy, (fptype*) dest);
 }
 #endif
 #if HAVE_TAN
@@ -283,6 +297,12 @@ static void my_gamma (void *dest, const void *a, const void *b)
   *(fptype*) dest = NAME(tgamma) (*(fptype*)a);
 }
 #endif
+#if HAVE_LGAMMA
+static void my_lgamma (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(lgamma) (*(fptype*)a);
+}
+#endif
 #if HAVE_EXP2
 static void my_exp2 (void *dest, const void *a, const void *b)
 {
@@ -305,6 +325,12 @@ static void my_expm1 (void *dest, const void *a, const void *b)
 static void my_log1p (void *dest, const void *a, const void *b)
 {
   *(fptype*) dest = NAME(log1p) (*(fptype*)a);
+}
+#endif
+#if HAVE_EXP10
+static void my_exp10 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(exp10) (*(fptype*)a);
 }
 #endif
 #if HAVE_LOG10
@@ -343,6 +369,30 @@ static void my_erfc (void *dest, const void *a, const void *b)
   *(fptype*) dest = NAME(erfc) (*(fptype*)a);
 }
 #endif
+#if HAVE_J0
+static void my_j0 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(j0) (*(fptype*)a);
+}
+#endif
+#if HAVE_J1
+static void my_j1 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(j1) (*(fptype*)a);
+}
+#endif
+#if HAVE_Y0
+static void my_y0 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(y0) (*(fptype*)a);
+}
+#endif
+#if HAVE_Y1
+static void my_y1 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(y1) (*(fptype*)a);
+}
+#endif
 
 static mpcheck_user_func_t tab[] = {
   {"add", my_add, 0, 0},
@@ -370,9 +420,17 @@ static mpcheck_user_func_t tab[] = {
   {"sin", my_sin, 0, 0},
   {"sin", my_sin, 10, 0},
 #endif
+#if HAVE_SINCOS
+  {"sincos1", my_sincos1, 0, 0},
+  {"sincos1", my_sincos1, 10, 0},
+#endif
 #if HAVE_COS
   {"cos", my_cos, 0, 0},
   {"cos", my_cos, 10, 0},
+#endif
+#if HAVE_SINCOS
+  {"sincos2", my_sincos2, 0, 0},
+  {"sincos2", my_sincos2, 10, 0},
 #endif
 #if HAVE_TAN
   {"tan", my_tan, 0, 0},
@@ -432,21 +490,29 @@ static mpcheck_user_func_t tab[] = {
   {"gamma", my_gamma, 0, 0},
   {"gamma", my_gamma, 10, 0},
 #endif
+#if HAVE_LGAMMA
+  {"lgamma", my_lgamma, 0, 0},
+  {"lgamma", my_lgamma, 10, 0},
+#endif
 #if HAVE_EXP2
   {"exp2", my_exp2, 0, 0},
   {"exp2", my_exp2, 9, 0},
 #endif
 #if HAVE_LOG2
   {"log2", my_log2,  0, 0},
-  {"log2", my_log2, LONG_MAX,0},
+  {"log2", my_log2, LONG_MAX, 0},
 #endif
 #if HAVE_EXPM1
   {"expm1", my_expm1, 0, 0},
   {"expm1", my_expm1, -9, 0},
 #endif
+#if HAVE_EXP10
+  {"exp10", my_exp10, 0, 0},
+  {"exp10", my_exp10, 9, 0},
+#endif
 #if HAVE_LOG10
   {"log10", my_log10, 0, 0},
-  {"log10", my_log10, LONG_MAX},
+  {"log10", my_log10, LONG_MAX, 0},
 #endif
 #if HAVE_LOG1P
   {"log1p", my_log1p, 0, 0},
@@ -464,6 +530,22 @@ static mpcheck_user_func_t tab[] = {
 #if HAVE_ERFC
   {"erfc", my_erfc, 0, 0},
   {"erfc", my_erfc, 2, 0},
+#endif
+#if HAVE_J0
+  {"j0", my_j0, 0, 0},
+  {"j0", my_j0, 10, 0},
+#endif
+#if HAVE_J1
+  {"j1", my_j1, 0, 0},
+  {"j1", my_j1, 10, 0},
+#endif
+#if HAVE_Y0
+  {"y0", my_y0, 0, 0},
+  {"y0", my_y0, 10, 0},
+#endif
+#if HAVE_Y1
+  {"y1", my_y1, 0, 0},
+  {"y1", my_y1, 10, 0},
 #endif
   {NULL, NULL, 0, 0}
 };
