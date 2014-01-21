@@ -21,6 +21,7 @@
 #define __MPCHECK__
 
 #include <math.h>
+#include <errno.h>
 #include <float.h>
 #include <stdio.h>
 #include <stdlib.h>

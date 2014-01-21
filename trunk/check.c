@@ -263,6 +263,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    mpcheck_func_t *ref;
    unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm, tot;
    mp_rnd_t rnd;
+   int saved_errno;
 
    for (i = 0 ; mpcheck_tab[i].name != NULL ; i++)
      if (strcmp (mpcheck_tab[i].name, name) == 0)
@@ -405,7 +406,9 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  else
 	    (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
 	       ref->mpfr)) (result, op1, rnd);
+          errno = 0;
 	  (*func) (rresult, rop1, rop2);
+          saved_errno = errno;
 	  /* Convert back the result to MPFR */
 	  (*setfp) (result_lib, rresult);
 
@@ -605,6 +608,73 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 		    }
 		}
 	    }
+
+          /* Testing errno */
+          if (saved_errno != 0)
+            {
+              if (saved_errno == EDOM)
+                {
+                  /* result and result_lib should be NaN */
+                  if (mpfr_nan_p (result) == 0 || mpfr_nan_p (result_lib) == 0)
+                    {
+                      fprintf (stderr, "errno=%d: out of domain of function\n",
+                               saved_errno);
+                      fprintf (out, "x=");
+                      mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                      if (ref->NumArg == 2)
+                        {
+                          fprintf (out, " t=");
+                          mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                        }
+		      fprintf (out, "\nlibrary gives ");
+		      mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+		      fprintf (out, "\nmpfr    gives ");
+		      mpfr_out_str (out, 10, 0, result, GMP_RNDN);
+		      fprintf (out, " \n");
+                      exit (1);
+                    }
+                }
+              else if (saved_errno == ERANGE)
+                {
+                  if (mpfr_nan_p (result) || mpfr_nan_p (result_lib) ||
+                      mpfr_cmp (result, result_lib))
+                    {
+                      fprintf (stderr, "errno=%d: result not representable\n",
+                               saved_errno);
+                      fprintf (out, "x=");
+                      mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                      if (ref->NumArg == 2)
+                        {
+                          fprintf (out, " t=");
+                          mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                        }
+		      fprintf (out, "\nlibrary gives ");
+		      mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+		      fprintf (out, "\nmpfr    gives ");
+		      mpfr_out_str (out, 10, 0, result, GMP_RNDN);
+		      fprintf (out, " \n");
+                      exit (1);
+                    }
+                }
+              else
+                {
+                  fprintf (stderr, "errno=%d\n", saved_errno);
+                  exit (1);
+                }
+            }
+          if (mpfr_nan_p (result)) /* check errno is set */
+            {
+              if (saved_errno == 0)
+                {
+                  fprintf (stderr, "Result is NaN but errno is not set\n");
+                  exit (1);
+                }
+              else if (saved_errno != EDOM)
+                {
+                  fprintf (stderr, "errno=%d\n", saved_errno);
+                  exit (1);
+                }
+            }
 	} /* for i to N */
       
       /* if any difference occured, prints the maximal ulp error */
@@ -703,4 +773,4 @@ mpcheck_check (FILE *out, mpcheck_user_func_t *tab)
   for (i = 0 ; tab[i].name != NULL ; i++)
     mpcheck (out, tab[i].e1, tab[i].e2, tab[i].name, tab[i].func);
 }
- 
+
