@@ -8,6 +8,8 @@ mkdir build
 cd build
 ../configure --prefix=/tmp
 make
-./testrun.sh $HOME/svn/mpcheck/mpcheck-double --RNDZ=0 --RNDD=0 --RNDU=0
+./testrun.sh $HOME/svn/mpcheck/mpcheck-float
+./testrun.sh $HOME/svn/mpcheck/mpcheck-double
+./testrun.sh $HOME/svn/mpcheck/mpcheck-longdouble
 cd /tmp
 /bin/rm -fr $d
