@@ -29,6 +29,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+#include <unistd.h> /* for getpid */
 
 #include "gmp.h"
 #include "mpfr.h"
