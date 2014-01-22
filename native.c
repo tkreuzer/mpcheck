@@ -386,17 +386,9 @@ static void my_j17 (void *dest, const void *a, const void *b)
 {
   *(fptype*) dest = NAME(jn) (17, *(fptype*)a);
 }
-int mpfr_j17 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
-{
-  return mpfr_jn (y, 17, x, r);
-}
 static void my_j42 (void *dest, const void *a, const void *b)
 {
   *(fptype*) dest = NAME(jn) (42, *(fptype*)a);
-}
-int mpfr_j42 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
-{
-  return mpfr_jn (y, 42, x, r);
 }
 #endif
 #if HAVE_Y0
@@ -416,17 +408,9 @@ static void my_y17 (void *dest, const void *a, const void *b)
 {
   *(fptype*) dest = NAME(yn) (17, *(fptype*)a);
 }
-int mpfr_y17 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
-{
-  return mpfr_yn (y, 17, x, r);
-}
 static void my_y42 (void *dest, const void *a, const void *b)
 {
   *(fptype*) dest = NAME(yn) (42, *(fptype*)a);
-}
-int mpfr_y42 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
-{
-  return mpfr_yn (y, 42, x, r);
 }
 #endif
 
