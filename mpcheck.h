@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <unistd.h> /* for getpid */
+#include <fenv.h>
 
 #include "gmp.h"
 #include "mpfr.h"
