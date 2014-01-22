@@ -9,3 +9,5 @@ cd build
 ../configure --prefix=/tmp
 make
 ./testrun.sh $HOME/svn/mpcheck/mpcheck-double --RNDZ=0 --RNDD=0 --RNDU=0
+cd /tmp
+/bin/rm -fr $d
