@@ -233,7 +233,7 @@ mpcheck_init (int argc, const char *const argv[],
     }
 
   /* Init */
-  mpfr_set_emin (emin);
+  mpfr_set_emin (emin - prec + 1);
   mpfr_set_emax (emax);
   mpfr_set_default_prec (prec);
   mpfr_inits (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
@@ -269,7 +269,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    mpcheck_func_t *ref;
    unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm, wrong_errno, tot;
    mp_rnd_t rnd;
-   int saved_errno;
+   int saved_errno, inex;
 
    for (i = 0 ; mpcheck_tab[i].name != NULL ; i++)
      if (strcmp (mpcheck_tab[i].name, name) == 0)
@@ -335,11 +335,12 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
       mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
 
       if (ref->NumArg == 2)
-	(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
-	   ref->mpfr)) (result, op1, op2, GMP_RNDN);
+	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+                  ref->mpfr)) (result, op1, op2, GMP_RNDN);
       else
-	(*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
-	   ref->mpfr)) (result, op1, GMP_RNDN);
+	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
+                  ref->mpfr)) (result, op1, GMP_RNDN);
+      inex = mpfr_subnormalize (result, inex, GMP_RNDN);
       if (mpfr_number_p (result))
 	break;
       if (e1 > 0) e1 --; else e1++;
@@ -407,7 +408,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	      if ((rand () & 1) == 0)
                 mpfr_neg (op2, op2, GMP_RNDN);
 	    }
-          /* Function which takes only positive arg
+          /* Functions which take only positive arguments
              may have a strange behaviour for 0 */
           else while (mpfr_zero_p (op1)) {
             mpfr_urandomb (op1, state);
@@ -419,11 +420,12 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  (*getfp) (rop2, op2);
 	  /* Compute the result with MPFR and the LIBRARY */
 	  if (ref->NumArg == 2)
-	    (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
-	       ref->mpfr)) (result, op1, op2, rnd); 
+	    inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+                      ref->mpfr)) (result, op1, op2, rnd); 
 	  else
-	    (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
-	       ref->mpfr)) (result, op1, rnd);
+	    inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
+                      ref->mpfr)) (result, op1, rnd);
+          inex = mpfr_subnormalize (result, inex, GMP_RNDN);
           errno = 0;
 	  (*func) (rresult, rop1, rop2);
           saved_errno = errno;
