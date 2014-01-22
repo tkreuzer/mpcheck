@@ -78,7 +78,13 @@ mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
 static void
 mpcheck_ulp (mpfr_t ulp, mpfr_t library, mpfr_t reference, mp_prec_t prec)
 {
+  mpfr_exp_t emin;
+
+  /* enlarge the exponent range to avoid getting zero */
+  emin = mpfr_get_emin ();
+  mpfr_set_emin (mpfr_get_emin_min ());
   mpfr_sub (ulp, library, reference, GMP_RNDN);
+  mpfr_set_emin (emin);
   if (mpfr_cmp_ui (ulp, 0) == 0)
     {
       fprintf (stderr, "MPCHECK ERROR: Ulp can't be 0!\n");
