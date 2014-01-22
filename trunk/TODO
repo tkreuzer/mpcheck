@@ -1,6 +1,6 @@
 /*
  * MPCHECK - Check double LIBM functions
- * Copyright (C) 2002, 2004, 2005 INRIA
+ * Copyright (C) 2002, 2004, 2005, 2014 INRIA
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
   like in http://www.vinc17.org/software/tst-ieee754.c
 + [from V. Lefe`vre] check special values too (NaN, inf, ...)
 + Support for external check.
-+ Add support for mpfr_subnormalize.
-+ If emax ~= prec, sometimes you can get 0 instead of the desired ulp when
-  substracting two big numbers.
++ check the "inexact" flag: for glibc, it is not aimed to be correct except
+  for functions such as fma
++ check underflows: no underflows should be missed by glibc, but we can get
+  some spurious underflows
++ check ERANGE: glibc only sets it for 0 or +/-Inf, not for +/-DBL_MIN or
+  the +/- DBL_MAX
