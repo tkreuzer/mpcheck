@@ -30,6 +30,10 @@ AC_ARG_WITH(mpfr_include, [  --with-mpfr-include=DIR MPFR include directory ], w
 AC_ARG_WITH(mpfr_lib, [  --with-mpfr-lib=DIR     MPFR lib directory ], with_mpfr_lib=$withval)
 AC_ARG_WITH(mpfr, [  --with-mpfr=DIR         MPFR install directory ], with_mpfr_include=$withval/include with_mpfr_lib=$withval/lib)
 
+AC_ARG_WITH(libm_include, [  --with-libm-include=DIR LIBM include directory ], with_libm_include=$withval)
+AC_ARG_WITH(libm_lib, [  --with-libm-lib=DIR     LIBM lib directory ], with_libm_lib=$withval)
+AC_ARG_WITH(libm, [  --with-libm=DIR         LIBM install directory ], with_libm_include=$withval/include with_libm_lib=$withval/lib)
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
@@ -118,7 +122,13 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 ])
 
 dnl Update Libraries directory
-AC_CHECK_LIB(m, main, , AC_MSG_ERROR(libm not found))
+dnl AC_CHECK_LIB(m, main, , AC_MSG_ERROR(libm not found))
+if test "$with_libm_lib" != "" ; then
+   AC_MY_LIBS($with_libm_lib, m)
+else
+   LIBS="$MPFR_LIBM $LIBS"
+fi
+
 AC_MY_LIBS($with_gmp_lib, gmp)
 AC_MY_LIBS($with_mpfr_lib, mpfr)
 
@@ -175,7 +185,6 @@ AC_MSG_CHECKING(for PARI)
 old_LIBS=$LIBS
 LIBS="-lpari $LIBS"
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-typedef unsigned long ulong; /* Bingo! Bravo PARI! */
 #include "pari/pari.h"
 ]], [[
 pari_init (10, 10);
