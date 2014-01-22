@@ -8,8 +8,8 @@ mkdir build
 cd build
 ../configure --prefix=/tmp
 make
-./testrun.sh $HOME/svn/mpcheck/mpcheck-float
-./testrun.sh $HOME/svn/mpcheck/mpcheck-double
-./testrun.sh $HOME/svn/mpcheck/mpcheck-longdouble
+./testrun.sh $HOME/svn/mpcheck/mpcheck-float --num=1000000
+./testrun.sh $HOME/svn/mpcheck/mpcheck-double --num=1000000
+./testrun.sh $HOME/svn/mpcheck/mpcheck-longdouble --num=1000000
 cd /tmp
 /bin/rm -fr $d
