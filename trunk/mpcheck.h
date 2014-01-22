@@ -20,6 +20,7 @@
 #ifndef __MPCHECK__
 #define __MPCHECK__
 
+#define _GNU_SOURCE
 #include <math.h>
 #include <errno.h>
 #include <float.h>
