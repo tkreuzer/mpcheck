@@ -19,10 +19,25 @@
 
 #include "mpcheck.h"
 
-int mpfr_j17 (mpfr_t, mpfr_rnd_t);
-int mpfr_j42 (mpfr_t, mpfr_rnd_t);
-int mpfr_y17 (mpfr_t, mpfr_rnd_t);
-int mpfr_y42 (mpfr_t, mpfr_rnd_t);
+int mpfr_j17 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  return mpfr_jn (y, 17, x, r);
+}
+
+int mpfr_j42 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  return mpfr_jn (y, 42, x, r);
+}
+
+int mpfr_y17 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  return mpfr_yn (y, 17, x, r);
+}
+
+int mpfr_y42 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  return mpfr_yn (y, 42, x, r);
+}
 
 mpcheck_func_t  mpcheck_tab[] = {
   {"add", mpfr_add, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
