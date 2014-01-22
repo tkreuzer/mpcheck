@@ -576,8 +576,10 @@ static mpcheck_user_func_t tab[] = {
 #if HAVE_YN
   {"y17", my_y17, 0, 0},
   {"y17", my_y17, 10, 0},
-  {"y42", my_y42, 0, 0},
-  {"y42", my_y42, 10, 0},
+  /* test y42 only for x >= 4 since otherwise we always get -Inf in single
+     precision */
+  {"y42", my_y42, 3},
+  {"y42", my_y42, 10},
 #endif
   {NULL, NULL, 0, 0}
 };

@@ -317,17 +317,21 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 
   /* Check if func(e1) doesn't overflow/underflow */
   reduction_done = 0;
+  int loop = 0;
   for (;;)
     {
+      if (loop++ > 100)
+        {
+          fprintf (stderr, "Infinite loop in exponent range reduction\n");
+          exit (1);
+        }
       /* we should ensure that 2^(e1-1) <= op1 < 2^e1 below */
-      do
-        mpfr_urandomb (op1, state);
-      while (mpfr_get_exp (op1) < 0);
+      mpfr_urandomb (op1, state);
+      mpfr_set_exp (op1, 0);
       mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
       /* we should ensure that 2^(e2-1) <= op1 < 2^e2 below */
-      do
-        mpfr_urandomb (op2, state);
-      while (mpfr_get_exp (op2) < 0);
+      mpfr_urandomb (op2, state);
+      mpfr_set_exp (op2, 0);
       mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
 
       if (ref->NumArg == 2)
@@ -391,8 +395,10 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	{
 	  /* Generate random numbers */
  	  mpfr_urandomb (op1, state);
+          mpfr_set_exp (op1, 0);
 	  mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
 	  mpfr_urandomb (op2, state);
+          mpfr_set_exp (op2, 0);
 	  mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
 	  if (ref->signed_input == IN_POSNEG)
 	    {
