@@ -77,6 +77,18 @@
 #define HAVE_ERF HAVE_ERFL
 #undef HAVE_ERFC
 #define HAVE_ERFC HAVE_ERFCL
+#undef HAVE_J0
+#define HAVE_J0 HAVE_J0L
+#undef HAVE_J1
+#define HAVE_J1 HAVE_J1L
+#undef HAVE_JN
+#define HAVE_JN HAVE_JNL
+#undef HAVE_Y0
+#define HAVE_Y0 HAVE_Y0L
+#undef HAVE_Y1
+#define HAVE_Y1 HAVE_Y1L
+#undef HAVE_YN
+#define HAVE_YN HAVE_YNL
 
 static void set_fp (mpfr_ptr dest, const void *fp)
 {
