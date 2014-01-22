@@ -37,6 +37,7 @@ cl_platform_id platform;
 cl_device_id   device;
 cl_context     context;
 cl_program     program;
+cl_command_queue queue;
 
 /* Open CL embedded kernel source program (Initial kernel for all operators) */
 /* Note: it seems that for Nvidia device, the more function are in the kernel,
@@ -85,7 +86,7 @@ init_opencl(void)
 		err = clGetPlatformIDs(1, &platform, NULL));
 
   /* Get device */
-  /* TODO: How to select a specific device ? */
+  /* TODO: How to interface the way to select a specific device ? */
   RUN_CHECK_ERR(err,
 		err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_DEFAULT, 1, &device, NULL));
   RUN_CHECK_ERR(err,
@@ -133,11 +134,15 @@ init_opencl(void)
 	}
       exit(1);
     }
+  /* Create a command queue */
+  RUN_CHECK_ERR (err,
+		 queue = clCreateCommandQueue(context, device, 0, &err) );
 }
 
 static void
 quit_opencl(void)
 {
+  clReleaseCommandQueue(queue);
   clReleaseProgram(program);
   clReleaseContext(context);
 }
@@ -151,7 +156,6 @@ run_opencl_function(const char *function_name,
   cl_int err;
   size_t global_size, local_size;
   cl_mem         input_buffer1, input_buffer2, output_buffer;
-  cl_command_queue queue;
   cl_kernel kernel;
 
   /* Create data buffer */
@@ -162,12 +166,7 @@ run_opencl_function(const char *function_name,
 		 input_buffer2 = clCreateBuffer(context, CL_MEM_READ_ONLY |
 						CL_MEM_COPY_HOST_PTR, sizeof(fptype), (void*) b, &err));
   RUN_CHECK_ERR (err,
-		 output_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
-						CL_MEM_COPY_HOST_PTR, sizeof(fptype), dest, &err));
-
-  /* Create a command queue */
-  RUN_CHECK_ERR (err,
-		 queue = clCreateCommandQueue(context, device, 0, &err) );
+		 output_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(fptype), dest, &err));
 
   /* Create a kernel */
   RUN_CHECK_ERR (err,
@@ -198,7 +197,6 @@ run_opencl_function(const char *function_name,
   clReleaseMemObject(input_buffer1);
   clReleaseMemObject(input_buffer2);
   clReleaseMemObject(output_buffer);
-  clReleaseCommandQueue(queue);
 }
 
 /* Recreate a kernel for specific function call */
@@ -207,8 +205,9 @@ build_and_run_opencl_function(const char *function_name, int arg_count,
 			      void *dest, const void *a, const void *b)
 {
   static char previous_function[50];
-  char opencl_name[5+sizeof previous_function];
+  static char opencl_name[5+sizeof previous_function];
   
+  /* Cache mechanism */
   if (strcmp (function_name, previous_function) != 0) {
     char buffer[1024];
     cl_int err;
@@ -259,16 +258,19 @@ build_and_run_opencl_function(const char *function_name, int arg_count,
 	clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 
 			      0, NULL, &log_size);
 	program_log = malloc(log_size + 1);
-	program_log[log_size] = '\0';
-	clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 
-			      log_size + 1, program_log, NULL);
-	fprintf(stderr, "LOG[%d]=%s\n", (int) log_size, program_log);
-	free(program_log);
-	exit(1);
+	if (program_log != NULL)
+	  {
+	    program_log[log_size] = '\0';
+	    clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 
+				  log_size + 1, program_log, NULL);
+	    fprintf(stderr, "LOG[%d]=%s\n", (int) log_size, program_log);
+	    free(program_log);
+	    exit(1);
+	  }
       }
+    sprintf (opencl_name, "opencl_%s", function_name);
   } /* cached */
 
-  sprintf (opencl_name, "opencl_%s", function_name);
   run_opencl_function(opencl_name, dest, a, b);
 }
 
