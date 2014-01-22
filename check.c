@@ -267,7 +267,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    mpfr_t xdplus, xdminus;
    void *rop1, *rop2, *rresult;
    mpcheck_func_t *ref;
-   unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm, tot;
+   unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm, wrong_errno, tot;
    mp_rnd_t rnd;
    int saved_errno;
 
@@ -384,6 +384,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
       wrong_range = 0;   /* number of wrong results wrt range        */
       wrong_monoton = 0; /* number of wrong results wrt monotonicity */
       wrong_symm = 0;    /* number of wrong results wrt symmetry     */
+      wrong_errno = 0;   /* number of wrong results wrt errno     */
+
 
       for (i = 0; i < N ; i++)
 	{
@@ -627,21 +629,24 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                   /* result and result_lib should be NaN */
                   if (mpfr_nan_p (result) == 0 || mpfr_nan_p (result_lib) == 0)
                     {
-                      fprintf (stderr, "errno=%d: out of domain of function\n",
-                               saved_errno);
-                      fprintf (out, "x=");
-                      mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
-                      if (ref->NumArg == 2)
+                     if (wrong_errno == 0 && verbose >= 3) 
                         {
-                          fprintf (out, " t=");
-                          mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                          fprintf (out, "errno=%d: out of domain of function\n",
+                                   saved_errno);
+                          fprintf (out, "x=");
+                          mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                          if (ref->NumArg == 2)
+                            {
+                              fprintf (out, " t=");
+                              mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                            }
+                        fprintf (out, "\nlibrary gives ");
+                        mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+                        fprintf (out, "\nmpfr    gives ");
+                        mpfr_out_str (out, 10, 0, result, GMP_RNDN);
+                        fprintf (out, " \n");
                         }
-		      fprintf (out, "\nlibrary gives ");
-		      mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
-		      fprintf (out, "\nmpfr    gives ");
-		      mpfr_out_str (out, 10, 0, result, GMP_RNDN);
-		      fprintf (out, " \n");
-                      exit (1);
+                     wrong_errno++;
                     }
                 }
               else if (saved_errno == ERANGE)
@@ -649,40 +654,85 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                   if (mpfr_nan_p (result) || mpfr_nan_p (result_lib) ||
                       mpfr_cmp (result, result_lib))
                     {
-                      fprintf (stderr, "errno=%d: result not representable\n",
-                               saved_errno);
-                      fprintf (out, "x=");
-                      mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
-                      if (ref->NumArg == 2)
+                      if (wrong_errno == 0 && verbose >= 3)
                         {
-                          fprintf (out, " t=");
-                          mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                        fprintf (out, "errno=%d: result not representable\n",
+                                 saved_errno);
+                        fprintf (out, "x=");
+                        mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                        if (ref->NumArg == 2)
+                          {
+                            fprintf (out, " t=");
+                            mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                          }
+                        fprintf (out, "\nlibrary gives ");
+                        mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+                        fprintf (out, "\nmpfr    gives ");
+                        mpfr_out_str (out, 10, 0, result, GMP_RNDN);
+                        fprintf (out, " \n");
                         }
-		      fprintf (out, "\nlibrary gives ");
-		      mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
-		      fprintf (out, "\nmpfr    gives ");
-		      mpfr_out_str (out, 10, 0, result, GMP_RNDN);
-		      fprintf (out, " \n");
-                      exit (1);
+                      wrong_errno++;
                     }
                 }
               else
                 {
-                  fprintf (stderr, "errno=%d\n", saved_errno);
-                  exit (1);
+                 if (wrong_errno == 0 && verbose >= 3)
+                  {
+                  fprintf (out, "errno=%d\n", saved_errno);
+                  fprintf (out, "x=");
+                  mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                  if (ref->NumArg == 2)
+                    {
+                    fprintf (out, " t=");
+                    mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                    }
+                  fprintf (out, "\nlibrary gives ");
+                  mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+                  fprintf (out, "\nmpfr    gives ");
+                  mpfr_out_str (out, 10, 0, result, GMP_RNDN);
+                  fprintf (out, " \n");
+                  }
+                wrong_errno++;
                 }
             }
           if (mpfr_nan_p (result)) /* check errno is set */
             {
               if (saved_errno == 0)
                 {
-                  fprintf (stderr, "Result is NaN but errno is not set\n");
-                  exit (1);
+                 if (wrong_errno == 0 && verbose >= 3)
+                  {
+                  fprintf (out, "Result is NaN but errno is not set\n");
+                  fprintf (out, "x=");
+                  mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                  if (ref->NumArg == 2)
+                    {
+                    fprintf (out, " t=");
+                    mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                    }
+                  fprintf (out, "\nlibrary gives ");
+                  mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+                  fprintf (out, "\nmpfr    gives ");
+                  mpfr_out_str (out, 10, 0, result, GMP_RNDN);
+                  fprintf (out, " \n");
+                  }
+                wrong_errno++;
                 }
               else if (saved_errno != EDOM)
                 {
-                  fprintf (stderr, "errno=%d\n", saved_errno);
-                  exit (1);
+                if (wrong_errno == 0 && verbose >= 3)
+                  {
+                  fprintf (out, "errno=%d\n", saved_errno);
+                  fprintf (out, "x=");
+                  mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                  if (ref->NumArg == 2)
+                    {
+                    fprintf (out, " t=");
+                    mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                    }
+                  fprintf (out, " \n");
+                  }
+                wrong_errno++;
+
                 }
             }
 	} /* for i to N */
@@ -722,12 +772,12 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	{
 	  if (rnd == GMP_RNDN)
 	    fprintf(out, 
-		    "   nb errors range/monotonicity/symmetry: %lu/%lu/%lu\n", 
-		    wrong_range, wrong_monoton, wrong_symm);
+		    "   nb errors range/monotonicity/symmetry/errno: %lu/%lu/%lu/%lu\n", 
+		    wrong_range, wrong_monoton, wrong_symm, wrong_errno);
 	  else
 	    fprintf(out, 
-		    "   nb errors range/monotonicity: %lu/%lu\n", 
-		    wrong_range, wrong_monoton);
+		    "   nb errors range/monotonicity/errno: %lu/%lu/%lu\n", 
+		    wrong_range, wrong_monoton, wrong_errno);
 	}
       if (verbose >= 3)
 	{
