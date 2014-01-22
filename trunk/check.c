@@ -276,7 +276,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    ref = &mpcheck_tab[i];
 
    /* if seed is zero, we generate a random one */
-   seed = getpid ();
+   if (seed == 0)
+     seed = getpid ();
 
    if (print_done == 0)
      print_done = fprintf (out,
