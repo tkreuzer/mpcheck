@@ -248,7 +248,7 @@ mpcheck_clear (FILE *out)
   mpfr_out_str (out, 10, 3,  mpcheck_max_err_near, GMP_RNDN);
   fprintf (out, " (nearest), ");
   mpfr_out_str (out, 10, 3, mpcheck_max_err_dir, GMP_RNDN);
-  fprintf (out, " (directed)\n");
+  fprintf (out, " (directed) [seed=%lu]\n", seed);
 
   mpfr_clears (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
 }
