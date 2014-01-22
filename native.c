@@ -381,6 +381,24 @@ static void my_j1 (void *dest, const void *a, const void *b)
   *(fptype*) dest = NAME(j1) (*(fptype*)a);
 }
 #endif
+#if HAVE_JN
+static void my_j17 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(jn) (17, *(fptype*)a);
+}
+int mpfr_j17 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  return mpfr_jn (y, 17, x, r);
+}
+static void my_j42 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(jn) (42, *(fptype*)a);
+}
+int mpfr_j42 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  return mpfr_jn (y, 42, x, r);
+}
+#endif
 #if HAVE_Y0
 static void my_y0 (void *dest, const void *a, const void *b)
 {
@@ -391,6 +409,24 @@ static void my_y0 (void *dest, const void *a, const void *b)
 static void my_y1 (void *dest, const void *a, const void *b)
 {
   *(fptype*) dest = NAME(y1) (*(fptype*)a);
+}
+#endif
+#if HAVE_YN
+static void my_y17 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(yn) (17, *(fptype*)a);
+}
+int mpfr_y17 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  return mpfr_yn (y, 17, x, r);
+}
+static void my_y42 (void *dest, const void *a, const void *b)
+{
+  *(fptype*) dest = NAME(yn) (42, *(fptype*)a);
+}
+int mpfr_y42 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  return mpfr_yn (y, 42, x, r);
 }
 #endif
 
@@ -539,6 +575,12 @@ static mpcheck_user_func_t tab[] = {
   {"j1", my_j1, 0, 0},
   {"j1", my_j1, 10, 0},
 #endif
+#if HAVE_JN
+  {"j17", my_j17, 0, 0},
+  {"j17", my_j17, 10, 0},
+  {"j42", my_j42, 0, 0},
+  {"j42", my_j42, 10, 0},
+#endif
 #if HAVE_Y0
   {"y0", my_y0, 0, 0},
   {"y0", my_y0, 10, 0},
@@ -546,6 +588,12 @@ static mpcheck_user_func_t tab[] = {
 #if HAVE_Y1
   {"y1", my_y1, 0, 0},
   {"y1", my_y1, 10, 0},
+#endif
+#if HAVE_YN
+  {"y17", my_y17, 0, 0},
+  {"y17", my_y17, 10, 0},
+  {"y42", my_y42, 0, 0},
+  {"y42", my_y42, 10, 0},
 #endif
   {NULL, NULL, 0, 0}
 };

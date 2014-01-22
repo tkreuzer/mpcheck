@@ -19,6 +19,11 @@
 
 #include "mpcheck.h"
 
+int mpfr_j17 (mpfr_t, mpfr_rnd_t);
+int mpfr_j42 (mpfr_t, mpfr_rnd_t);
+int mpfr_y17 (mpfr_t, mpfr_rnd_t);
+int mpfr_y42 (mpfr_t, mpfr_rnd_t);
+
 mpcheck_func_t  mpcheck_tab[] = {
   {"add", mpfr_add, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
   {"sub", mpfr_sub, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
@@ -61,8 +66,12 @@ mpcheck_func_t  mpcheck_tab[] = {
 
   {"j0", mpfr_j0, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, EVEN, IN_POSNEG},
   {"j1", mpfr_j1, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD,  IN_POSNEG},
+  {"j17", mpfr_j17, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD,  IN_POSNEG},
+  {"j42", mpfr_j42, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, EVEN,  IN_POSNEG},
   {"y0", mpfr_y0, 1, RANGE_ZERO, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
   {"y1", mpfr_y1, 1, RANGE_ZERO, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
+  {"y17", mpfr_y17, 1, RANGE_ZERO, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
+  {"y42", mpfr_y42, 1, RANGE_ZERO, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
 
   {"hypot", mpfr_hypot, 2, -RANGE_INF, RANGE_INF,NO_MONOTON,NO_SYMM,IN_POSNEG},
   {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
