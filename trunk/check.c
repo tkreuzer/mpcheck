@@ -267,9 +267,10 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    mpfr_t xdplus, xdminus;
    void *rop1, *rop2, *rresult;
    mpcheck_func_t *ref;
-   unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm, wrong_errno, tot;
+   unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm;
+   unsigned long wrong_errno, wrong_inexact, tot;
    mp_rnd_t rnd;
-   int saved_errno, inex;
+   int saved_errno, inex, rinex;
 
    for (i = 0 ; mpcheck_tab[i].name != NULL ; i++)
      if (strcmp (mpcheck_tab[i].name, name) == 0)
@@ -390,7 +391,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
       wrong_monoton = 0; /* number of wrong results wrt monotonicity */
       wrong_symm = 0;    /* number of wrong results wrt symmetry     */
       wrong_errno = 0;   /* number of wrong results wrt errno     */
-
+      wrong_inexact = 0; /* number of wrong inexact flags */
 
       for (i = 0; i < N ; i++)
 	{
@@ -427,10 +428,34 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                       ref->mpfr)) (result, op1, rnd);
           inex = mpfr_subnormalize (result, inex, GMP_RNDN);
           errno = 0;
+          feclearexcept (FE_ALL_EXCEPT); /* clear all exceptions */
 	  (*func) (rresult, rop1, rop2);
+          rinex = fetestexcept (FE_INEXACT);
           saved_errno = errno;
 	  /* Convert back the result to MPFR */
 	  (*setfp) (result_lib, rresult);
+
+          if ((inex == 0 && rinex != 0) || (inex != 0 && inex == 0))
+            {
+              wrong_inexact ++;
+              if (verbose >= 3)
+                {
+                  fprintf (out, "      wrong inexact flag: mpfr gives %d, "
+                           "library %d\n", inex, rinex);
+                  fprintf (out, "      x=");
+                  mpfr_out_str (out, 10, 0, op1, GMP_RNDN);
+                  if (ref->NumArg == 2)
+                    {
+                      fprintf (out, "      t=");
+                      mpfr_out_str (out, 10, 0, op2, GMP_RNDN);
+                    }
+                  fprintf (out, "\n      library gives ");
+                  mpfr_out_str (out, 10, 0, result_lib, GMP_RNDN);
+                  fprintf (out, "\n      mpfr    gives ");
+                  mpfr_out_str (out, 10, 0, result, GMP_RNDN);
+                  fprintf (out, " \n");
+                }
+            }
 
 	  /* Check for correct rounding */
 	  if (mpfr_cmp (result, result_lib) != 0)
@@ -654,7 +679,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                         mpfr_out_str (out, 10, 0, result, GMP_RNDN);
                         fprintf (out, " \n");
                         }
-                     wrong_errno++;
+                     wrong_errno ++;
                     }
                 }
               else if (saved_errno == ERANGE)
@@ -679,7 +704,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                         mpfr_out_str (out, 10, 0, result, GMP_RNDN);
                         fprintf (out, " \n");
                         }
-                      wrong_errno++;
+                      wrong_errno ++;
                     }
                 }
               else
@@ -700,7 +725,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                   mpfr_out_str (out, 10, 0, result, GMP_RNDN);
                   fprintf (out, " \n");
                   }
-                wrong_errno++;
+                 wrong_errno ++;
                 }
             }
           if (mpfr_nan_p (result)) /* check errno is set */
@@ -723,7 +748,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                   mpfr_out_str (out, 10, 0, result, GMP_RNDN);
                   fprintf (out, " \n");
                   }
-                wrong_errno++;
+                 wrong_errno ++;
                 }
               else if (saved_errno != EDOM)
                 {
@@ -739,8 +764,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                     }
                   fprintf (out, " \n");
                   }
-                wrong_errno++;
-
+                wrong_errno ++;
                 }
             }
 	} /* for i to N */
@@ -780,12 +804,13 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	{
 	  if (rnd == GMP_RNDN)
 	    fprintf(out, 
-		    "   nb errors range/monotonicity/symmetry/errno: %lu/%lu/%lu/%lu\n", 
-		    wrong_range, wrong_monoton, wrong_symm, wrong_errno);
+		    "   nb errors range/monotonicity/symmetry/errno/inexact: %lu/%lu/%lu/%lu/%lu\n", 
+		    wrong_range, wrong_monoton, wrong_symm, wrong_errno,
+                    wrong_inexact);
 	  else
 	    fprintf(out, 
-		    "   nb errors range/monotonicity/errno: %lu/%lu/%lu\n", 
-		    wrong_range, wrong_monoton, wrong_errno);
+		    "   nb errors range/monotonicity/errno/inexact: %lu/%lu/%lu/%lu\n", 
+		    wrong_range, wrong_monoton, wrong_errno, wrong_inexact);
 	}
       if (verbose >= 3)
 	{
