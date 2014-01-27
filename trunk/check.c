@@ -882,6 +882,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                max_err_near, max_err_dir, result_more_prec, 
 	       op1max_dir, op2max_dir, op1max, op2max, range_min, 
 	       range_max, xdplus, xdminus, NULL);
+  mpfr_free_cache ();
   (*setrnd) (GMP_RNDN);
 }
 
