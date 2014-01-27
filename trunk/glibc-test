@@ -7,9 +7,11 @@ cd glibc
 mkdir build
 cd build
 ../configure --prefix=/tmp
-make
-./testrun.sh $HOME/svn/mpcheck/mpcheck-float --num=1000000
-./testrun.sh $HOME/svn/mpcheck/mpcheck-double --num=1000000
-./testrun.sh $HOME/svn/mpcheck/mpcheck-longdouble --num=1000000
+make >& /dev/null
+./testrun.sh $HOME/svn/mpcheck/mpcheck-float --num=1000000 --verbose=3
+echo ""
+./testrun.sh $HOME/svn/mpcheck/mpcheck-double --num=1000000 --verbose=3
+echo ""
+./testrun.sh $HOME/svn/mpcheck/mpcheck-longdouble --num=1000000 --verbose=3
 cd /tmp
 /bin/rm -fr $d
