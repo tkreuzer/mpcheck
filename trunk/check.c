@@ -452,7 +452,9 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  /* Convert back the result to MPFR */
 	  (*setfp) (result_lib, rresult);
 
-          if ((inex == 0 && rinex != 0) || (inex != 0 && inex == 0))
+          /* we can only compare the inexact flags when the results agree */
+          if (((inex == 0 && rinex != 0) || (inex != 0 && inex == 0)) &&
+              mpfr_cmp (result, result_lib) == 0)
             {
               static int count = 0;
               wrong_inexact ++;
