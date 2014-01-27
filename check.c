@@ -21,8 +21,11 @@
 
 mpfr_t    mpcheck_max_err_dir, mpcheck_max_err_near;
 mp_rnd_t  mpcheck_rnd_mode;
+unsigned long tot_wrong_errno = 0, tot_wrong_inexact = 0,
+  tot_wrong_dir = 0, tot_wrong_range = 0, tot_wrong_monoton = 0,
+  tot_wrong_symm = 0, tot_wrong = 0;
 
-/* Wince we can't store the range directly (we need to compute
+/* Since we can't store the range directly (we need to compute
    it for any prec), we compute it here */
 static void
 mpcheck_set_range (mpfr_t dest, mpcheck_range_e range)
@@ -249,6 +252,20 @@ mpcheck_clear (FILE *out)
   fprintf (out, " (nearest), ");
   mpfr_out_str (out, 10, 3, mpcheck_max_err_dir, GMP_RNDN);
   fprintf (out, " (directed) [seed=%lu]\n", seed);
+  if (tot_wrong > 0)
+    fprintf (out, "Incorrect roundings: %lu\n", tot_wrong);
+  if (tot_wrong_dir > 0)
+    fprintf (out, "Wrong side of directed rounding: %lu\n", tot_wrong_dir);
+  if (tot_wrong_range > 0)
+    fprintf (out, "Wrong range: %lu\n", tot_wrong_range);
+  if (tot_wrong_monoton > 0)
+    fprintf (out, "Wrong monotonicity: %lu\n", tot_wrong_monoton);
+  if (tot_wrong_symm > 0)
+    fprintf (out, "Wrong symmetry: %lu\n", tot_wrong_symm);
+  if (tot_wrong_errno > 0)
+    fprintf (out, "Wrong errno: %lu\n", tot_wrong_errno);
+  if (tot_wrong_inexact > 0)
+    fprintf (out, "Wrong inexact: %lu\n", tot_wrong_inexact);
 
   mpfr_clears (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
 }
@@ -267,8 +284,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    mpfr_t xdplus, xdminus;
    void *rop1, *rop2, *rresult;
    mpcheck_func_t *ref;
-   unsigned long i, wrong, wrong_range, wrong_monoton, wrong_symm;
-   unsigned long wrong_errno, wrong_inexact, tot;
+   unsigned long i, wrong_dir, wrong_range, wrong_monoton, wrong_symm;
+   unsigned long wrong_errno, wrong_inexact, wrong;
    mp_rnd_t rnd;
    int saved_errno, inex, rinex;
 
@@ -385,8 +402,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
       mpfr_set_ui (op2max, 0, GMP_RNDN);
       mpfr_set_ui (op2max_dir, 0, GMP_RNDN);
 
-      tot = 0;
-      wrong = 0;         /* number of wrong directed roundings */
+      wrong = 0;
+      wrong_dir = 0;     /* number of wrong (side of) directed roundings */
       wrong_range = 0;   /* number of wrong results wrt range        */
       wrong_monoton = 0; /* number of wrong results wrt monotonicity */
       wrong_symm = 0;    /* number of wrong results wrt symmetry     */
@@ -437,8 +454,9 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 
           if ((inex == 0 && rinex != 0) || (inex != 0 && inex == 0))
             {
+              static int count = 0;
               wrong_inexact ++;
-              if (verbose >= 3)
+              if (verbose >= 3 && count++ < 10)
                 {
                   fprintf (out, "      wrong inexact flag: mpfr gives %d, "
                            "library %d\n", inex, rinex);
@@ -460,6 +478,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  /* Check for correct rounding */
 	  if (mpfr_cmp (result, result_lib) != 0)
 	    {
+	      /* Error ++ */
+	      wrong ++;
 	      /* Recompute MPFR result with more prec */
 	      if (ref->NumArg == 2)
 		(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
@@ -478,7 +498,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 		  if ((rnd2 == GMP_RNDU && mpfr_sgn (u) < 0)
 		      || (rnd2 == GMP_RNDD && mpfr_sgn (u) > 0))
 		    {
-		      wrong ++;
+		      wrong_dir ++;
 		      if (mpfr_cmpabs (u, umax_dir) > 0)
 			{
 			  mpfr_set (umax_dir, u, GMP_RNDN);
@@ -487,8 +507,6 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 			}
 		    }
 		}
-	      /* Error ++ */
-	      tot ++;
 	      if (mpfr_cmpabs (u, umax) > 0)
 		{
 		  mpfr_set (umax, u, GMP_RNDN);
@@ -768,6 +786,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                 }
             }
 	} /* for i to N */
+
+      tot_wrong += wrong;
+      tot_wrong_dir += wrong_dir;
+      tot_wrong_range += wrong_range;
+      tot_wrong_monoton += wrong_monoton;
+      tot_wrong_symm += wrong_symm;
+      tot_wrong_errno += wrong_errno;
+      tot_wrong_inexact += wrong_inexact;
       
       /* if any difference occured, prints the maximal ulp error */
       if (mpfr_cmp_ui (umax, 0) != 0.0 && verbose >= 3)
@@ -784,7 +810,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  fprintf (out, "\n");
 	}
       
-      if (wrong != 0 && verbose >= 3)
+      if (wrong_dir != 0 && verbose >= 3)
 	{
 	  fprintf (out, "      wrong directed rounding for x=");
 	  mpfr_out_str (out, 10, 0, op1max_dir, GMP_RNDN);
@@ -816,7 +842,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	{
 	  fprintf (out, 
 		   "   nb errors/wrong directed/max ulp diff: %lu/%lu/", 
-		   tot, wrong);
+		   wrong, wrong_dir);
 	  mpfr_out_str (out, 10, 0, umax, GMP_RNDN);
 	  fprintf (out, "\n");
 	}
