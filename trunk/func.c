@@ -49,7 +49,7 @@ mpcheck_func_t  mpcheck_tab[] = {
 
   {"sqrt", mpfr_sqrt, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM, IN_POS},
   {"exp", mpfr_exp, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},
-  {"log", mpfr_log, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM, IN_POS},
+  {"log", mpfr_log, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},
 
   {"sin", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD, IN_POSNEG},
   {"sincos1", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD, IN_POSNEG},
@@ -72,8 +72,8 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"log2", mpfr_log2, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM,IN_POSNEG},
   {"expm1", mpfr_expm1, 1, -RANGE_ONE, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
   {"exp10", mpfr_exp10, 1, RANGE_ZERO, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
-  {"log10", mpfr_log10, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POS},
-  {"log1p", mpfr_log1p, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POS},
+  {"log10", mpfr_log10, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
+  {"log1p", mpfr_log1p, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
 
   {"gamma", mpfr_gamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POS},
   {"lgamma", mpfr_lngamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POS},
