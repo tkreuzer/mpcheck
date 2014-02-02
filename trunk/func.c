@@ -19,6 +19,12 @@
 
 #include "mpcheck.h"
 
+int mpfr_Lgamma (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
+{
+  int s;
+  return mpfr_lgamma (y, &s, x, r);
+}
+
 int mpfr_j17 (mpfr_t y, mpfr_t x, mpfr_rnd_t r)
 {
   return mpfr_jn (y, 17, x, r);
@@ -76,7 +82,7 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"log1p", mpfr_log1p, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
 
   {"gamma", mpfr_gamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POS},
-  {"lgamma", mpfr_lngamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POS},
+  {"lgamma", mpfr_Lgamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POSNEG},
   {"cbrt", mpfr_cbrt, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD, IN_POSNEG},
   {"erf", mpfr_erf, 1, -RANGE_ONE, RANGE_ONE, INCREASING, ODD, IN_POSNEG},
   {"erfc", mpfr_erfc, 1, RANGE_ZERO, RANGE_TWO, DECREASING, NO_SYMM,IN_POSNEG},
