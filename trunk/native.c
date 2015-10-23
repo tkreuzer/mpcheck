@@ -595,6 +595,11 @@ int main (int argc, const char *const argv[])
     fprintf (stderr, " %s", argv[i]);
   fprintf (stderr, "\n");
 
+  /* works for GCC and the Intel compiler */
+#if defined(__GNUC__) && defined(__VERSION__)
+  printf ("GCC: %s\n", __VERSION__);
+#endif
+
 #ifdef HAVE_GLIBC
   printf("GNU libc version: %s\n", gnu_get_libc_version ());
   printf("GNU libc release: %s\n", gnu_get_libc_release ());
