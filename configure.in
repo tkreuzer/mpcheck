@@ -34,6 +34,8 @@ AC_ARG_WITH(libm_include, [  --with-libm-include=DIR LIBM include directory ], w
 AC_ARG_WITH(libm_lib, [  --with-libm-lib=DIR     LIBM lib directory ], with_libm_lib=$withval)
 AC_ARG_WITH(libm, [  --with-libm=DIR         LIBM install directory ], with_libm_include=$withval/include with_libm_lib=$withval/lib)
 
+AC_ARG_WITH(pari, [  --with-pari=DIR         PARI install directory ], with_pari_include=$withval/include with_pari_lib=$withval/lib)
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
@@ -73,6 +75,9 @@ if test -d "$with_gmp_include"; then
 fi
 if test -d "$with_mpfr_include"; then
   CPPFLAGS="$CPPFLAGS -I$with_mpfr_include"
+fi
+if test -d "$with_pari_include"; then
+  CPPFLAGS="$CPPFLAGS -I$with_pari_include"
 fi
 
 dnl Check for GNU libc
@@ -183,7 +188,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 dnl Check for PARI
 AC_MSG_CHECKING(for PARI)
 old_LIBS=$LIBS
-LIBS="-lpari $LIBS"
+LIBS="-L$with_pari_lib -lpari $LIBS"
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include "pari/pari.h"
 ]], [[
