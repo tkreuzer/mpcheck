@@ -32,9 +32,11 @@ static unsigned long stck;
 static void *new_fp (mp_prec_t p)
 {
   GEN a;
+  char sprec[20];
 
   /* Setup internal prec */
-  // sd_realbitprecision ("200", 0);
+  sprintf (sprec, "%lu", p);
+  sd_realbitprecision (sprec, d_ACKNOWLEDGE);
 
   if (prec == 0) {
     prec = p;
