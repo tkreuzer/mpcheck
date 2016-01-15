@@ -34,6 +34,8 @@ static void *new_fp (mp_prec_t p)
   GEN a;
 
   /* Setup internal prec */
+  // sd_realbitprecision ("200", 0);
+
   if (prec == 0) {
     prec = p;
     prec_ul = (prec-1)/(8*sizeof (mp_limb_t))+1;
