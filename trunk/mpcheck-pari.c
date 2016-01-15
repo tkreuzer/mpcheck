@@ -238,7 +238,7 @@ static mpcheck_user_func_t tab[] = {
   {"sqrt", my_pari_sqrt, LONG_MAX, 0},
   {"sqrt", my_pari_sqrt, LONG_MAX-2, 0},
   {"exp", my_pari_exp, 0, 0},
-  {"exp", my_pari_exp, 9, 0}, /* FIXME: Improve by autodection of overflow? */
+  {"exp", my_pari_exp, 5, 0},
   {"log", my_pari_log, 0, 0},
   {"log", my_pari_log, LONG_MAX, 0},
   {"sin", my_pari_sin, 0, 0},
@@ -258,10 +258,8 @@ static mpcheck_user_func_t tab[] = {
   {"pow", my_pari_pow, 0, 0},
   {"pow", my_pari_pow, 5, 4},
   {"pow", my_pari_pow, 16, 10},
-#if 0
   {"erfc", my_pari_erfc, 0, 0},
   {"erfc", my_pari_erfc, 2, 0},
-#endif
   {NULL, NULL, 0, 0}
 };
 
@@ -308,6 +306,38 @@ int main (int argc, const char *argv[])
   mpcheck_clear (stdout);
   gmp_randclear (state);
   return 0;
+}
+
+int
+is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
+{
+  if (mpfr_nan_p (op1) || mpfr_inf_p (op1))
+    return 0;
+
+  if (numarg == 2 && (mpfr_nan_p (op2) || mpfr_inf_p (op2)))
+    return 0;
+
+  if (strcmp (name, "div") == 0 && mpfr_zero_p (op2))
+    return 0;
+
+  if (strcmp (name, "sqrt") == 0 && mpfr_cmp_ui (op1, 0) <= 0)
+    return 0;
+
+  if (strcmp (name, "exp") == 0 && (mpfr_get_exp (op1) >= 65536 ||
+                                    mpfr_cmp_si (op1, -45462) <= 0))
+    return 0;
+
+  if (strcmp (name, "log") == 0 && (mpfr_cmp_ui (op1, 0) <= 0 ||
+                                    mpfr_get_exp (op1) <= -65588))
+    return 0;
+
+  if (strcmp (name, "gamma") == 0 && mpfr_cmp_ui (op1, 0) <= 0)
+    return 0;
+  
+  if (strcmp (name, "pow") == 0 && mpfr_cmp_ui (op2, 0) <= 0)
+    return 0;
+
+  return 1;
 }
 
 #else
