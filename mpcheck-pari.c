@@ -380,7 +380,7 @@ is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
                                       mpfr_get_exp (op1) >= 32768))
     return 0;
   
-  if (strcmp (name, "pow") == 0 && mpfr_cmp_ui (op2, 0) <= 0)
+  if (strcmp (name, "pow") == 0 && (mpfr_zero_p (op1) && mpfr_zero_p (op2)))
     return 0;
 
   if (strcmp (name, "erfc") == 0 && mpfr_get_exp (op1) >= 32768)
