@@ -36,7 +36,7 @@ static void *new_fp (mp_prec_t p)
 
   /* Setup internal prec */
   sprintf (sprec, "%lu", p);
-  sd_realbitprecision (sprec, d_ACKNOWLEDGE);
+  sd_realbitprecision (sprec, d_SILENT);
 
   if (prec == 0) {
     prec = p;
@@ -77,12 +77,22 @@ static void set_fp (mpfr_ptr dest, const void *fp)
   mp_prec_t p;
   long s = gsigne ((GEN) fp);
 
-  if (s== 0)
+  if (s == 0)
     mpfr_set_ui (dest, 0, GMP_RNDN);
   else {
     mpfr_set_si (dest, s, GMP_RNDN);
-    mpfr_set_exp (dest, gexpo ((GEN) fp)+1);
-    copy_reverse (dest->_mpfr_d, (mp_limb_t*) & ((long*)fp)[2], prec_ul);
+    if (mpfr_set_exp (dest, gexpo ((GEN) fp)+1)) /* underflow/overflow */
+      {
+        if (gexpo ((GEN) fp)+1 < mpfr_get_emin ())
+          mpfr_set_exp (dest, mpfr_get_emin ());
+        else
+          {
+            mpfr_set_exp (dest, mpfr_get_emax ());
+            mpfr_mul_2exp (dest, dest, 2, MPFR_RNDZ);
+          }
+      }
+    else
+      copy_reverse (dest->_mpfr_d, (mp_limb_t*) & ((long*)fp)[2], prec_ul);
     /* We may have copied more bit than necessary: reprec it */
     p = mpfr_get_prec (dest);
     dest->_mpfr_prec = prec_ul * (8*sizeof(mp_limb_t));
@@ -242,7 +252,7 @@ static mpcheck_user_func_t tab[] = {
   {"sqrt", my_pari_sqrt, LONG_MAX, 0},
   {"sqrt", my_pari_sqrt, LONG_MAX-2, 0},
   {"exp", my_pari_exp, 0, 0},
-  {"exp", my_pari_exp, 5, 0},
+  {"exp", my_pari_exp, 9, 0},
   {"log", my_pari_log, 0, 0},
   {"log", my_pari_log, LONG_MAX, 0},
   {"sin", my_pari_sin, 0, 0},
@@ -303,6 +313,22 @@ int main (int argc, const char *argv[])
   del_fp (fp);
   prec = 0;
 
+#if 0
+  /* we can test directly Pari functions like this */
+  mpfr_set_prec (x, 53);
+  mpfr_set_prec (y, 53);
+  mpfr_set_str (x, "d.534cb60e42b88@1", 16, MPFR_RNDN);
+  mpfr_out_str (stdout, 16, 0, x, MPFR_RNDN);
+  printf ("\n");
+  fp = new_fp (53);
+  get_fp (fp, x);
+  printf ("fp ="); output ((GEN) fp);
+  GEN tmp = gerfc (fp, prec_ul);
+  printf ("tmp ="); output ((GEN) tmp);
+  del_fp (fp);
+  prec = 0;
+#endif
+
   mpcheck_init (argc, argv, 53, -1L<<16, 1L<<16,
 		new_fp, del_fp, get_fp, set_fp, set_rnd_mode,
 		ALL_RND, ALL_TEST, 0, 10000, 2);
@@ -327,18 +353,37 @@ is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
   if (strcmp (name, "sqrt") == 0 && mpfr_cmp_ui (op1, 0) <= 0)
     return 0;
 
-  if (strcmp (name, "exp") == 0 && (mpfr_get_exp (op1) >= 65536 ||
-                                    mpfr_cmp_si (op1, -45462) <= 0))
+  if (strcmp (name, "exp") == 0 && (mpfr_cmp_si (op1, 45426) > 0 ||
+                                    mpfr_cmp_si (op1, -22749) < 0))
     return 0;
 
   if (strcmp (name, "log") == 0 && (mpfr_cmp_ui (op1, 0) <= 0 ||
-                                    mpfr_get_exp (op1) <= -65588))
+                                    mpfr_get_exp (op1) <= -32820))
     return 0;
 
-  if (strcmp (name, "gamma") == 0 && mpfr_cmp_ui (op1, 0) <= 0)
+  if (strcmp (name, "sin") == 0 && mpfr_get_exp (op1) >= 32768)
+    return 0;
+
+  if (strcmp (name, "cos") == 0 && mpfr_get_exp (op1) >= 32768)
+    return 0;
+
+  if (strcmp (name, "tan") == 0 && mpfr_get_exp (op1) >= 32768)
+    return 0;
+
+  if (strcmp (name, "asin") == 0 && mpfr_get_exp (op1) > 0)
+    return 0;
+
+  if (strcmp (name, "acos") == 0 && mpfr_get_exp (op1) > 0)
+    return 0;
+
+  if (strcmp (name, "gamma") == 0 && (mpfr_cmp_ui (op1, 0) <= 0 ||
+                                      mpfr_get_exp (op1) >= 32768))
     return 0;
   
   if (strcmp (name, "pow") == 0 && mpfr_cmp_ui (op2, 0) <= 0)
+    return 0;
+
+  if (strcmp (name, "erfc") == 0 && mpfr_get_exp (op1) >= 32768)
     return 0;
 
   return 1;
