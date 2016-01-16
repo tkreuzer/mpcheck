@@ -350,7 +350,7 @@ is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
   if (strcmp (name, "div") == 0 && mpfr_zero_p (op2))
     return 0;
 
-  if (strcmp (name, "sqrt") == 0 && mpfr_cmp_ui (op1, 0) <= 0)
+  if (strcmp (name, "sqrt") == 0 && mpfr_cmp_ui (op1, 0) < 0)
     return 0;
 
   if (strcmp (name, "exp") == 0 && (mpfr_cmp_si (op1, 45426) > 0 ||
