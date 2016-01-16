@@ -21,7 +21,7 @@
 
 #define MAX_REPORTS 3 /* maximal number of errors reported by category */
 
-#define OUT 16 /* output base */
+#define OUT 10 /* output base */
 
 mpfr_t    mpcheck_max_err_dir, mpcheck_max_err_near;
 mp_rnd_t  mpcheck_rnd_mode;
@@ -32,6 +32,16 @@ unsigned long tot_wrong_errno = 0, tot_wrong_inexact = 0,
 unsigned long suppressed_wrong_inexact = 0, suppressed_wrong_errno = 0,
   suppressed_wrong_underflow = 0, suppressed_wrong_range = 0,
   suppressed_wrong_overflow = 0;
+
+/* output x in decimal and hexadecimal */
+static void
+out_value (FILE *fp, mpfr_t x)
+{
+  mpfr_out_str (fp, 10, 0, x, GMP_RNDN);
+  fprintf (fp, " [");
+  mpfr_out_str (fp, 16, 0, x, GMP_RNDN);
+  fprintf (fp, "]");
+}
 
 /* Since we can't store the range directly (we need to compute
    it for any prec), we compute it here */
@@ -103,8 +113,6 @@ mpcheck_ulp (mpfr_t ulp, mpfr_t library, mpfr_t reference, mp_prec_t prec)
   /* ulp(reference) = 2^(EXP(reference) - prec), unless it is smaller than
      1/2*2^emin = 2^(emin-1) */
   eulp = mpfr_get_exp (reference) - prec;
-  if (eulp < emin -1)
-    eulp = emin - 1;
   mpfr_div_2si (ulp, ulp, eulp, GMP_RNDN);
   mpfr_set_emin (emin);
 }
@@ -511,6 +519,8 @@ gen (mpfr_t op1, mp_exp_t e1, mpfr_t op2, mp_exp_t e2, gmp_randstate_t state,
   int Signed = ref->signed_input == IN_POSNEG;
   int numarg = ref->NumArg;
 
+// #define NO_SPECIAL /* useful to test say Pari/GP */
+#ifndef NO_SPECIAL
   if (numarg == 1 && i < 5)
     {
       set_special (op1, i);
@@ -624,6 +634,7 @@ gen (mpfr_t op1, mp_exp_t e1, mpfr_t op2, mp_exp_t e2, gmp_randstate_t state,
         next (op1);
       return;
     }
+#endif
 
   do mpfr_urandomb (op1, state); while (mpfr_zero_p (op1));
   mpfr_set_exp (op1, 0);
@@ -1070,11 +1081,11 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    if (verbose >= 2)
      {
        if (ref->NumArg == 1)
-	 fprintf (out, "Testing function %s for exponent %ld [seed=%lu].\n",
-		  name, e1, seed);
+	 fprintf (out, "Testing function %s for precision %lu, exponent %ld [seed=%lu].\n",
+		  name, prec, e1, seed);
        else
-	 fprintf (out, "Testing function %s for exponents %ld and %ld [seed=%lu]\n",
-		  name, e1, e2, seed);
+	 fprintf (out, "Testing function %s for precision %lu, exponents %ld and %ld [seed=%lu]\n",
+		  name, prec, e1, e2, seed);
      }
 
   for (rnd = 0 ; rnd < 4; rnd++)
@@ -1751,20 +1762,20 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  fprintf (out, "      ");
 	  mpfr_out_str (out, 10, 3, umax, MPFR_RNDA);
 	  fprintf (out, " ulp(s) for x=");
-	  mpfr_out_str (out, OUT, 0, op1max, GMP_RNDN);
+          out_value (out, op1max);
 	  if (ref->NumArg == 2)
 	    {  
 	      fprintf (out, " t=");
-	      mpfr_out_str (out, OUT, 0, op2max, GMP_RNDN);
+              out_value (out, op2max);
 	    }
 	  fprintf (out, "\n");
           if (verbose >= 4)
             {
               fprintf (out, "         mpfr gives ");
-              mpfr_out_str (out, OUT, 0, rmax, GMP_RNDN);
+              out_value (out, rmax);
               fprintf (out, "\n");
               fprintf (out, "         lib  gives ");
-              mpfr_out_str (out, OUT, 0, rlibmax, GMP_RNDN);
+              out_value (out, rlibmax);
               fprintf (out, "\n");
             }
 	}
