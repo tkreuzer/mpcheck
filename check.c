@@ -1493,7 +1493,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	    {
 	      mpfr_set (xdminus, op1, GMP_RNDN);
 	      mpfr_nextbelow (xdminus);
-              if (is_accepted ("exp", 1, xdminus, NULL) == 0)
+              if (is_accepted (name, 1, xdminus, NULL) == 0)
                 continue;
 	      (*getfp) (rop1, xdminus);
 	      (*func) (rresult, rop1, rop2);
@@ -1501,7 +1501,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	      
 	      mpfr_set (xdplus, op1, GMP_RNDN);
 	      mpfr_nextabove (xdplus);
-              if (is_accepted ("exp", 1, xdplus, NULL) == 0)
+              if (is_accepted (name, 1, xdplus, NULL) == 0)
                 continue;
               (*getfp) (rop1, xdplus);
               (*func) (rresult, rop1, rop2);
@@ -1580,7 +1580,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
               && (test & MPCHECK_TEST_SYMM)!=0 && (ref->symm != NO_SYMM))
 	    {
 	      mpfr_neg (xdminus, op1, GMP_RNDN);
-              if (is_accepted ("exp", 1, xdminus, NULL) == 0)
+              if (is_accepted (name, 1, xdminus, NULL) == 0)
                 continue;
               (*getfp) (rop1, xdminus);
               (*func) (rresult, rop1, rop2);
