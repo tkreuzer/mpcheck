@@ -51,8 +51,10 @@ static void *new_fp (mp_prec_t p)
   if (count++ == 0)
     stck = avma;
 
-  /* Since PARI can't handle prec bits exactly we request a few more */
-  a = gsqrt (stoi(3), prec_ul + 2);
+  /* the 2nd argument (prec) of Pari mathematical functions is the number
+     of words used to store the t_REAL type, i.e., 2 plus the number of
+     words to store the significand. */
+  a = gsqrt (stoi(3), nbits2prec (prec));
 
   return (void *) a;
 }
@@ -141,7 +143,7 @@ void my_pari_div (void *dest, const void *src1, const void *src2) {
 void my_pari_sqrt (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gsqrt ((GEN) src1, prec_ul);
+  tmp = gsqrt ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gsqrtz ((GEN) src1, (GEN) dest); */
@@ -149,7 +151,7 @@ void my_pari_sqrt (void *dest, const void *src1, const void *src2) {
 void my_pari_exp (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gexp ((GEN) src1, prec_ul);
+  tmp = gexp ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gexpz ((GEN) src1, (GEN) dest); */
@@ -157,7 +159,7 @@ void my_pari_exp (void *dest, const void *src1, const void *src2) {
 void my_pari_log (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = glog ((GEN) src1, prec_ul);
+  tmp = glog ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* glogz ((GEN) src1, (GEN) dest); */
@@ -166,7 +168,7 @@ void my_pari_log (void *dest, const void *src1, const void *src2) {
 void my_pari_sin (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gsin ((GEN) src1, prec_ul);
+  tmp = gsin ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gsinz ((GEN) src1, (GEN) dest); */
@@ -174,14 +176,14 @@ void my_pari_sin (void *dest, const void *src1, const void *src2) {
 void my_pari_sinh (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gsinh ((GEN) src1, prec_ul);
+  tmp = gsinh ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_cos (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gcos ((GEN) src1, prec_ul);
+  tmp = gcos ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gcosz ((GEN) src1, (GEN) dest); */
@@ -189,28 +191,28 @@ void my_pari_cos (void *dest, const void *src1, const void *src2) {
 void my_pari_cot (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gcotan ((GEN) src1, prec_ul);
+  tmp = gcotan ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_coth (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gcotanh ((GEN) src1, prec_ul);
+  tmp = gcotanh ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_cosh (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gch ((GEN) src1, prec_ul);
+  tmp = gch ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_tan (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gtan ((GEN) src1, prec_ul);
+  tmp = gtan ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gtanz ((GEN) src1, (GEN) dest); */
@@ -218,14 +220,14 @@ void my_pari_tan (void *dest, const void *src1, const void *src2) {
 void my_pari_tanh (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gtanh ((GEN) src1, prec_ul);
+  tmp = gtanh ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_asin (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gasin ((GEN) src1, prec_ul);
+  tmp = gasin ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gasinz ((GEN) src1, (GEN) dest); */
@@ -233,14 +235,14 @@ void my_pari_asin (void *dest, const void *src1, const void *src2) {
 void my_pari_asinh (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gasinh ((GEN) src1, prec_ul);
+  tmp = gasinh ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_acos (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gacos ((GEN) src1, prec_ul);
+  tmp = gacos ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gacosz ((GEN) src1, (GEN) dest); */
@@ -248,14 +250,14 @@ void my_pari_acos (void *dest, const void *src1, const void *src2) {
 void my_pari_acosh (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gacosh ((GEN) src1, prec_ul);
+  tmp = gacosh ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_atan (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gatan ((GEN) src1, prec_ul);
+  tmp = gatan ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gatanz ((GEN) src1, (GEN) dest); */
@@ -263,7 +265,7 @@ void my_pari_atan (void *dest, const void *src1, const void *src2) {
 void my_pari_atanh (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gatanh ((GEN) src1, prec_ul);
+  tmp = gatanh ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
@@ -271,7 +273,7 @@ void my_pari_atanh (void *dest, const void *src1, const void *src2) {
 void my_pari_gamma (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = ggamma ((GEN) src1, prec_ul);
+  tmp = ggamma ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* ggammaz ((GEN) src1, (GEN) dest); */
@@ -279,7 +281,7 @@ void my_pari_gamma (void *dest, const void *src1, const void *src2) {
 void my_pari_lngamma (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = glngamma ((GEN) src1, prec_ul);
+  tmp = glngamma ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
@@ -287,7 +289,7 @@ void my_pari_lngamma (void *dest, const void *src1, const void *src2) {
 void my_pari_erfc (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gerfc ((GEN) src1, prec_ul);
+  tmp = gerfc ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gerfcz ((GEN) src1, (GEN) dest); */
@@ -296,7 +298,7 @@ void my_pari_j0 (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN nu = gen_0;
   GEN tmp;
-  tmp = jbessel (nu, (GEN) src1, prec_ul);
+  tmp = jbessel (nu, (GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
@@ -304,16 +306,14 @@ void my_pari_j1 (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN nu = gen_1;
   GEN tmp;
-  tmp = jbessel (nu, (GEN) src1, prec_ul);
+  tmp = jbessel (nu, (GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_dilog (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  /* gives for src1=0.9237095167162023834:
-     ***   unknown type 48.  ***   Error in the PARI system. End of program. */
-  tmp = dilog ((GEN) src1, prec_ul);
+  tmp = dilog ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
@@ -321,51 +321,50 @@ void my_pari_eint (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
   /* Definition of eint in MPFR doesn't match eint1 in Pari:
-     mpfr_eint (x) = Re(pari_eint1(-x)).
-     However eint1 fails for prec_ul=1.
-  */
+     mpfr_eint (x) = Re(pari_eint1(-x)). */
   tmp = gneg ((GEN) src1);
-  tmp = eint1 (tmp, prec_ul);
+  tmp = eint1 (tmp, nbits2prec (prec));
   tmp = greal (tmp);
+  tmp = gneg (tmp);
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_expm1 (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gexpm1 ((GEN) src1, prec_ul);
+  tmp = gexpm1 ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_zeta (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
-  tmp = gzeta ((GEN) src1, prec_ul);
+  tmp = gzeta ((GEN) src1, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_pow (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
-  GEN tmp = gpow ((GEN) src1, (GEN) src2, prec_ul);
+  GEN tmp = gpow ((GEN) src1, (GEN) src2, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gpowz ((GEN) src1, (GEN) src2, (GEN) dest); */
 }
 void my_pari_agm (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
-  GEN tmp = agm ((GEN) src1, (GEN) src2, prec_ul);
+  GEN tmp = agm ((GEN) src1, (GEN) src2, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_gamma_inc (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
-  GEN tmp = incgam ((GEN) src1, (GEN) src2, prec_ul);
+  GEN tmp = incgam ((GEN) src1, (GEN) src2, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
 void my_pari_root (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
-  GEN tmp = gsqrtn ((GEN) src1, (GEN) src2, NULL, prec_ul);
+  GEN tmp = gsqrtn ((GEN) src1, (GEN) src2, NULL, nbits2prec (prec));
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
@@ -418,8 +417,8 @@ static mpcheck_user_func_t tab[] = {
   {"j1", my_pari_j1, 0, 0},
   {"cot", my_pari_cot, 0, 0},
   {"coth", my_pari_coth, 0, 0},
-  //  {"dilog", my_pari_dilog, 0, 0},
-  // {"eint", my_pari_eint, 0, 0},
+  {"dilog", my_pari_dilog, 0, 0},
+  {"eint", my_pari_eint, 0, 0},
   {"expm1", my_pari_expm1, 0, 0},
   {"gamma_inc", my_pari_gamma_inc, 0, 0},
   {"lngamma", my_pari_lngamma, 0, 0},
@@ -473,7 +472,7 @@ int main (int argc, const char *argv[])
   fp = new_fp (53);
   get_fp (fp, x);
   printf ("fp ="); output ((GEN) fp);
-  GEN tmp = gerfc (fp, prec_ul);
+  GEN tmp = gerfc (fp, nbits2prec (prec));
   printf ("tmp ="); output ((GEN) tmp);
   del_fp (fp);
   prec = 0;
@@ -576,8 +575,11 @@ is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
   if (strcmp (name, "lngamma") == 0 && mpfr_cmp_ui (op1, 0) <= 0)
     return 0;
 
+  if (strcmp (name, "dilog") == 0 && mpfr_cmp_ui (op1, 1) > 0)
+    return 0;
+
 #if 0
-  if (strcmp (name, "eint") == 0)
+  if (strcmp (name, "dilog") == 0)
     mpfr_printf ("op1=%Re\n", op1);
 #endif
 
