@@ -56,6 +56,8 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"sqrt", mpfr_sqrt, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM, IN_POS},
   {"exp", mpfr_exp, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},
   {"log", mpfr_log, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},
+  {"dilog", mpfr_li2, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},
+  {"eint", mpfr_eint, 1, RANGE_ZERO, RANGE_INF, DECREASING, NO_SYMM, IN_POS},
 
   {"sin", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD, IN_POSNEG},
   {"sincos1", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD, IN_POSNEG},
@@ -73,6 +75,8 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"asinh", mpfr_asinh, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD, IN_POS},
   {"acosh", mpfr_acosh, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM, IN_POS},
   {"atanh", mpfr_atanh, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD, IN_POS},
+  {"cot", mpfr_cot, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD, IN_POSNEG},
+  {"coth", mpfr_coth, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, ODD, IN_POSNEG},
  
   {"exp2", mpfr_exp2, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM,IN_POSNEG},
   {"log2", mpfr_log2, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM,IN_POSNEG},
@@ -82,7 +86,9 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"log1p", mpfr_log1p, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
 
   {"gamma", mpfr_gamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POS},
+  {"gamma_inc", mpfr_gamma_inc, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
   {"lgamma", mpfr_Lgamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POSNEG},
+  {"lngamma", mpfr_lngamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POSNEG},
   {"cbrt", mpfr_cbrt, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD, IN_POSNEG},
   {"erf", mpfr_erf, 1, -RANGE_ONE, RANGE_ONE, INCREASING, ODD, IN_POSNEG},
   {"erfc", mpfr_erfc, 1, RANGE_ZERO, RANGE_TWO, DECREASING, NO_SYMM,IN_POSNEG},
@@ -95,9 +101,11 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"y1", mpfr_y1, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
   {"y17", mpfr_y17, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
   {"y42", mpfr_y42, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
+  {"zeta", mpfr_zeta, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
 
   {"hypot", mpfr_hypot, 2, -RANGE_INF, RANGE_INF,NO_MONOTON,NO_SYMM,IN_POSNEG},
   {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
+  {"agm", mpfr_agm, 2, RANGE_ZERO, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
   {NULL, NULL, 0, 0, 0, 0, 0, 0}
 };
 

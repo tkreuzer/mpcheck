@@ -171,6 +171,13 @@ void my_pari_sin (void *dest, const void *src1, const void *src2) {
   avma = st;
   /* gsinz ((GEN) src1, (GEN) dest); */
 }
+void my_pari_sinh (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gsinh ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
 void my_pari_cos (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
@@ -178,6 +185,27 @@ void my_pari_cos (void *dest, const void *src1, const void *src2) {
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gcosz ((GEN) src1, (GEN) dest); */
+}
+void my_pari_cot (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gcotan ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_coth (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gcotanh ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_cosh (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gch ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
 }
 void my_pari_tan (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
@@ -187,6 +215,13 @@ void my_pari_tan (void *dest, const void *src1, const void *src2) {
   avma = st;
   /* gtanz ((GEN) src1, (GEN) dest); */
 }
+void my_pari_tanh (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gtanh ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
 void my_pari_asin (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
@@ -194,6 +229,13 @@ void my_pari_asin (void *dest, const void *src1, const void *src2) {
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gasinz ((GEN) src1, (GEN) dest); */
+}
+void my_pari_asinh (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gasinh ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
 }
 void my_pari_acos (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
@@ -203,6 +245,13 @@ void my_pari_acos (void *dest, const void *src1, const void *src2) {
   avma = st;
   /* gacosz ((GEN) src1, (GEN) dest); */
 }
+void my_pari_acosh (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gacosh ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
 void my_pari_atan (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
@@ -210,6 +259,13 @@ void my_pari_atan (void *dest, const void *src1, const void *src2) {
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gatanz ((GEN) src1, (GEN) dest); */
+}
+void my_pari_atanh (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gatanh ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
 }
 
 void my_pari_gamma (void *dest, const void *src1, const void *src2) {
@@ -220,6 +276,13 @@ void my_pari_gamma (void *dest, const void *src1, const void *src2) {
   avma = st;
   /* ggammaz ((GEN) src1, (GEN) dest); */
 }
+void my_pari_lngamma (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = glngamma ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
 /* Doesn't work very well... Does a lot of assert failed */
 void my_pari_erfc (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
@@ -229,12 +292,82 @@ void my_pari_erfc (void *dest, const void *src1, const void *src2) {
   avma = st;
   /* gerfcz ((GEN) src1, (GEN) dest); */
 }
+void my_pari_j0 (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN nu = gen_0;
+  GEN tmp;
+  tmp = jbessel (nu, (GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_j1 (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN nu = gen_1;
+  GEN tmp;
+  tmp = jbessel (nu, (GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_dilog (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  /* gives for src1=0.9237095167162023834:
+     ***   unknown type 48.  ***   Error in the PARI system. End of program. */
+  tmp = dilog ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_eint (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  /* Definition of eint in MPFR doesn't match eint1 in Pari:
+     mpfr_eint (x) = Re(pari_eint1(-x)).
+     However eint1 fails for prec_ul=1.
+  */
+  tmp = gneg ((GEN) src1);
+  tmp = eint1 (tmp, prec_ul);
+  tmp = greal (tmp);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_expm1 (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gexpm1 ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_zeta (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp;
+  tmp = gzeta ((GEN) src1, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
 void my_pari_pow (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp = gpow ((GEN) src1, (GEN) src2, prec_ul);
   gaffect (tmp, (GEN) dest);
   avma = st;
   /* gpowz ((GEN) src1, (GEN) src2, (GEN) dest); */
+}
+void my_pari_agm (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp = agm ((GEN) src1, (GEN) src2, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_gamma_inc (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp = incgam ((GEN) src1, (GEN) src2, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
+}
+void my_pari_root (void *dest, const void *src1, const void *src2) {
+  unsigned long st = avma;
+  GEN tmp = gsqrtn ((GEN) src1, (GEN) src2, NULL, prec_ul);
+  gaffect (tmp, (GEN) dest);
+  avma = st;
 }
 
 static mpcheck_user_func_t tab[] = {
@@ -274,6 +407,23 @@ static mpcheck_user_func_t tab[] = {
   {"pow", my_pari_pow, 16, 10},
   {"erfc", my_pari_erfc, 0, 0},
   {"erfc", my_pari_erfc, 2, 0},
+  {"cosh", my_pari_cosh, 0, 0},
+  {"sinh", my_pari_sinh, 0, 0},
+  {"tanh", my_pari_tanh, 0, 0},
+  {"acosh", my_pari_acosh, 1, 0},
+  {"asinh", my_pari_asinh, 0, 0},
+  {"atanh", my_pari_atanh, 0, 0},
+  {"agm", my_pari_agm, 0, 0},
+  {"j0", my_pari_j0, 0, 0},
+  {"j1", my_pari_j1, 0, 0},
+  {"cot", my_pari_cot, 0, 0},
+  {"coth", my_pari_coth, 0, 0},
+  //  {"dilog", my_pari_dilog, 0, 0},
+  // {"eint", my_pari_eint, 0, 0},
+  {"expm1", my_pari_expm1, 0, 0},
+  {"gamma_inc", my_pari_gamma_inc, 0, 0},
+  {"lngamma", my_pari_lngamma, 0, 0},
+  {"zeta", my_pari_zeta, 0, 0},
   {NULL, NULL, 0, 0}
 };
 
@@ -357,6 +507,10 @@ is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
                                     mpfr_cmp_si (op1, -22749) < 0))
     return 0;
 
+  if (strcmp (name, "expm1") == 0 && (mpfr_cmp_si (op1, 45426) > 0 ||
+                                      mpfr_cmp_si (op1, -22749) < 0))
+    return 0;
+
   if (strcmp (name, "log") == 0 && (mpfr_cmp_ui (op1, 0) <= 0 ||
                                     mpfr_get_exp (op1) <= -32820))
     return 0;
@@ -385,6 +539,47 @@ is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
 
   if (strcmp (name, "erfc") == 0 && mpfr_get_exp (op1) >= 32768)
     return 0;
+
+  if (strcmp (name, "cosh") == 0 && (mpfr_cmp_si (op1, 45426) > 0 ||
+                                     mpfr_cmp_si (op1, -22749) < 0))
+    return 0;
+
+  if (strcmp (name, "acosh") == 0 && mpfr_cmp_ui (op1, 1) < 0)
+    return 0;
+
+  if (strcmp (name, "atanh") == 0 && (mpfr_cmp_si (op1, -1) <= 0 ||
+                                      mpfr_cmp_si (op1, 1) >= 0))
+    return 0;
+
+  if (strcmp (name, "j0") == 0 && mpfr_get_exp (op1) > 15)
+    return 0;
+
+  if (strcmp (name, "j1") == 0 && mpfr_get_exp (op1) > 15)
+    return 0;
+
+  if (strcmp (name, "cot") == 0 && (mpfr_cmp_ui (op1, 0) == 0 ||
+                                    mpfr_get_exp (op1) > 67))
+    return 0;
+
+  if (strcmp (name, "coth") == 0 && mpfr_cmp_ui (op1, 0) == 0)
+    return 0;
+
+  if (strcmp (name, "eint") == 0 && (mpfr_cmp_ui (op1, 0) <= 0 ||
+                                     mpfr_get_exp (op1) > 17 ||
+                                     mpfr_get_exp (op1) < -63))
+    return 0;
+
+  if (strcmp (name, "gamma_inc") == 0 && (mpfr_cmp_ui (op1, 0) == 0 ||
+                                          mpfr_cmp_ui (op2, 0) == 0))
+    return 0;
+
+  if (strcmp (name, "lngamma") == 0 && mpfr_cmp_ui (op1, 0) <= 0)
+    return 0;
+
+#if 0
+  if (strcmp (name, "eint") == 0)
+    mpfr_printf ("op1=%Re\n", op1);
+#endif
 
   return 1;
 }
