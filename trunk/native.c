@@ -161,6 +161,12 @@ static void del_fp (void *fp)
   free (fp);
 }
 
+int
+is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
+{
+  return 1;
+}
+
 /* Define the wrapper for the libm */
 #ifdef NAME
 
