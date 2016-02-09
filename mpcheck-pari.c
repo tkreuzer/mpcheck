@@ -321,11 +321,20 @@ void my_pari_eint (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
   /* Definition of eint in MPFR doesn't match eint1 in Pari:
-     mpfr_eint (x) = Re(pari_eint1(-x)). */
-  tmp = gneg ((GEN) src1);
-  tmp = eint1 (tmp, nbits2prec (prec));
-  tmp = greal (tmp);
-  tmp = gneg (tmp);
+     for x >= 0: mpfr_eint (x) = -Re(pari_eint1(-x)),
+     for x < 0:  mpfr_eint (x) = pari_eint1(-x). */
+  if (signe ((GEN) src1) >= 0)
+    {
+      tmp = gneg ((GEN) src1);
+      tmp = eint1 (tmp, nbits2prec (prec));
+      tmp = greal (tmp);
+      tmp = gneg (tmp);
+    }
+  else
+    {
+      tmp = gneg ((GEN) src1);
+      tmp = eint1 (tmp, nbits2prec (prec));
+    }
   gaffect (tmp, (GEN) dest);
   avma = st;
 }
@@ -563,8 +572,7 @@ is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
   if (strcmp (name, "coth") == 0 && mpfr_cmp_ui (op1, 0) == 0)
     return 0;
 
-  if (strcmp (name, "eint") == 0 && (mpfr_cmp_ui (op1, 0) <= 0 ||
-                                     mpfr_get_exp (op1) > 17 ||
+  if (strcmp (name, "eint") == 0 && (mpfr_get_exp (op1) > 17 ||
                                      mpfr_get_exp (op1) < -63))
     return 0;
 

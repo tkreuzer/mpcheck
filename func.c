@@ -57,7 +57,7 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"exp", mpfr_exp, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},
   {"log", mpfr_log, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},
   {"dilog", mpfr_li2, 1, -RANGE_INF, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},
-  {"eint", mpfr_eint, 1, RANGE_ZERO, RANGE_INF, DECREASING, NO_SYMM, IN_POS},
+  {"eint", mpfr_eint, 1, RANGE_ZERO, RANGE_INF, DECREASING, NO_SYMM, IN_POSNEG},
 
   {"sin", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD, IN_POSNEG},
   {"sincos1", mpfr_sin, 1, -RANGE_ONE, RANGE_ONE, NO_MONOTON, ODD, IN_POSNEG},
