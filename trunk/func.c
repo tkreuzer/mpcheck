@@ -52,6 +52,7 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"sub", mpfr_sub, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
   {"mul", mpfr_mul, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
   {"div", mpfr_div, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
+  {"fma", mpfr_fma, 3, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
 
   {"sqrt", mpfr_sqrt, 1, -RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM, IN_POS},
   {"exp", mpfr_exp, 1, RANGE_ZERO, RANGE_INF, INCREASING, NO_SYMM, IN_POSNEG},

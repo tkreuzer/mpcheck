@@ -161,265 +161,271 @@ static void del_fp (void *fp)
   free (fp);
 }
 
-int
-is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
-{
-  return 1;
-}
-
 /* Define the wrapper for the libm */
 #ifdef NAME
 
-static void my_add (void *dest, const void *a, const void *b)
+static void my_add (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = *(fptype*)a + *(fptype*) b;
 }
-static void my_sub (void *dest, const void *a, const void *b)
+static void my_sub (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = *(fptype*)a - *(fptype*) b;
 }
-static void my_mul (void *dest, const void *a, const void *b)
+static void my_mul (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = *(fptype*)a * *(fptype*) b;
 }
-static void my_div (void *dest, const void *a, const void *b)
+static void my_div (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = *(fptype*)a / *(fptype*) b;
 }
+#if HAVE_FMA
+static void my_fma (void *dest, const void *a, const void *b, const void *c)
+{
+  *(fptype*) dest = NAME(fma) (*(fptype*) a, *(fptype*) b, *(fptype*) c);
+}
+#endif
 
 #if HAVE_SQRT
-static void my_sqrt (void *dest, const void *a, const void *b)
+static void my_sqrt (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(sqrt) (*(fptype*)a);
 }
 #endif
 #if HAVE_EXP
-static void my_exp (void *dest, const void *a, const void *b)
+static void my_exp (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(exp) (*(fptype*)a);
 }
 #endif
 #if HAVE_LOG
-static void my_log (void *dest, const void *a, const void *b)
+static void my_log (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(log) (*(fptype*)a);
 }
 #endif
 #if HAVE_SIN
-static void my_sin (void *dest, const void *a, const void *b)
+static void my_sin (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(sin) (*(fptype*)a);
 }
 #endif
 #if HAVE_SINCOS
-static void my_sincos1 (void *dest, const void *a, const void *b)
+static void my_sincos1 (void *dest, const void *a, const void *b, const void *c)
 {
   fptype dummy[1];
   NAME(sincos) (*(fptype*)a, (fptype*) dest, (fptype*) dummy);
 }
 #endif
 #if HAVE_COS
-static void my_cos (void *dest, const void *a, const void *b)
+static void my_cos (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(cos) (*(fptype*)a);
 }
 #endif
 #if HAVE_SINCOS
-static void my_sincos2 (void *dest, const void *a, const void *b)
+static void my_sincos2 (void *dest, const void *a, const void *b, const void *c)
 {
   fptype dummy[1];
   NAME(sincos) (*(fptype*)a, (fptype*) dummy, (fptype*) dest);
 }
 #endif
 #if HAVE_TAN
-static void my_tan (void *dest, const void *a, const void *b)
+static void my_tan (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(tan) (*(fptype*)a);
 }
 #endif
 #if HAVE_ASIN
-static void my_asin (void *dest, const void *a, const void *b)
+static void my_asin (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(asin) (*(fptype*)a);
 }
 #endif
 #if HAVE_ACOS
-static void my_acos (void *dest, const void *a, const void *b)
+static void my_acos (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(acos) (*(fptype*)a);
 }
 #endif
 #if HAVE_ATAN
-static void my_atan (void *dest, const void *a, const void *b)
+static void my_atan (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(atan) (*(fptype*)a);
 }
 #endif
 #if HAVE_ATAN2
-static void my_atan2 (void *dest, const void *a, const void *b)
+static void my_atan2 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(atan2) (*(fptype*)a, *(fptype*)b);
 }
 #endif
 #if HAVE_SINH
-static void my_sinh (void *dest, const void *a, const void *b)
+static void my_sinh (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(sinh) (*(fptype*)a);
 }
 #endif
 #if HAVE_COSH
-static void my_cosh (void *dest, const void *a, const void *b)
+static void my_cosh (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(cosh) (*(fptype*)a);
 }
 #endif
 #if HAVE_TANH
-static void my_tanh (void *dest, const void *a, const void *b)
+static void my_tanh (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(tanh) (*(fptype*)a);
 }
 #endif
 #if HAVE_ASINH
-static void my_asinh (void *dest, const void *a, const void *b)
+static void my_asinh (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(asinh) (*(fptype*)a);
 }
 #endif
 #if HAVE_ACOSH
-static void my_acosh (void *dest, const void *a, const void *b)
+static void my_acosh (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(acosh) (*(fptype*)a);
 }
 #endif
 #if HAVE_ATANH
-static void my_atanh (void *dest, const void *a, const void *b)
+static void my_atanh (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(atanh) (*(fptype*)a);
 }
 #endif
 #if HAVE_TGAMMA
-static void my_gamma (void *dest, const void *a, const void *b)
+static void my_gamma (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(tgamma) (*(fptype*)a);
 }
 #endif
 #if HAVE_LGAMMA
-static void my_lgamma (void *dest, const void *a, const void *b)
+static void my_lgamma (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(lgamma) (*(fptype*)a);
 }
 #endif
 #if HAVE_EXP2
-static void my_exp2 (void *dest, const void *a, const void *b)
+static void my_exp2 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(exp2) (*(fptype*)a);
 }
 #endif
 #if HAVE_LOG2
-static void my_log2 (void *dest, const void *a, const void *b)
+static void my_log2 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(log2) (*(fptype*)a);
 }
 #endif
 #if HAVE_EXPM1
-static void my_expm1 (void *dest, const void *a, const void *b)
+static void my_expm1 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(expm1) (*(fptype*)a);
 }
 #endif
 #if HAVE_LOG1P
-static void my_log1p (void *dest, const void *a, const void *b)
+static void my_log1p (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(log1p) (*(fptype*)a);
 }
 #endif
 #if HAVE_EXP10
-static void my_exp10 (void *dest, const void *a, const void *b)
+static void my_exp10 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(exp10) (*(fptype*)a);
 }
 #endif
 #if HAVE_LOG10
-static void my_log10 (void *dest, const void *a, const void *b)
+static void my_log10 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(log10) (*(fptype*)a);
 }
 #endif
 #if HAVE_CBRT
-static void my_cbrt (void *dest, const void *a, const void *b)
+static void my_cbrt (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(cbrt) (*(fptype*)a);
 }
 #endif
 #if HAVE_HYPOT
-static void my_hypot (void *dest, const void *a, const void *b)
+static void my_hypot (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(hypot) (*(fptype*)a, *(fptype*)b);
 }
 #endif
 #if HAVE_POW
-static void my_pow (void *dest, const void *a, const void *b)
+static void my_pow (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(pow) (*(fptype*)a, *(fptype*)b);
 }
 #endif
 #if HAVE_ERF
-static void my_erf (void *dest, const void *a, const void *b)
+static void my_erf (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(erf) (*(fptype*)a);
 }
 #endif
 #if HAVE_ERFC
-static void my_erfc (void *dest, const void *a, const void *b)
+static void my_erfc (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(erfc) (*(fptype*)a);
 }
 #endif
 #if HAVE_J0
-static void my_j0 (void *dest, const void *a, const void *b)
+static void my_j0 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(j0) (*(fptype*)a);
 }
 #endif
 #if HAVE_J1
-static void my_j1 (void *dest, const void *a, const void *b)
+static void my_j1 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(j1) (*(fptype*)a);
 }
 #endif
 #if HAVE_JN
-static void my_j17 (void *dest, const void *a, const void *b)
+static void my_j17 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(jn) (17, *(fptype*)a);
 }
-static void my_j42 (void *dest, const void *a, const void *b)
+static void my_j42 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(jn) (42, *(fptype*)a);
 }
 #endif
 #if HAVE_Y0
-static void my_y0 (void *dest, const void *a, const void *b)
+static void my_y0 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(y0) (*(fptype*)a);
 }
 #endif
 #if HAVE_Y1
-static void my_y1 (void *dest, const void *a, const void *b)
+static void my_y1 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(y1) (*(fptype*)a);
 }
 #endif
 #if HAVE_YN
-static void my_y17 (void *dest, const void *a, const void *b)
+static void my_y17 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(yn) (17, *(fptype*)a);
 }
-static void my_y42 (void *dest, const void *a, const void *b)
+static void my_y42 (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(yn) (42, *(fptype*)a);
 }
 #endif
 
+/* 3rd entry is exponent for 1st argument, 4th entry for 2nd argument
+   (if any), where special values are:
+   LONG_MAX: maximal exponent of the type, minus 1
+   LONG_MAX-1: maximal exponent of the type, divided by 2
+   LONG_MAX-2: minimal exponent of the range
+*/
 static mpcheck_user_func_t tab[] = {
   {"add", my_add, 0, 0},
   {"add", my_add, LONG_MAX, LONG_MAX},
@@ -433,6 +439,12 @@ static mpcheck_user_func_t tab[] = {
   {"sqrt", my_sqrt, 0, 0},
   {"sqrt", my_sqrt, LONG_MAX, 0},
   {"sqrt", my_sqrt, LONG_MAX-2, 0},
+#endif
+#if HAVE_FMA
+  {"fma", my_fma, 0, 0},
+  {"fma", my_fma, 0, LONG_MAX-1},
+  {"fma", my_fma, LONG_MAX-1, 0},
+  {"fma", my_fma, LONG_MAX-1, LONG_MAX-1},
 #endif
 #if HAVE_EXP
   {"exp", my_exp, 0, 0},
@@ -596,10 +608,10 @@ int main (int argc, const char *const argv[])
   int i;
 
   /* print command line */
-  fprintf (stderr, "%s", argv[0]);
+  printf ("%s", argv[0]);
   for (i = 1; i < argc; i++)
-    fprintf (stderr, " %s", argv[i]);
-  fprintf (stderr, "\n");
+    printf (" %s", argv[i]);
+  printf ("\n");
 
   /* works for GCC and the Intel compiler */
 #if defined(__GNUC__) && defined(__VERSION__)
@@ -610,6 +622,8 @@ int main (int argc, const char *const argv[])
   printf("GNU libc version: %s\n", gnu_get_libc_version ());
   printf("GNU libc release: %s\n", gnu_get_libc_release ());
 #endif
+
+  printf ("MPFR %s\n", mpfr_get_version ());
 
   setup_native ();
 #ifdef LIB_INIT
