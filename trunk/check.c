@@ -739,11 +739,12 @@ suppress (int err, const char *name, mpfr_t result, mpfr_t op1, mpfr_t op2)
       /* errno is only supposed to be set for <math.h> standard library
          functions, not C operators (or <complex.h> functions) */
       if (strcmp (name, "add") == 0 || strcmp (name, "sub") == 0 ||
-          strcmp (name, "mul") == 0 || strcmp (name, "div") == 0 ||
-          strcmp (name, "fma") == 0)
+          strcmp (name, "mul") == 0 || strcmp (name, "div") == 0)
         return 1;
       if (strcmp (name, "log1p") == 0)
         return 1; /* bug 6792 */
+      if (strcmp (name, "fma") == 0)
+        return 1; /* bug 6801 */
       /* man sincos says it does not set errno for x=Inf, cf bug 15467 */
       if ((strcmp (name, "sincos1") == 0 || strcmp (name, "sincos2") == 0)
           && (mpfr_inf_p (op1) || mpfr_inf_p (op2)))
