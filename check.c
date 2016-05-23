@@ -115,6 +115,8 @@ mpcheck_ulp (mpfr_t ulp, mpfr_t library, mpfr_t reference, mp_prec_t prec)
   /* ulp(reference) = 2^(EXP(reference) - prec), unless it is smaller than
      1/2*2^emin = 2^(emin-1) */
   eulp = mpfr_get_exp (reference) - prec;
+  if (eulp < emin -1)
+    eulp = emin - 1;
   mpfr_div_2si (ulp, ulp, eulp, GMP_RNDN);
   mpfr_set_emin (emin);
 }

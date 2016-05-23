@@ -571,6 +571,7 @@ static mpcheck_user_func_t tab[] = {
   {"erfc", my_erfc, 0, 0, 0},
   {"erfc", my_erfc, 2, 0, 0},
 #endif
+#if 0 /* Joseph Myers, 23 Jun 2015: ignore Bessel functions for now */
 #if HAVE_J0
   {"j0", my_j0, 0, 0, 0},
   {"j0", my_j0, 10, 0, 0},
@@ -600,6 +601,7 @@ static mpcheck_user_func_t tab[] = {
      precision */
   {"y42", my_y42, 3, 0},
   {"y42", my_y42, 10, 0},
+#endif
 #endif
   {NULL, NULL, 0, 0, 0}
 };
