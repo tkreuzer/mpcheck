@@ -63,7 +63,7 @@ extern "C" {
   typedef struct {
     const char *const name;
     void (*func) (void*, const void*, const void*, const void*);
-    mp_exp_t e1, e2;
+    mp_exp_t e1, e2, e3;
   } mpcheck_user_func_t;
 
   extern mpcheck_func_t mpcheck_tab[];
@@ -96,7 +96,7 @@ extern "C" {
 		     unsigned long N2, int verbose2);
   void mpcheck_clear (FILE *out);
   
-  void mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
+  void mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 		const char *const name, 
 		void (*func) (void*,const void*, const void*, const void*));
   void mpcheck_check (FILE *out, mpcheck_user_func_t *tab);

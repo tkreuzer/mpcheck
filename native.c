@@ -421,185 +421,187 @@ static void my_y42 (void *dest, const void *a, const void *b, const void *c)
 #endif
 
 /* 3rd entry is exponent for 1st argument, 4th entry for 2nd argument
-   (if any), where special values are:
+   (if any), 4th entry for 3rd argument (if any), where special values are:
    LONG_MAX: maximal exponent of the type, minus 1
    LONG_MAX-1: maximal exponent of the type, divided by 2
    LONG_MAX-2: minimal exponent of the range
+   LONG_MAX-3: maximal exponent of the type, divided by 2, plus 1
 */
 static mpcheck_user_func_t tab[] = {
-  {"add", my_add, 0, 0},
-  {"add", my_add, LONG_MAX, LONG_MAX},
-  {"sub", my_sub, LONG_MAX, LONG_MAX},
-  {"sub", my_sub, 0, 0},
-  {"mul", my_mul, 0, 0},
-  {"mul", my_mul, LONG_MAX-1, LONG_MAX-1},
-  {"div", my_div, 0, 0},
-  {"div", my_div, LONG_MAX, LONG_MAX},
+  {"add", my_add, 0, 0, 0},
+  {"add", my_add, LONG_MAX, LONG_MAX, 0},
+  {"sub", my_sub, LONG_MAX, LONG_MAX, 0},
+  {"sub", my_sub, 0, 0, 0},
+  {"mul", my_mul, 0, 0, 0},
+  {"mul", my_mul, LONG_MAX-1, LONG_MAX-1, 0},
+  {"div", my_div, 0, 0, 0},
+  {"div", my_div, LONG_MAX, LONG_MAX, 0},
 #if HAVE_SQRT
-  {"sqrt", my_sqrt, 0, 0},
-  {"sqrt", my_sqrt, LONG_MAX, 0},
-  {"sqrt", my_sqrt, LONG_MAX-2, 0},
+  {"sqrt", my_sqrt, 0, 0, 0},
+  {"sqrt", my_sqrt, LONG_MAX, 0, 0},
+  {"sqrt", my_sqrt, LONG_MAX-2, 0, 0},
 #endif
-#if HAVE_FMA
-  {"fma", my_fma, 0, 0},
-  {"fma", my_fma, 0, LONG_MAX-1},
-  {"fma", my_fma, LONG_MAX-1, 0},
-  {"fma", my_fma, LONG_MAX-1, LONG_MAX-1},
+#if HAVE_FMA /* x*y + z */
+  {"fma", my_fma, 0, 0, 0},
+  {"fma", my_fma, LONG_MAX-1, LONG_MAX-1, 0},
+  {"fma", my_fma, 0, 0, LONG_MAX-1},
+  {"fma", my_fma, LONG_MAX-1, LONG_MAX-3, LONG_MAX}, /* might produce
+                                                       intermediate overflow */
 #endif
 #if HAVE_EXP
-  {"exp", my_exp, 0, 0},
-  {"exp", my_exp, 9, 0}, /* FIXME: Improve by autodection of overflow? */
+  {"exp", my_exp, 0, 0, 0},
+  {"exp", my_exp, 9, 0, 0}, /* FIXME: Improve by autodection of overflow? */
 #endif
 #if HAVE_LOG
-  {"log", my_log, 0, 0},
-  {"log", my_log, LONG_MAX, 0},
+  {"log", my_log, 0, 0, 0},
+  {"log", my_log, LONG_MAX, 0, 0},
 #endif
 #if HAVE_SIN
-  {"sin", my_sin, 0, 0},
-  {"sin", my_sin, 10, 0},
+  {"sin", my_sin, 0, 0, 0},
+  {"sin", my_sin, 10, 0, 0},
 #endif
 #if HAVE_SINCOS
-  {"sincos1", my_sincos1, 0, 0},
-  {"sincos1", my_sincos1, 10, 0},
+  {"sincos1", my_sincos1, 0, 0, 0},
+  {"sincos1", my_sincos1, 10, 0, 0},
 #endif
 #if HAVE_COS
-  {"cos", my_cos, 0, 0},
-  {"cos", my_cos, 10, 0},
+  {"cos", my_cos, 0, 0, 0},
+  {"cos", my_cos, 10, 0, 0},
 #endif
 #if HAVE_SINCOS
-  {"sincos2", my_sincos2, 0, 0},
-  {"sincos2", my_sincos2, 10, 0},
+  {"sincos2", my_sincos2, 0, 0, 0},
+  {"sincos2", my_sincos2, 10, 0, 0},
 #endif
 #if HAVE_TAN
-  {"tan", my_tan, 0, 0},
-  {"tan", my_tan, 10, 0},
+  {"tan", my_tan, 0, 0, 0},
+  {"tan", my_tan, 10, 0, 0},
 #endif
 #if HAVE_ATAN
-  {"atan", my_atan, 0, 0},
-  {"atan", my_atan, 53, 0},
+  {"atan", my_atan, 0, 0, 0},
+  {"atan", my_atan, 53, 0, 0},
 #endif
 #if HAVE_ATAN2
-  {"atan2", my_atan2, 0, 0},
-  {"atan2", my_atan2, 53, 0},
+  {"atan2", my_atan2, 0, 0, 0},
+  {"atan2", my_atan2, 53, 0, 0},
 #endif
 #if HAVE_ASIN
-  {"asin", my_asin, 0, 0},
-  {"asin", my_asin, -10, 0},
+  {"asin", my_asin, 0, 0, 0},
+  {"asin", my_asin, -10, 0, 0},
 #endif
 #if HAVE_ACOS
-  {"acos", my_acos, 0, 0},
-  {"acos", my_acos, -10, 0},
+  {"acos", my_acos, 0, 0, 0},
+  {"acos", my_acos, -10, 0, 0},
 #endif
 #if HAVE_SINH
-  {"sinh", my_sinh, 0, 0},
-  {"sinh", my_sinh, 9, 0}, /* TODO: Improve overflow detection */
+  {"sinh", my_sinh, 0, 0, 0},
+  {"sinh", my_sinh, 9, 0, 0}, /* TODO: Improve overflow detection */
 #endif
 #if HAVE_COSH
-  {"cosh", my_cosh, 0, 0},
-  {"cosh", my_cosh, 9, 0}, /* TODO: Improve overflow detection */
+  {"cosh", my_cosh, 0, 0, 0},
+  {"cosh", my_cosh, 9, 0, 0}, /* TODO: Improve overflow detection */
 #endif
 #if HAVE_TANH
-  {"tanh", my_tanh, 0, 0},
-  {"tanh", my_tanh, 4, 0}, 
+  {"tanh", my_tanh, 0, 0, 0},
+  {"tanh", my_tanh, 4, 0, 0}, 
 #endif
 #if HAVE_ASINH
-  {"asinh", my_asinh, 0, 0},
-  {"asinh", my_asinh, 9, 0}, /* TODO */
+  {"asinh", my_asinh, 0, 0, 0},
+  {"asinh", my_asinh, 9, 0, 0}, /* TODO */
 #endif
 #if HAVE_ACOSH
-  {"acosh", my_acosh, 1, 0},
-  {"acosh", my_acosh, 9, 0},
+  {"acosh", my_acosh, 1, 0, 0},
+  {"acosh", my_acosh, 9, 0, 0},
 #endif
 #if HAVE_ATANH
-  {"atanh", my_atanh, 0, 0},
-  {"atanh", my_atanh,-10, 0},
+  {"atanh", my_atanh, 0, 0, 0},
+  {"atanh", my_atanh,-10, 0, 0},
 #endif
 #if HAVE_CBRT
-  {"cbrt", my_cbrt, 0, 0},
-  {"cbrt", my_cbrt, LONG_MAX, 0},
-  {"cbrt", my_cbrt, -1010, 0},
+  {"cbrt", my_cbrt, 0, 0, 0},
+  {"cbrt", my_cbrt, LONG_MAX, 0, 0},
+  {"cbrt", my_cbrt, -1010, 0, 0},
 #endif
 #if HAVE_HYPOT
-  {"hypot", my_hypot, 0, 0},
-  {"hypot", my_hypot, LONG_MAX, LONG_MAX},
-  {"hypot", my_hypot, -1010, -1010},
+  {"hypot", my_hypot, 0, 0, 0},
+  {"hypot", my_hypot, LONG_MAX, LONG_MAX, 0},
+  {"hypot", my_hypot, -1010, -1010, 0},
 #endif
 #if HAVE_TGAMMA
-  {"gamma", my_gamma, 0, 0},
-  {"gamma", my_gamma, 10, 0},
+  {"gamma", my_gamma, 0, 0, 0},
+  {"gamma", my_gamma, 10, 0, 0},
 #endif
 #if HAVE_LGAMMA
-  {"lgamma", my_lgamma, 0, 0},
-  {"lgamma", my_lgamma, 10, 0},
+  {"lgamma", my_lgamma, 0, 0, 0},
+  {"lgamma", my_lgamma, 10, 0, 0},
 #endif
 #if HAVE_EXP2
-  {"exp2", my_exp2, 0, 0},
-  {"exp2", my_exp2, 9, 0},
+  {"exp2", my_exp2, 0, 0, 0},
+  {"exp2", my_exp2, 9, 0, 0},
 #endif
 #if HAVE_LOG2
-  {"log2", my_log2,  0, 0},
-  {"log2", my_log2, LONG_MAX, 0},
+  {"log2", my_log2,  0, 0, 0},
+  {"log2", my_log2, LONG_MAX, 0, 0},
 #endif
 #if HAVE_EXPM1
-  {"expm1", my_expm1, 0, 0},
-  {"expm1", my_expm1, -9, 0},
+  {"expm1", my_expm1, 0, 0, 0},
+  {"expm1", my_expm1, -9, 0, 0},
 #endif
 #if HAVE_EXP10
-  {"exp10", my_exp10, 0, 0},
-  {"exp10", my_exp10, 9, 0},
+  {"exp10", my_exp10, 0, 0, 0},
+  {"exp10", my_exp10, 9, 0, 0},
 #endif
 #if HAVE_LOG10
-  {"log10", my_log10, 0, 0},
-  {"log10", my_log10, LONG_MAX, 0},
+  {"log10", my_log10, 0, 0, 0},
+  {"log10", my_log10, LONG_MAX, 0, 0},
 #endif
 #if HAVE_LOG1P
-  {"log1p", my_log1p, 0, 0},
-  {"log1p", my_log1p, LONG_MAX, 0},
+  {"log1p", my_log1p, 0, 0, 0},
+  {"log1p", my_log1p, LONG_MAX, 0, 0},
 #endif
 #if HAVE_POW
-  {"pow", my_pow, 0, 0},
-  {"pow", my_pow, 5, 4},
-  /* {"pow", my_pow, 16, 10},  old snapshot of MPFR 2.2.0 are even too buggy*/
+  {"pow", my_pow, 0, 0, 0},
+  {"pow", my_pow, 5, 4, 0},
+  /* {"pow", my_pow, 16, 10, 0},  old snapshot of MPFR 2.2.0 are even too buggy*/
 #endif
 #if HAVE_ERF
-  {"erf", my_erf, 0, 0},
-  {"erf", my_erf, 9, 0},
+  {"erf", my_erf, 0, 0, 0},
+  {"erf", my_erf, 9, 0, 0},
 #endif
 #if HAVE_ERFC
-  {"erfc", my_erfc, 0, 0},
-  {"erfc", my_erfc, 2, 0},
+  {"erfc", my_erfc, 0, 0, 0},
+  {"erfc", my_erfc, 2, 0, 0},
 #endif
 #if HAVE_J0
-  {"j0", my_j0, 0, 0},
-  {"j0", my_j0, 10, 0},
+  {"j0", my_j0, 0, 0, 0},
+  {"j0", my_j0, 10, 0, 0},
 #endif
 #if HAVE_J1
-  {"j1", my_j1, 0, 0},
-  {"j1", my_j1, 10, 0},
+  {"j1", my_j1, 0, 0, 0},
+  {"j1", my_j1, 10, 0, 0},
 #endif
 #if HAVE_JN
-  {"j17", my_j17, 0, 0},
-  {"j17", my_j17, 10, 0},
-  {"j42", my_j42, 0, 0},
-  {"j42", my_j42, 10, 0},
+  {"j17", my_j17, 0, 0, 0},
+  {"j17", my_j17, 10, 0, 0},
+  {"j42", my_j42, 0, 0, 0},
+  {"j42", my_j42, 10, 0, 0},
 #endif
 #if HAVE_Y0
-  {"y0", my_y0, 0, 0},
-  {"y0", my_y0, 10, 0},
+  {"y0", my_y0, 0, 0, 0},
+  {"y0", my_y0, 10, 0, 0},
 #endif
 #if HAVE_Y1
-  {"y1", my_y1, 0, 0},
-  {"y1", my_y1, 10, 0},
+  {"y1", my_y1, 0, 0, 0},
+  {"y1", my_y1, 10, 0, 0},
 #endif
 #if HAVE_YN
-  {"y17", my_y17, 0, 0},
-  {"y17", my_y17, 10, 0},
+  {"y17", my_y17, 0, 0, 0},
+  {"y17", my_y17, 10, 0, 0},
   /* test y42 only for x >= 4 since otherwise we always get -Inf in single
      precision */
-  {"y42", my_y42, 3},
-  {"y42", my_y42, 10},
+  {"y42", my_y42, 3, 0},
+  {"y42", my_y42, 10, 0},
 #endif
-  {NULL, NULL, 0, 0}
+  {NULL, NULL, 0, 0, 0}
 };
 #endif /* NAME */
 

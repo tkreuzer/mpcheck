@@ -1008,7 +1008,7 @@ is_accepted (const char *name, int numarg, mpfr_t op1, mpfr_t op2)
 #endif
 
 void
-mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
+mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 	const char *const name,
 	 void (*func) (void*,const void*, const void*, const void*))
 {
@@ -1052,11 +1052,17 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 
    /* Translate some absolute exponent to relative one's */
    if (e1 == LONG_MAX)     e1 = emax - 1;
-   if (e2 == LONG_MAX)     e2 = emax -1;
-   if (e1 == LONG_MAX-1)   e1 = emax /2;
-   if (e2 == LONG_MAX-1)   e2 = emax /2;
+   if (e2 == LONG_MAX)     e2 = emax - 1;
+   if (e3 == LONG_MAX)     e3 = emax - 1;
+   if (e1 == LONG_MAX-1)   e1 = emax / 2;
+   if (e2 == LONG_MAX-1)   e2 = emax / 2;
+   if (e3 == LONG_MAX-1)   e3 = emax / 2;
    if (e1 == LONG_MAX-2)   e1 = emin;
    if (e2 == LONG_MAX-2)   e2 = emin;
+   if (e3 == LONG_MAX-2)   e3 = emin;
+   if (e1 == LONG_MAX-3)   e1 = emax / 2 + 1;
+   if (e2 == LONG_MAX-3)   e2 = emax / 2 + 1;
+   if (e3 == LONG_MAX-3)   e3 = emax / 2 + 1;
 
    mpfr_inits2 (prec, op1, op2, op3, result, result_lib, u, umax, umax_dir,
                 max_err_near, max_err_dir, op1max_dir, op2max_dir, op3max_dir,
@@ -1080,6 +1086,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
   int loop = 0;
   for (;;)
     {
+      if (strcmp (ref->name, "fma") == 0)
+        break;
       if (loop++ > 100)
         {
           fprintf (stderr, "Infinite loop in exponent range reduction\n");
@@ -1100,7 +1108,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
         {
           mpfr_urandomb (op3, state);
           mpfr_set_exp (op3, 0);
-          mpfr_mul_2si (op3, op3, e2, GMP_RNDN); /* use same exponent e2 */
+          mpfr_mul_2si (op3, op3, e3, GMP_RNDN);
         }
       if (ref->NumArg == 1)
 	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
@@ -1117,12 +1125,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	break;
       if (e1 > 0) e1 --; else e1++;
       if (e2 > 0) e2 --; else e2++;
+      if (e3 > 0) e3 --; else e3++;
       reduction_done = 1;
     }
   if (reduction_done)
     {
       if (e1 > 0) e1 --; else e1++;
       if (e2 > 0) e2 --; else e2++;
+      if (e3 > 0) e3 --; else e3++;
     }
 
    if (verbose >= 2)
@@ -1130,9 +1140,12 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
        if (ref->NumArg == 1)
 	 fprintf (out, "Testing function %s for precision %lu, exponent %ld [seed=%lu].\n",
 		  name, prec, e1, seed);
-       else
+       else if (ref->NumArg == 2)
 	 fprintf (out, "Testing function %s for precision %lu, exponents %ld and %ld [seed=%lu]\n",
 		  name, prec, e1, e2, seed);
+       else
+	 fprintf (out, "Testing function %s for precision %lu, exponents %ld, %ld and %ld [seed=%lu]\n",
+		  name, prec, e1, e2, e3, seed);
      }
 
   for (rnd = 0 ; rnd < 4; rnd++)
@@ -1178,7 +1191,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
             dichotomy (op1, mpfr_sgn (result), last_x, ref);
           else
             /* Generate random numbers */
-            gen (op1, e1, op2, e2, op3, e2, state, i, ref);
+            gen (op1, e1, op2, e2, op3, e3, state, i, ref);
           assert (!mpfr_regular_p (op1) || mpfr_get_exp (op1) -
                   mpfr_min_prec (op1) >= mpfr_get_emin () - 1);
 
@@ -1990,6 +2003,6 @@ mpcheck_check (FILE *out, mpcheck_user_func_t *tab)
 {
   int i;
   for (i = 0 ; tab[i].name != NULL ; i++)
-    mpcheck (out, tab[i].e1, tab[i].e2, tab[i].name, tab[i].func);
+    mpcheck (out, tab[i].e1, tab[i].e2, tab[i].e3, tab[i].name, tab[i].func);
 }
 
