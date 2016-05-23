@@ -102,67 +102,67 @@ set_rnd_mode (mp_rnd_t rnd) {
 
 /* Code to check */
 extern "C" void 
-my_add (void *dest, const void *src1, const void *src2) {
+my_add (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = *(const RR*)src1 + *(const RR*)src2;
 }
 
 extern "C" void 
-my_sub (void *dest, const void *src1, const void *src2) {
+my_sub (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = *(const RR*)src1 - *(const RR*)src2;
 }
 
 extern "C" void 
-my_mul (void *dest, const void *src1, const void *src2) {
+my_mul (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = *(const RR*)src1 * *(const RR*)src2;
 }
 
 extern "C" void 
-my_div (void *dest, const void *src1, const void *src2) {
+my_div (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = *(const RR*)src1 / *(const RR*)src2;
 }
 
 extern "C" void 
-my_sqrt (void *dest, const void *src1, const void *src2) {
+my_sqrt (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = sqrt (*(const RR*)src1);
 }
 
 extern "C" void 
-my_exp (void *dest, const void *src1, const void *src2) {
+my_exp (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = exp (*(const RR*)src1);
 }
 
 extern "C" void 
-my_log (void *dest, const void *src1, const void *src2) {
+my_log (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = log (*(const RR*)src1);
 }
 
 extern "C" void 
-my_sin (void *dest, const void *src1, const void *src2) {
+my_sin (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = sin (*(const RR*)src1);
 }
 
 extern "C" void 
-my_cos (void *dest, const void *src1, const void *src2) {
+my_cos (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = cos (*(const RR*)src1);
 }
 
 extern "C" void 
-my_expm1 (void *dest, const void *src1, const void *src2) {
+my_expm1 (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = expm1 (*(const RR*)src1);
 }
 
 extern "C" void 
-my_log1p (void *dest, const void *src1, const void *src2) {
+my_log1p (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = log1p (*(const RR*)src1);
 }
 
 extern "C" void 
-my_log10 (void *dest, const void *src1, const void *src2) {
+my_log10 (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = log10 (*(const RR*)src1);
 }
 
 extern "C" void 
-my_pow (void *dest, const void *src1, const void *src2) {
+my_pow (void *dest, const void *src1, const void *src2, const void *src3) {
   *(RR*)dest = pow (*(const RR*)src1, *(const RR*)src2);
 }
 

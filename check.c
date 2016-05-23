@@ -25,10 +25,12 @@
 
 mpfr_t    mpcheck_max_err_dir, mpcheck_max_err_near;
 mp_rnd_t  mpcheck_rnd_mode;
+char function_to_check[128] = "all"; /* default=all */
 unsigned long tot_wrong_errno = 0, tot_wrong_inexact = 0,
   tot_wrong_dir = 0, tot_wrong_range = 0, tot_wrong_monoton = 0,
   tot_wrong_symm = 0, tot_wrong = 0, tot_wrong_special = 0,
-  tot_wrong_overflow = 0, tot_wrong_underflow = 0;
+  tot_wrong_overflow = 0, tot_wrong_underflow = 0,
+  tot_wrong_basic = 0;
 unsigned long suppressed_wrong_inexact = 0, suppressed_wrong_errno = 0,
   suppressed_wrong_underflow = 0, suppressed_wrong_range = 0,
   suppressed_wrong_overflow = 0;
@@ -237,6 +239,8 @@ mpcheck_init (int argc, const char *const argv[],
 	    N = value;
 	  else if (strcmp (Buffer, "prec") == 0)
 	    prec = value;
+	  else if (strcmp (Buffer, "func") == 0)
+	    strcpy (function_to_check, val);
 	  else
 	    {
 	      usage ();
@@ -268,7 +272,8 @@ mpcheck_clear (FILE *out)
   mpfr_out_str (out, 10, 3, mpcheck_max_err_dir, MPFR_RNDA);
   fprintf (out, " (directed) [seed=%lu]\n", seed);
   if (tot_wrong > 0)
-    fprintf (out, "Incorrect roundings: %lu\n", tot_wrong);
+    fprintf (out, "Incorrect roundings: %lu (basic %lu)\n",
+             tot_wrong, tot_wrong_basic);
   if (tot_wrong_dir > 0)
     fprintf (out, "Wrong side of directed rounding: %lu\n", tot_wrong_dir);
   if (tot_wrong_range > 0)
@@ -513,8 +518,8 @@ next (mpfr_t op1)
 }
 
 static void
-gen (mpfr_t op1, mp_exp_t e1, mpfr_t op2, mp_exp_t e2, gmp_randstate_t state,
-     int i, mpcheck_func_t *ref)
+gen (mpfr_t op1, mp_exp_t e1, mpfr_t op2, mp_exp_t e2, mpfr_t op3, mp_exp_t e3,
+     gmp_randstate_t state, int i, mpcheck_func_t *ref)
 {
   int Signed = ref->signed_input == IN_POSNEG;
   int numarg = ref->NumArg;
@@ -530,6 +535,13 @@ gen (mpfr_t op1, mp_exp_t e1, mpfr_t op2, mp_exp_t e2, gmp_randstate_t state,
     {
       set_special (op1, i % 5);
       set_special (op2, i / 5);
+      return;
+    }
+  else if (numarg == 3 && i < 125)
+    {
+      set_special (op1, i % 5);
+      set_special (op2, (i / 5) % 5);
+      set_special (op3, i / 25);
       return;
     }
   if (numarg == 1 && (5 <= i && i <= 6) &&
@@ -639,19 +651,28 @@ gen (mpfr_t op1, mp_exp_t e1, mpfr_t op2, mp_exp_t e2, gmp_randstate_t state,
   do mpfr_urandomb (op1, state); while (mpfr_zero_p (op1));
   mpfr_set_exp (op1, 0);
   mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
-  if (numarg == 2)
+  if (numarg >= 2)
     {
       do mpfr_urandomb (op2, state); while (mpfr_zero_p (op2));
       mpfr_set_exp (op2, 0);
       mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
     }
+  if (numarg >= 3)
+    {
+      do mpfr_urandomb (op3, state); while (mpfr_zero_p (op3));
+      mpfr_set_exp (op3, 0);
+      mpfr_mul_2si (op3, op3, e3, GMP_RNDN);
+    }
   if (Signed)
     {
       if ((rand () & 1) == 0)
         mpfr_neg (op1, op1, GMP_RNDN);
-      if (numarg == 2)
+      if (numarg >= 2)
         if ((rand () & 1) == 0)
           mpfr_neg (op2, op2, GMP_RNDN);
+      if (numarg >= 3)
+        if ((rand () & 1) == 0)
+          mpfr_neg (op3, op3, GMP_RNDN);
     }
   /* Functions which take only positive arguments
      may have a strange behaviour for 0 */
@@ -718,7 +739,8 @@ suppress (int err, const char *name, mpfr_t result, mpfr_t op1, mpfr_t op2)
       /* errno is only supposed to be set for <math.h> standard library
          functions, not C operators (or <complex.h> functions) */
       if (strcmp (name, "add") == 0 || strcmp (name, "sub") == 0 ||
-          strcmp (name, "mul") == 0 || strcmp (name, "div") == 0)
+          strcmp (name, "mul") == 0 || strcmp (name, "div") == 0 ||
+          strcmp (name, "fma") == 0)
         return 1;
       if (strcmp (name, "log1p") == 0)
         return 1; /* bug 6792 */
@@ -975,19 +997,28 @@ dichotomy (mpfr_t x, int sign_x, mpfr_t y, mpcheck_func_t *ref)
   mpfr_set_emax (emax);
 }
 
+#if !defined(HAVE_PARI)
+int
+is_accepted (const char *name, int numarg, mpfr_t op1, mpfr_t op2)
+{
+  return 1;
+}
+
+#endif
+
 void
 mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	const char *const name,
-	 void (*func) (void*,const void*, const void*))
+	 void (*func) (void*,const void*, const void*, const void*))
 {
   static int print_done = 0;
   int reduction_done;
   gmp_randstate_t state;
-  mpfr_t op1, op2, result, result_lib, result_more_prec, rmax, rlibmax;
-   mpfr_t u, umax, umax_dir, op1max_dir, op2max_dir, max_err_near, max_err_dir;
-   mpfr_t op1max, op2max, range_min, range_max;
+  mpfr_t op1, op2, op3, result, result_lib, result_more_prec, rmax, rlibmax;
+  mpfr_t u, umax, umax_dir, op1max_dir, op2max_dir, op3max_dir, max_err_near, max_err_dir;
+   mpfr_t op1max, op2max, op3max, range_min, range_max;
    mpfr_t xdplus, xdminus, last_x, last_result;
-   void *rop1, *rop2, *rresult;
+   void *rop1, *rop2, *rop3, *rresult;
    mpcheck_func_t *ref;
    unsigned long i, wrong_dir, wrong_range, wrong_monoton, wrong_symm;
    unsigned long wrong_errno, wrong_inexact, wrong, wrong_special;
@@ -1004,6 +1035,9 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
       return;
      }
    ref = &mpcheck_tab[i];
+   if (strcmp (function_to_check, "all") != 0 &&
+       strcmp (ref->name, function_to_check) != 0)
+     return;
 
    /* if seed is zero, we generate a random one */
    if (seed == 0)
@@ -1023,14 +1057,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
    if (e1 == LONG_MAX-2)   e1 = emin;
    if (e2 == LONG_MAX-2)   e2 = emin;
 
-  mpfr_inits2 (prec, op1, op2, result, result_lib, u, umax, umax_dir,
-	       max_err_near, max_err_dir, op1max_dir, op2max_dir,
-	       op1max, op2max, range_min, range_max, rmax, rlibmax,
+   mpfr_inits2 (prec, op1, op2, op3, result, result_lib, u, umax, umax_dir,
+                max_err_near, max_err_dir, op1max_dir, op2max_dir, op3max_dir,
+                op1max, op2max, op3max, range_min, range_max, rmax, rlibmax,
 	       xdplus, xdminus, last_x, last_result, NULL);
   mpfr_init2 (result_more_prec, prec+32);
   gmp_randinit (state, GMP_RAND_ALG_LC, 128);
   rop1 = (*new) (prec);
   rop2 = (*new) (prec);
+  rop3 = (*new) (prec);
   rresult = (*new) (prec);
 
   mpfr_set_ui (max_err_near, 0, GMP_RNDN);
@@ -1054,16 +1089,27 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
       mpfr_set_exp (op1, 0);
       mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
       /* we should ensure that 2^(e2-1) <= op1 < 2^e2 below */
-      mpfr_urandomb (op2, state);
-      mpfr_set_exp (op2, 0);
-      mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
-
-      if (ref->NumArg == 2)
-	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
-                  ref->mpfr)) (result, op1, op2, GMP_RNDN);
-      else
+      if (ref->NumArg >= 2)
+        {
+          mpfr_urandomb (op2, state);
+          mpfr_set_exp (op2, 0);
+          mpfr_mul_2si (op2, op2, e2, GMP_RNDN);
+        }
+      if (ref->NumArg >= 3)
+        {
+          mpfr_urandomb (op3, state);
+          mpfr_set_exp (op3, 0);
+          mpfr_mul_2si (op3, op3, e2, GMP_RNDN); /* use same exponent e2 */
+        }
+      if (ref->NumArg == 1)
 	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
                   ref->mpfr)) (result, op1, GMP_RNDN);
+      else if (ref->NumArg == 2)
+	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+                  ref->mpfr)) (result, op1, op2, GMP_RNDN);
+      else /* 3 arguments */
+	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+                  ref->mpfr)) (result, op1, op2, op3, GMP_RNDN);
       inex = mpfr_subnormalize (result, inex, GMP_RNDN);
 
       if (mpfr_number_p (result))
@@ -1110,6 +1156,9 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
       mpfr_set_ui (op2max, 0, GMP_RNDN);
       mpfr_set_ui (op2max_dir, 0, GMP_RNDN);
 
+      mpfr_set_ui (op3max, 0, GMP_RNDN);
+      mpfr_set_ui (op3max_dir, 0, GMP_RNDN);
+
       wrong = 0;
       wrong_dir = 0;     /* number of wrong (side of) directed roundings */
       wrong_range = 0;   /* number of wrong results wrt range        */
@@ -1128,7 +1177,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
             dichotomy (op1, mpfr_sgn (result), last_x, ref);
           else
             /* Generate random numbers */
-            gen (op1, e1, op2, e2, state, i, ref);
+            gen (op1, e1, op2, e2, op3, e2, state, i, ref);
           assert (!mpfr_regular_p (op1) || mpfr_get_exp (op1) -
                   mpfr_min_prec (op1) >= mpfr_get_emin () - 1);
 
@@ -1143,22 +1192,28 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 
 	  /* Convert the input to the format used by the library */
 	  (*getfp) (rop1, op1);
-	  (*getfp) (rop2, op2);
+          if (ref->NumArg >= 2)
+            (*getfp) (rop2, op2);
+          if (ref->NumArg >= 3)
+            (*getfp) (rop3, op3);
 	  /* Compute the result with MPFR and the LIBRARY */
           mpfr_clear_overflow ();
           mpfr_clear_underflow ();
-	  if (ref->NumArg == 2)
-	    inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
-                      ref->mpfr)) (result, op1, op2, rnd); 
-	  else
+          if (ref->NumArg == 1)
 	    inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
                       ref->mpfr)) (result, op1, rnd);
+	  else if (ref->NumArg == 2)
+	    inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+                      ref->mpfr)) (result, op1, op2, rnd);
+          else /* 3 arguments */
+	    inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+                      ref->mpfr)) (result, op1, op2, op3, rnd);
           inex = mpfr_subnormalize (result, inex, rnd);
           overflow = mpfr_overflow_p ();
           underflow = fixed_underflow_p (result, inex);
           errno = 0;
           feclearexcept (FE_ALL_EXCEPT); /* clear all exceptions */
-	  (*func) (rresult, rop1, rop2);
+	  (*func) (rresult, rop1, rop2, rop3);
           rinex = fetestexcept (FE_INEXACT);
           roverflow = fetestexcept (FE_OVERFLOW);
           runderflow = fetestexcept (FE_UNDERFLOW);
@@ -1338,10 +1393,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                            "library %d\n", inex, rinex);
                   fprintf (out, "      x=");
                   mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                  if (ref->NumArg == 2)
+                  if (ref->NumArg >= 2)
                     {
                       fprintf (out, "      t=");
                       mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                    }
+                  if (ref->NumArg >= 3)
+                    {
+                      fprintf (out, "      u=");
+                      mpfr_out_str (out, OUT, 0, op3, GMP_RNDN);
                     }
                   fprintf (out, "\n      library gives ");
                   mpfr_out_str (out, OUT, 0, result_lib, GMP_RNDN);
@@ -1364,10 +1424,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                            "library %d\n", overflow, roverflow);
                   fprintf (out, "      x=");
                   mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                  if (ref->NumArg == 2)
+                  if (ref->NumArg >= 2)
                     {
                       fprintf (out, "      t=");
                       mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                    }
+                  if (ref->NumArg >= 3)
+                    {
+                      fprintf (out, "      u=");
+                      mpfr_out_str (out, OUT, 0, op3, GMP_RNDN);
                     }
                   fprintf (out, "\n      library gives ");
                   mpfr_out_str (out, OUT, 0, result_lib, GMP_RNDN);
@@ -1395,10 +1460,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                            "library %d\n", underflow, runderflow);
                   fprintf (out, "      x=");
                   mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                  if (ref->NumArg == 2)
+                  if (ref->NumArg >= 2)
                     {
                       fprintf (out, "      t=");
                       mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                    }
+                  if (ref->NumArg >= 3)
+                    {
+                      fprintf (out, "      u=");
+                      mpfr_out_str (out, OUT, 0, op3, GMP_RNDN);
                     }
                   fprintf (out, "\n      library gives ");
                   mpfr_out_str (out, OUT, 0, result_lib, GMP_RNDN);
@@ -1419,12 +1489,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                   break; /* ulp difference does not make sense */
                 }
 	      /* Recompute MPFR result with more prec */
-	      if (ref->NumArg == 2)
-		(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
-		   ref->mpfr)) (result_more_prec, op1, op2, rnd);
-	      else
+	      if (ref->NumArg == 1)
 		(*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
                    ref->mpfr)) (result_more_prec, op1, rnd);
+	      else if (ref->NumArg == 2)
+		(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+		   ref->mpfr)) (result_more_prec, op1, op2, rnd);
+	      else /* three arguments */
+		(*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
+		   ref->mpfr)) (result_more_prec, op1, op2, op3, rnd);
 	      /* Compute ULP */
 	      mpcheck_ulp (u, result_lib, result_more_prec, prec);
 	      if (rnd != GMP_RNDN)
@@ -1442,6 +1515,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 			  mpfr_set (umax_dir, u, GMP_RNDN);
 			  mpfr_set (op1max_dir, op1, GMP_RNDN);
 			  mpfr_set (op2max_dir, op2, GMP_RNDN);
+			  mpfr_set (op3max_dir, op3, GMP_RNDN);
 			}
 		    }
 		}
@@ -1450,6 +1524,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 		  mpfr_set (umax, u, GMP_RNDN);
 		  mpfr_set (op1max, op1, GMP_RNDN);
 		  mpfr_set (op2max, op2, GMP_RNDN);
+		  mpfr_set (op3max, op3, GMP_RNDN);
                   mpfr_set (rmax, result, GMP_RNDN);
                   mpfr_set (rlibmax, result_lib, GMP_RNDN);
 		}
@@ -1470,10 +1545,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 		    {
 		      fprintf (out, "      wrong range for x=");
 		      mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                      if (ref->NumArg == 2)
+                      if (ref->NumArg >= 2)
                         {
                           fprintf (out, " t=");
                           mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                        }
+                      if (ref->NumArg >= 3)
+                        {
+                          fprintf (out, " u=");
+                          mpfr_out_str (out, OUT, 0, op3, GMP_RNDN);
                         }
 		      fprintf (out, "\n           f(x)=");
 		      mpfr_out_str (out, OUT, 0, result_lib, GMP_RNDN);
@@ -1496,7 +1576,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
               if (is_accepted (name, 1, xdminus, NULL) == 0)
                 continue;
 	      (*getfp) (rop1, xdminus);
-	      (*func) (rresult, rop1, rop2);
+	      (*func) (rresult, rop1, rop2, rop3);
 	      (*setfp) (xdminus, rresult);
 	      
 	      mpfr_set (xdplus, op1, GMP_RNDN);
@@ -1504,7 +1584,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
               if (is_accepted (name, 1, xdplus, NULL) == 0)
                 continue;
               (*getfp) (rop1, xdplus);
-              (*func) (rresult, rop1, rop2);
+              (*func) (rresult, rop1, rop2, rop3);
               (*setfp) (xdplus, rresult);
 
 	      if (ref->monoton == INCREASING)
@@ -1583,7 +1663,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
               if (is_accepted (name, 1, xdminus, NULL) == 0)
                 continue;
               (*getfp) (rop1, xdminus);
-              (*func) (rresult, rop1, rop2);
+              (*func) (rresult, rop1, rop2, rop3);
               (*setfp) (xdminus, rresult);
 
 	      if (ref->symm == ODD)
@@ -1639,9 +1719,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                                    saved_errno);
                           fprintf (out, "x=");
                           mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                          if (ref->NumArg == 2)
+                          if (ref->NumArg >= 2)
                             {
                               fprintf (out, " t=");
+                              mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                            }
+                          if (ref->NumArg >= 3)
+                            {
+                              fprintf (out, " u=");
                               mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
                             }
                         fprintf (out, "\nlibrary gives ");
@@ -1664,9 +1749,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                                  saved_errno);
                         fprintf (out, "x=");
                         mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                        if (ref->NumArg == 2)
+                        if (ref->NumArg >= 2)
                           {
                             fprintf (out, " t=");
+                            mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                          }
+                        if (ref->NumArg >= 3)
+                          {
+                            fprintf (out, " u=");
                             mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
                           }
                         fprintf (out, "\nlibrary gives ");
@@ -1685,10 +1775,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                   fprintf (out, "errno=%d\n", saved_errno);
                   fprintf (out, "x=");
                   mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                  if (ref->NumArg == 2)
+                  if (ref->NumArg >= 2)
                     {
                     fprintf (out, " t=");
                     mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                    }
+                  if (ref->NumArg >= 3)
+                    {
+                    fprintf (out, " u=");
+                    mpfr_out_str (out, OUT, 0, op3, GMP_RNDN);
                     }
                   fprintf (out, "\nlibrary gives ");
                   mpfr_out_str (out, OUT, 0, result_lib, GMP_RNDN);
@@ -1714,10 +1809,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                   fprintf (out, "Result is NaN but errno is not set\n");
                   fprintf (out, "x=");
                   mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                  if (ref->NumArg == 2)
+                  if (ref->NumArg >= 2)
                     {
                     fprintf (out, " t=");
                     mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                    }
+                  if (ref->NumArg >= 3)
+                    {
+                    fprintf (out, " u=");
+                    mpfr_out_str (out, OUT, 0, op3, GMP_RNDN);
                     }
                   fprintf (out, "\nlibrary gives ");
                   mpfr_out_str (out, OUT, 0, result_lib, GMP_RNDN);
@@ -1735,10 +1835,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
                       fprintf (out, "errno=%d\n", saved_errno);
                       fprintf (out, "x=");
                       mpfr_out_str (out, OUT, 0, op1, GMP_RNDN);
-                      if (ref->NumArg == 2)
+                      if (ref->NumArg >= 2)
                         {
                           fprintf (out, " t=");
                           mpfr_out_str (out, OUT, 0, op2, GMP_RNDN);
+                        }
+                      if (ref->NumArg >= 3)
+                        {
+                          fprintf (out, " u=");
+                          mpfr_out_str (out, OUT, 0, op3, GMP_RNDN);
                         }
                       fprintf (out, " \n");
                     }
@@ -1747,6 +1852,10 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	} /* for i to N */
 
       tot_wrong += wrong;
+      if (strcmp (ref->name, "add") == 0 || strcmp (ref->name, "sub") == 0 ||
+          strcmp (ref->name, "mul") == 0 || strcmp (ref->name, "div") == 0 ||
+          strcmp (ref->name, "fma") == 0 || strcmp (ref->name, "sqrt") == 0)
+        tot_wrong_basic += wrong;
       tot_wrong_dir += wrong_dir;
       tot_wrong_range += wrong_range;
       tot_wrong_monoton += wrong_monoton;
@@ -1763,10 +1872,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	  mpfr_out_str (out, 10, 3, umax, MPFR_RNDA);
 	  fprintf (out, " ulp(s) for x=");
           out_value (out, op1max);
-	  if (ref->NumArg == 2)
+	  if (ref->NumArg >= 2)
 	    {  
 	      fprintf (out, " t=");
               out_value (out, op2max);
+	    }
+	  if (ref->NumArg >= 3)
+	    {  
+	      fprintf (out, " u=");
+              out_value (out, op3max);
 	    }
 	  fprintf (out, "\n");
           if (verbose >= 4)
@@ -1784,10 +1898,15 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
 	{
 	  fprintf (out, "      wrong directed rounding for x=");
 	  mpfr_out_str (out, OUT, 0, op1max_dir, GMP_RNDN);
-	  if (ref->NumArg == 2)
+	  if (ref->NumArg >= 2)
 	    {
 	      fprintf (out, " t=");
 	      mpfr_out_str (out, OUT, 0, op2max_dir, GMP_RNDN);
+	    }
+	  if (ref->NumArg >= 3)
+	    {
+	      fprintf (out, " u=");
+	      mpfr_out_str (out, OUT, 0, op3max_dir, GMP_RNDN);
 	    }
 	  fprintf (out, " [");
 	  mpfr_out_str (out, 10, 3, umax_dir, MPFR_RNDA);
@@ -1846,7 +1965,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
   fprintf (out, " (directed)\n");
   if (verbose >= 3)
     fprintf (out, "\n");
-  
+
   if (mpfr_cmp (max_err_near, mpcheck_max_err_near) > 0)
     mpfr_set (mpcheck_max_err_near, max_err_near, GMP_RNDN);
   
@@ -1859,7 +1978,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2,
   gmp_randclear (state);
   mpfr_clears (op1, op2, result, result_lib, u, umax, umax_dir,
                max_err_near, max_err_dir, result_more_prec, rmax, rlibmax,
-	       op1max_dir, op2max_dir, op1max, op2max, range_min,
+	       op1max_dir, op2max_dir, op3max_dir, op1max, op2max, op3max, range_min,
 	       range_max, xdplus, xdminus, last_x, last_result, NULL);
   mpfr_free_cache ();
   (*setrnd) (GMP_RNDN);
