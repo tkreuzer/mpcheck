@@ -87,7 +87,9 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"log1p", mpfr_log1p, 1, -RANGE_INF, RANGE_INF,INCREASING,NO_SYMM,IN_POSNEG},
 
   {"gamma", mpfr_gamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POS},
+#ifdef mpfr_gamma_inc
   {"gamma_inc", mpfr_gamma_inc, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
+#endif
   {"lgamma", mpfr_Lgamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
   {"lngamma", mpfr_lngamma, 1, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM,IN_POSNEG},
   {"cbrt", mpfr_cbrt, 1, -RANGE_INF, RANGE_INF, INCREASING, ODD, IN_POSNEG},
