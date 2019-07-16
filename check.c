@@ -1993,12 +1993,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
   
   (*del) (rop1);
   (*del) (rop2);
+  (*del) (rop3);
   (*del) (rresult);
   gmp_randclear (state);
-  mpfr_clears (op1, op2, result, result_lib, u, umax, umax_dir,
-               max_err_near, max_err_dir, result_more_prec, rmax, rlibmax,
-	       op1max_dir, op2max_dir, op3max_dir, op1max, op2max, op3max, range_min,
-	       range_max, xdplus, xdminus, last_x, last_result, NULL);
+  mpfr_clears (op1, op2, op3, result, result_lib, u, umax, umax_dir,
+               max_err_near, max_err_dir, op1max_dir, op2max_dir, op3max_dir,
+	       op1max, op2max, op3max, range_min, range_max, rmax, rlibmax,
+               xdplus, xdminus, last_x, last_result, NULL);
+  mpfr_clear (result_more_prec);
   mpfr_free_cache ();
   (*setrnd) (GMP_RNDN);
 }
