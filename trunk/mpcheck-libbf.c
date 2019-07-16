@@ -246,6 +246,7 @@ int main (int argc, const char *argv[])
     printf ("ERROR: set_fp(get_fp)) != Identity\n");
     exit (1);
   }
+  mpfr_clears (x, y, NULL);
   del_fp (fp);
   bf_prec = 0;
 
