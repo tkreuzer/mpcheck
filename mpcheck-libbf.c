@@ -221,7 +221,7 @@ static mpcheck_user_func_t tab[] = {
   {"acos", my_libbf_acos, -10, 0},
   {"pow", my_libbf_pow, 0, 0},
   {"pow", my_libbf_pow, 5, 4},
-  /* {"pow", my_libbf_pow, 16, 10}, */
+  {"pow", my_libbf_pow, 16, 10},
   {NULL, NULL, 0, 0}
 };
 
