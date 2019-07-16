@@ -35,6 +35,7 @@ AC_ARG_WITH(libm_lib, [  --with-libm-lib=DIR     LIBM lib directory ], with_libm
 AC_ARG_WITH(libm, [  --with-libm=DIR         LIBM install directory ], with_libm_include=$withval/include with_libm_lib=$withval/lib)
 
 AC_ARG_WITH(pari, [  --with-pari=DIR         PARI install directory ], with_pari_include=$withval/include with_pari_lib=$withval/lib)
+AC_ARG_WITH(libbf, [  --with-libbf=DIR       LIBBF source directory ], with_libbf_include=$withval/ with_libbf_lib=$withval/)
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -44,6 +45,7 @@ AC_CHECK_OS
 AC_CHECK_MACHTYPE
 AC_C_CONST
 AC_C_VOLATILE
+AC_LANG(C)
 
 dnl Well, we don't need all the MPFR tests, but it is easier.
 MPFR_CONFIGS
@@ -78,6 +80,9 @@ if test -d "$with_mpfr_include"; then
 fi
 if test -d "$with_pari_include"; then
   CPPFLAGS="$CPPFLAGS -I$with_pari_include"
+fi
+if test -d "$with_libbf_include"; then
+  CPPFLAGS="$CPPFLAGS -I$with_libbf_include"
 fi
 
 dnl Check for GNU libc
@@ -195,6 +200,23 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 pari_init (10, 10);
 ]])],[
  AC_DEFINE([HAVE_PARI], 1, [PARI was here and could be used])
+ AC_MSG_RESULT(yes)
+],[
+ LIBS=$old_LIBS
+ AC_MSG_RESULT(no)
+])
+
+dnl Check for BF
+AC_MSG_CHECKING(for LIBBF)
+old_LIBS=$LIBS
+LIBS="$with_libbf_lib/libbf.o $with_libbf_lib/cutils.o $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include "libbf.h"
+]], [[
+bf_t r;
+bf_set_ui(&r, 1);
+]])],[
+ AC_DEFINE([HAVE_LIBBF], 1, [LIBBF was here and could be used])
  AC_MSG_RESULT(yes)
 ],[
  LIBS=$old_LIBS
