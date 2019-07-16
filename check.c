@@ -1241,6 +1241,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
           if (verbose >= 5)
             {
               printf ("op1="); mpfr_dump (op1);
+              if (ref->NumArg >= 2)
+                { printf ("op2="); mpfr_dump (op2); }
               printf ("result="); mpfr_dump (result);
               printf ("result_lib="); mpfr_dump (result_lib);
               printf ("errno: library %d\n", errno);
