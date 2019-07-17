@@ -256,6 +256,8 @@ int main (int argc, const char *argv[])
   mpcheck_check (stdout, tab);
   mpcheck_clear (stdout);
   gmp_randclear (state);
+  bf_context_end (&context);
+  bf_clear_cache (&context);
   return 0;
 }
 
