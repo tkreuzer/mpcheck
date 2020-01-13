@@ -17,6 +17,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/* use #undef HAVE_GLIBC if you want to check another implementation,
+   for example musl (http://www.musl-libc.org/download.html) */
 #ifdef HAVE_GLIBC
 #include <gnu/libc-version.h>
 #endif
