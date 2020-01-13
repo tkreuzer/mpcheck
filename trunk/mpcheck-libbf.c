@@ -26,7 +26,8 @@
 static long bf_prec;
 static bf_context_t context;
 static bf_flags_t bf_rnd;
- 
+static int bf_status;
+
 static void *my_bf_realloc(void *opaque, void *ptr, size_t size)
 {
     return realloc(ptr, size);
@@ -45,7 +46,6 @@ static void *new_fp (mp_prec_t p)
   bf_t *r = malloc(sizeof(bf_t));
   if (!p) abort();
 
-  bf_context_init(&context, my_bf_realloc, NULL);
   bf_init(&context, r);
   
   return (void *) r;
@@ -72,10 +72,13 @@ static void set_fp (mpfr_ptr dest, const void *fp)
   }
   size_t s = r->len;
   size_t len = 1 + (dest->_mpfr_prec -1) / LIMB_BITS;
-  len = len < s  ? len : s;
+  if (s > len)
+      s = len;
   dest->_mpfr_exp = r->expn;
   dest->_mpfr_sign = r->sign == 1 ? -1 : 1;
-  memcpy(dest->_mpfr_d, r->tab, len * sizeof (limb_t) );
+  /* BF floats can be shorter */
+  memset(dest->_mpfr_d, 0, (len - s) * sizeof(limb_t));
+  memcpy(dest->_mpfr_d + (len - s), r->tab, s * sizeof (limb_t));
   /*
   mpfr_printf("RP=%Re and ", dest);
   char *buf;
@@ -88,7 +91,7 @@ static void set_fp (mpfr_ptr dest, const void *fp)
 static void get_fp (void *fp, mpfr_srcptr src)
 {
   bf_t *r = fp;
-  size_t len = 1 + (src->_mpfr_prec -1) / LIMB_BITS;
+  size_t len = 1 + (src->_mpfr_prec - 1) / LIMB_BITS;
   if (mpfr_nan_p(src)) {
     bf_set_nan(r);
   } else if (mpfr_inf_p(src)) {
@@ -111,82 +114,104 @@ static void get_fp (void *fp, mpfr_srcptr src)
 }
 
 static int set_rnd_mode (mpfr_rnd_t rnd) {
-  switch (rnd) {
-  case MPFR_RNDN: bf_rnd = BF_RNDN; break;
-  case MPFR_RNDZ: bf_rnd = BF_RNDZ; break;
-  case MPFR_RNDA: bf_rnd = BF_RNDU; break;
-  case MPFR_RNDD: bf_rnd = BF_RNDD; break;
-  case MPFR_RNDF: bf_rnd = BF_RNDF; break;
-  default: return 0;
-  }
+    bf_flags_t v;
+    
+    switch (rnd) {
+    case MPFR_RNDN: v = BF_RNDN; break;
+    case MPFR_RNDZ: v = BF_RNDZ; break;
+    case MPFR_RNDA: v = BF_RNDU; break;
+    case MPFR_RNDD: v = BF_RNDD; break;
+    case MPFR_RNDF: v = BF_RNDF; break;
+    default: return 0;
+    }
+    bf_rnd = (bf_rnd & ~BF_RND_MASK) | v;
   return 1;
+}
+
+static void bf_feclearexcept(void)
+{
+    bf_status = 0;
+}
+
+static int bf_fetestexcept(int flag)
+{
+    switch(flag) {
+    case FE_INEXACT:
+        return (bf_status & BF_ST_INEXACT) != 0;
+    case FE_OVERFLOW:
+        return (bf_status & BF_ST_OVERFLOW) != 0;
+    case FE_UNDERFLOW:
+        return (bf_status & BF_ST_UNDERFLOW) != 0;
+    default:
+        abort();
+    }
 }
 
 /* Start Libbf Function to check */
 void my_libbf_add (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src3;
-  bf_add ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
+  bf_status |= bf_add ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
 }
 void my_libbf_sub (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src3;
-  bf_sub ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
+  bf_status |= bf_sub ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
 }
 void my_libbf_mul (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src3;
-  bf_mul ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
+  bf_status |= bf_mul ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
 }
 void my_libbf_div (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src3;
-  bf_add ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
+  bf_status |= bf_div ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
 }
 void my_libbf_pow (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src3;
-  bf_pow ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
+  bf_status |= bf_pow ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
 }
 
 void my_libbf_sqrt (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src3;
-  bf_sqrt ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_sqrt ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 void my_libbf_exp (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src2;
   (void) src3;
-  bf_exp ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_exp ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 void my_libbf_log (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src2;
   (void) src3;
-  bf_log ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_log ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 void my_libbf_cos (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src2;
   (void) src3;
-  bf_cos ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_cos ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 void my_libbf_sin (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src2;
   (void) src3;
-  bf_sin ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_sin ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 void my_libbf_tan (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src2;
   (void) src3;
-  bf_tan ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_tan ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 void my_libbf_acos (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src2;
   (void) src3;
-  bf_acos ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_acos ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 void my_libbf_asin (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src2;
   (void) src3;
-  bf_asin ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_asin ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 void my_libbf_atan (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src2;
   (void) src3;
-  bf_atan ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
+  bf_status |= bf_atan ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
 
 static mpcheck_user_func_t tab[] = {
@@ -225,15 +250,17 @@ static mpcheck_user_func_t tab[] = {
   {NULL, NULL, 0, 0}
 };
 
-
 int main (int argc, const char *argv[])
 {
   mpfr_t x,y;
   void *fp;
   gmp_randstate_t state;
-
+  int exp_bits, emin, emax, prec;
+  
   gmp_randinit_default (state);
   assert(GMP_NUMB_BITS == LIMB_BITS);
+
+  bf_context_init(&context, my_bf_realloc, NULL);
 
   /* Check if interface works */
   mpfr_inits2 (113, x, y, NULL);
@@ -250,7 +277,16 @@ int main (int argc, const char *argv[])
   del_fp (fp);
   bf_prec = 0;
 
-  mpcheck_init (argc, argv, 64, -1L<<16, 1L<<16,
+  prec = 64;
+  exp_bits = 16;
+  bf_rnd = bf_set_exp_bits(exp_bits) | BF_FLAG_SUBNORMAL;
+  /* IEEE 754 convention for emin/emax */
+  emin = -((slimb_t)1 << exp_bits) / 2 + 3;
+  emax = ((slimb_t)1 << exp_bits) / 2;
+  
+  mpcheck_set_exception_functions(bf_feclearexcept, bf_fetestexcept);
+
+  mpcheck_init (argc, argv, prec, emin, emax,
 		new_fp, del_fp, get_fp, set_fp, set_rnd_mode,
 		ALL_RND, ALL_TEST, 0, 10000, 2);
   mpcheck_check (stdout, tab);

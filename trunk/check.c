@@ -154,6 +154,15 @@ static unsigned long seed;
 static mpcheck_test_e test;
 static int rnd_mode;
 static int verbose;
+static void (*fp_feclearexcept)(void);
+static int (*fp_fetestexcept)(int flag);
+    
+void mpcheck_set_exception_functions(void (*fp_feclearexcept1)(void),
+                                     int (*fp_fetestexcept1)(int flag))
+{
+    fp_feclearexcept = fp_feclearexcept1;
+    fp_fetestexcept = fp_fetestexcept1;
+}
 
 void
 mpcheck_init (int argc, const char *const argv[],
@@ -887,6 +896,10 @@ suppress (int err, const char *name, mpfr_t result, mpfr_t op1, mpfr_t op2)
   else
     abort ();
 #endif
+#ifdef HAVE_LIBBF
+    if (err == 1)
+        return 1; /* libbf never sets errno */
+#endif
   return 0;
 }
 
@@ -1141,7 +1154,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
    if (verbose >= 2)
      {
        if (ref->NumArg == 1)
-	 fprintf (out, "Testing function %s for precision %lu, exponent %ld [seed=%lu].\n",
+	 fprintf (out, "Testing function %s for precision %lu, exponent %ld [seed=%lu]\n",
 		  name, prec, e1, seed);
        else if (ref->NumArg == 2)
 	 fprintf (out, "Testing function %s for precision %lu, exponents %ld and %ld [seed=%lu]\n",
@@ -1229,11 +1242,21 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
           overflow = mpfr_overflow_p ();
           underflow = fixed_underflow_p (result, inex);
           errno = 0;
-          feclearexcept (FE_ALL_EXCEPT); /* clear all exceptions */
+          if (fp_feclearexcept) {
+              fp_feclearexcept();
+          } else {
+              feclearexcept (FE_ALL_EXCEPT); /* clear all exceptions */
+          }
 	  (*func) (rresult, rop1, rop2, rop3);
-          rinex = fetestexcept (FE_INEXACT);
-          roverflow = fetestexcept (FE_OVERFLOW);
-          runderflow = fetestexcept (FE_UNDERFLOW);
+          if (fp_fetestexcept) {
+              rinex = fp_fetestexcept (FE_INEXACT);
+              roverflow = fp_fetestexcept (FE_OVERFLOW);
+              runderflow = fp_fetestexcept (FE_UNDERFLOW);
+          } else {
+              rinex = fetestexcept (FE_INEXACT);
+              roverflow = fetestexcept (FE_OVERFLOW);
+              runderflow = fetestexcept (FE_UNDERFLOW);
+          }
           saved_errno = errno;
 	  /* Convert back the result to MPFR */
 	  (*setfp) (result_lib, rresult);
@@ -1500,6 +1523,16 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 	  /* Check for correct rounding */
 	  if (mpfr_cmp (result, result_lib) != 0)
 	    {
+#ifdef HAVE_LIBBF
+                if (verbose >= 3) {
+                    printf("ERROR:\n");
+                    printf ("op1="); mpfr_dump (op1);
+                    if (ref->NumArg >= 2)
+                        { printf ("op2="); mpfr_dump (op2); }
+                    printf ("result    ="); mpfr_dump (result);
+                    printf ("result_lib="); mpfr_dump (result_lib);
+                }
+#endif
 	      /* Error ++ */
 	      wrong ++;
               if (!mpfr_regular_p (result) || !mpfr_regular_p (result_lib))
