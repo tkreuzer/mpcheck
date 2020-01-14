@@ -1524,7 +1524,9 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 	  if (mpfr_cmp (result, result_lib) != 0)
 	    {
 #ifdef HAVE_LIBBF
-                if (verbose >= 3) {
+              /* at verbose level 3, we get detailed information about
+                 which operands give the largest error for each function */
+                if (verbose >= 4) {
                     printf("ERROR:\n");
                     printf ("op1="); mpfr_dump (op1);
                     if (ref->NumArg >= 2)
