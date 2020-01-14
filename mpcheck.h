@@ -87,7 +87,8 @@ extern "C" {
 #define DEFAULT_N 10000 /* default number of tests per function */
 
   void mpcheck_set_exception_functions(void (*fp_feclearexcept1)(void),
-                                       int (*fp_fetestexcept1)(int flag));
+                                       int (*fp_fetestexcept1)(int flag),
+                                       int);
 
   void mpcheck_init (int argc, const char *const argv[],
 		     mp_prec_t prec2, mp_exp_t emin2, mp_exp_t emax2,
