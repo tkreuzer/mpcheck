@@ -256,6 +256,7 @@ int main (int argc, const char *argv[])
   void *fp;
   gmp_randstate_t state;
   int exp_bits, emin, emax, prec;
+  int bf_errno_check = 0; /* libbf never sets errno */
   
   gmp_randinit_default (state);
   assert(GMP_NUMB_BITS == LIMB_BITS);
@@ -284,7 +285,8 @@ int main (int argc, const char *argv[])
   emin = -((slimb_t)1 << exp_bits) / 2 + 3;
   emax = ((slimb_t)1 << exp_bits) / 2;
   
-  mpcheck_set_exception_functions(bf_feclearexcept, bf_fetestexcept);
+  mpcheck_set_exception_functions(bf_feclearexcept, bf_fetestexcept,
+                                  bf_errno_check);
 
   mpcheck_init (argc, argv, prec, emin, emax,
 		new_fp, del_fp, get_fp, set_fp, set_rnd_mode,

@@ -166,12 +166,15 @@ static int rnd_mode;
 static int verbose;
 static void (*fp_feclearexcept)(void);
 static int (*fp_fetestexcept)(int flag);
+static int fp_errno_check = 1;
     
 void mpcheck_set_exception_functions(void (*fp_feclearexcept1)(void),
-                                     int (*fp_fetestexcept1)(int flag))
+                                     int (*fp_fetestexcept1)(int flag),
+                                     int fp_errno_check1)
 {
     fp_feclearexcept = fp_feclearexcept1;
     fp_fetestexcept = fp_fetestexcept1;
+    fp_errno_check = fp_errno_check1;
 }
 
 void
@@ -906,10 +909,8 @@ suppress (int err, const char *name, mpfr_t result, mpfr_t op1, mpfr_t op2)
   else
     abort ();
 #endif
-#ifdef HAVE_LIBBF
-    if (err == 1)
-        return 1; /* libbf never sets errno */
-#endif
+  if (fp_errno_check == 0)
+    return 1;
   return 0;
 }
 
