@@ -153,6 +153,16 @@ static unsigned long N;
 static unsigned long seed;
 static mpcheck_test_e test;
 static int rnd_mode;
+/* verbose levels:
+   1: only print one summary line for each function + exponent range
+   2 (default): print two lines per function + exp. (Testing ... + Max. errors)
+   3: for each (function,exponent), and for each rounding mode,
+      print the maximal error in ulps, the corresponding input value(s),
+      and a summary "nb errors/wrong directed/max ulp diff"
+   4: print also the results return by mpfr and the other library
+      (only for the worst cases)
+   5: print ERROR: ... for each difference between mpfr and the other library
+*/
 static int verbose;
 static void (*fp_feclearexcept)(void);
 static int (*fp_fetestexcept)(int flag);
@@ -1523,18 +1533,14 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 	  /* Check for correct rounding */
 	  if (mpfr_cmp (result, result_lib) != 0)
 	    {
-#ifdef HAVE_LIBBF
-              /* at verbose level 3, we get detailed information about
-                 which operands give the largest error for each function */
-                if (verbose >= 4) {
-                    printf("ERROR:\n");
-                    printf ("op1="); mpfr_dump (op1);
-                    if (ref->NumArg >= 2)
-                        { printf ("op2="); mpfr_dump (op2); }
-                    printf ("result    ="); mpfr_dump (result);
-                    printf ("result_lib="); mpfr_dump (result_lib);
-                }
-#endif
+              if (verbose >= 5) {
+                printf("ERROR:\n");
+                printf ("op1="); mpfr_dump (op1);
+                if (ref->NumArg >= 2)
+                  { printf ("op2="); mpfr_dump (op2); }
+                printf ("result    ="); mpfr_dump (result);
+                printf ("result_lib="); mpfr_dump (result_lib);
+              }
 	      /* Error ++ */
 	      wrong ++;
               if (!mpfr_regular_p (result) || !mpfr_regular_p (result_lib))
