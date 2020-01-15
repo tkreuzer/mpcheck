@@ -19,6 +19,17 @@
 
 #include "mpcheck.h"
 
+/* define CHECK_ULPS if you want to compare the maximal errors in ulps
+   with the bounds for the glibc (in glibc/sysdeps/xxx/fpu/libm-test-ulps
+   where xxx is for example x86_64).
+   This assumes the file ulps.h has been generated with the parse.sage
+   script. */
+// #define CHECK_ULPS
+
+#ifdef CHECK_ULPS
+#include "ulps.h"
+#endif
+
 #define MAX_REPORTS 3 /* maximal number of errors reported by category */
 
 #define OUT 10 /* output base */
@@ -1034,6 +1045,59 @@ is_accepted (const char *name, int numarg, mpfr_t op1, mpfr_t op2)
 
 #endif
 
+#ifdef CHECK_ULPS
+static void
+check_ulp_error (const char *func, mpfr_rnd_t rnd, int prec, mpfr_t max_err)
+{
+  assert (mpfr_fits_sint_p (max_err, GMP_RNDN));
+  int err = mpfr_get_si (max_err, GMP_RNDN);
+  int err_bound = -1; /* means not initialized */
+  for (int i = 0; strlen (max_ulps[i].fn) != 0; i++)
+    {
+      int p;
+      if (strcmp (max_ulps[i].type, "float") == 0)
+        p = 24;
+      else if (strcmp (max_ulps[i].type, "double") == 0)
+        p = 53;
+      else if (strcmp (max_ulps[i].type, "ldouble") == 0)
+        p = 64;
+      else if (strcmp (max_ulps[i].type, "float128") == 0)
+        p = 113;
+      else
+        {
+          fprintf (stderr, "Error, unknown type %s\n", max_ulps[i].type);
+          exit (1);
+        }
+      if (strcmp (func, max_ulps[i].fn) == 0 && p == prec)
+        {
+          if (rnd == GMP_RNDN)
+            {
+              if (strcmp (max_ulps[i].rnd, "RNDN") == 0)
+                {
+                  assert (err_bound == -1);
+                  err_bound = max_ulps[i].err;
+                }
+            }
+          else /* directed rounding: we use the largest bound */
+            {
+              if (strcmp (max_ulps[i].rnd, "RNDN") != 0)
+                {
+                  if (max_ulps[i].err > err_bound)
+                    err_bound = max_ulps[i].err;
+                }
+            }
+        }
+    }
+  if (err_bound == -1) /* add, sub, ..., sincos1 */
+    return;
+  if (err > err_bound)
+    {
+      printf ("****** glibc error bound %d exceeded for func=%s, prec=%d, rnd=%s\n",
+              err_bound, func, prec, mpfr_print_rnd_mode (rnd));
+    }
+}
+#endif
+
 void
 mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 	const char *const name,
@@ -2026,6 +2090,11 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
   fprintf (out, " (directed)\n");
   if (verbose >= 3)
     fprintf (out, "\n");
+
+#ifdef CHECK_ULPS
+  check_ulp_error (name, GMP_RNDN, prec, max_err_near);
+  check_ulp_error (name, GMP_RNDZ, prec, max_err_dir);
+#endif
 
   if (mpfr_cmp (max_err_near, mpcheck_max_err_near) > 0)
     mpfr_set (mpcheck_max_err_near, max_err_near, GMP_RNDN);

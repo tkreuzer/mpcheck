@@ -4,7 +4,7 @@ typedef struct {
   char rnd[16];
   int err;
 } entry_t;
-entry_t T[] = {
+entry_t max_ulps[] = {
 {"yn", "ldouble", "RNDZ", 5},
 {"cabs", "double", "RNDU", 1},
 {"tgamma", "float128", "RNDZ", 5},
