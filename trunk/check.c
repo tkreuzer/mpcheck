@@ -749,8 +749,8 @@ suppress (int err, const char *name, mpfr_t result, mpfr_t op1, mpfr_t op2)
       /* cbrt does not guarantee a correct inexact flag, except for NaN */
       if (strcmp (name, "cbrt") == 0 && !mpfr_nan_p (result))
         return 1;
-      /* same for gamma, exp10, log2, exp2 */
-      if ((strcmp (name, "gamma") == 0 || strcmp (name, "exp10") == 0 ||
+      /* same for tgamma, exp10, log2, exp2 */
+      if ((strcmp (name, "tgamma") == 0 || strcmp (name, "exp10") == 0 ||
            strcmp (name, "log2") == 0 || strcmp (name, "exp2") == 0) &&
           !mpfr_nan_p (result))
         return 1;

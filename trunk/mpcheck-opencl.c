@@ -383,7 +383,7 @@ void my_opencl_cbrt (void *dest, const void *src1, const void *src2) {
 void my_opencl_hypot (void *dest, const void *src1, const void *src2) {
   build_and_run_opencl_function("hypot", 2, dest, src1, src2);
 }
-void my_opencl_gamma (void *dest, const void *src1, const void *src2) {
+void my_opencl_tgamma (void *dest, const void *src1, const void *src2) {
   build_and_run_opencl_function("tgamma", 1, dest, src1, src2);
 }
 void my_opencl_exp2 (void *dest, const void *src1, const void *src2) {
@@ -459,8 +459,8 @@ static mpcheck_user_func_t tab[] = {
   {"hypot", my_opencl_hypot, 0, 0},
   {"hypot", my_opencl_hypot, LONG_MAX, LONG_MAX},
   {"hypot", my_opencl_hypot, -1010, -1010},
-  {"gamma", my_opencl_gamma, 0, 0},
-  {"gamma", my_opencl_gamma, 10, 0},
+  {"tgamma", my_opencl_tgamma, 0, 0},
+  {"tgamma", my_opencl_tgamma, 10, 0},
   {"exp2", my_opencl_exp2, 0, 0},
   {"exp2", my_opencl_exp2, 9, 0},
   {"log2", my_opencl_log2,  0, 0},
