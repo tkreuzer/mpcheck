@@ -8,14 +8,9 @@ mkdir build
 cd build
 ../configure --prefix=/tmp
 make -j4 >& /dev/null
-ln -s /usr/lib/libntl.so.35 .
-ln -s /usr/lib/x86_64-linux-gnu/libOpenCL.so.1 .
-ln -s /usr/lib/x86_64-linux-gnu/libpari-gmp-tls.so.4 .
 ln -s /usr/lib/x86_64-linux-gnu/libgmp.so.10 .
-ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6 .
-ln -s /lib/x86_64-linux-gnu/libgcc_s.so.1 .
-ln -s /lib/x86_64-linux-gnu/libm.so.6 .
-ln -s /usr/local/SageMath/local/lib/libgf2x.so.1 .
+ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 .
+ln -s /usr/lib/x86_64-linux-gnu/libquadmath.so.0 .
 ./testrun.sh $HOME/svn/mpcheck/mpcheck-float --num=$1 --verbose=3
 echo ""
 ./testrun.sh $HOME/svn/mpcheck/mpcheck-double --num=$1 --verbose=3

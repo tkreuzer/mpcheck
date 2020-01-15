@@ -270,7 +270,7 @@ void my_pari_atanh (void *dest, const void *src1, const void *src2) {
   avma = st;
 }
 
-void my_pari_gamma (void *dest, const void *src1, const void *src2) {
+void my_pari_tgamma (void *dest, const void *src1, const void *src2) {
   unsigned long st = avma;
   GEN tmp;
   tmp = ggamma ((GEN) src1, nbits2prec (prec));
@@ -408,8 +408,8 @@ static mpcheck_user_func_t tab[] = {
   {"asin", my_pari_asin, -10, 0},
   {"acos", my_pari_acos, 0, 0},
   {"acos", my_pari_acos, -10, 0},
-  {"gamma", my_pari_gamma, 0, 0},
-  {"gamma", my_pari_gamma, 10, 0},
+  {"tgamma", my_pari_tgamma, 0, 0},
+  {"tgamma", my_pari_tgamma, 10, 0},
   {"pow", my_pari_pow, 0, 0},
   {"pow", my_pari_pow, 5, 4},
   {"pow", my_pari_pow, 16, 10},
@@ -538,7 +538,7 @@ is_accepted (char *name, int numarg, mpfr_t op1, mpfr_t op2)
   if (strcmp (name, "acos") == 0 && mpfr_get_exp (op1) > 0)
     return 0;
 
-  if (strcmp (name, "gamma") == 0 && (mpfr_cmp_ui (op1, 0) <= 0 ||
+  if (strcmp (name, "tgamma") == 0 && (mpfr_cmp_ui (op1, 0) <= 0 ||
                                       mpfr_get_exp (op1) >= 32768))
     return 0;
   

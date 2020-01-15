@@ -300,7 +300,7 @@ static void my_atanh (void *dest, const void *a, const void *b, const void *c)
 }
 #endif
 #if HAVE_TGAMMA
-static void my_gamma (void *dest, const void *a, const void *b, const void *c)
+static void my_tgamma (void *dest, const void *a, const void *b, const void *c)
 {
   *(fptype*) dest = NAME(tgamma) (*(fptype*)a);
 }
@@ -529,8 +529,8 @@ static mpcheck_user_func_t tab[] = {
   {"hypot", my_hypot, -1010, -1010, 0},
 #endif
 #if HAVE_TGAMMA
-  {"gamma", my_gamma, 0, 0, 0},
-  {"gamma", my_gamma, 10, 0, 0},
+  {"tgamma", my_tgamma, 0, 0, 0},
+  {"tgamma", my_tgamma, 10, 0, 0},
 #endif
 #if HAVE_LGAMMA
   {"lgamma", my_lgamma, 0, 0, 0},
