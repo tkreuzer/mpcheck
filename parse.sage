@@ -47,13 +47,13 @@ def parse(file):
 # export(T,"ulps.h")
 def export(T,file):
    fp = open(file,"w")
-   fp.write("typedef struct entry_t {\n")
+   fp.write("typedef struct {\n")
    fp.write("  char fn[16];\n")
    fp.write("  char type[16];\n")
    fp.write("  char rnd[16];\n")
    fp.write("  int err;\n")
-   fp.write("};\n")
-   fp.write("struct entry_t T[] = {\n")
+   fp.write("} entry_t;\n")
+   fp.write("entry_t T[] = {\n")
    for f,t,r in T.keys():
       e = T[(f,t,r)]
       fp.write("{\"" + f + "\", \"" + t + "\", \""+r+"\", " + str(e) + "},\n")
