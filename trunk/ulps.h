@@ -1,10 +1,10 @@
-typedef struct entry_t {
+typedef struct {
   char fn[16];
   char type[16];
   char rnd[16];
   int err;
-};
-struct entry_t T[] = {
+} entry_t;
+entry_t T[] = {
 {"yn", "ldouble", "RNDZ", 5},
 {"cabs", "double", "RNDU", 1},
 {"tgamma", "float128", "RNDZ", 5},
