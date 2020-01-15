@@ -53,7 +53,7 @@ def export(T,file):
    fp.write("  char rnd[16];\n")
    fp.write("  int err;\n")
    fp.write("} entry_t;\n")
-   fp.write("entry_t T[] = {\n")
+   fp.write("entry_t max_ulps[] = {\n")
    for f,t,r in T.keys():
       e = T[(f,t,r)]
       fp.write("{\"" + f + "\", \"" + t + "\", \""+r+"\", " + str(e) + "},\n")
