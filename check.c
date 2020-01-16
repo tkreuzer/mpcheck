@@ -305,18 +305,15 @@ mpcheck_init (int argc, const char *const argv[],
 void
 mpcheck_clear (FILE *out)
 {
-  fprintf (out, "Max. errors : ");
+  fprintf (out, "Max. errors: ");
   mpfr_out_str (out, 10, 3,  mpcheck_max_err_rndn, MPFR_RNDA);
-  mpfr_t mpcheck_max_err_dir;
-  mpfr_init (mpcheck_max_err_dir);
-  mpfr_max (mpcheck_max_err_dir, mpcheck_max_err_rndz, mpcheck_max_err_rndu,
-            GMP_RNDU);
-  mpfr_max (mpcheck_max_err_dir, mpcheck_max_err_dir, mpcheck_max_err_rndd,
-            GMP_RNDU);
-  fprintf (out, " (nearest), ");
-  mpfr_out_str (out, 10, 3, mpcheck_max_err_dir, MPFR_RNDA);
-  mpfr_clear (mpcheck_max_err_dir);
-  fprintf (out, " (directed) [seed=%lu]\n", seed);
+  fprintf (out, " (rndn), ");
+  mpfr_out_str (out, 10, 3, mpcheck_max_err_rndz, MPFR_RNDA);
+  fprintf (out, " (rndz), ");
+  mpfr_out_str (out, 10, 3, mpcheck_max_err_rndu, MPFR_RNDA);
+  fprintf (out, " (rndu), ");
+  mpfr_out_str (out, 10, 3, mpcheck_max_err_rndd, MPFR_RNDA);
+  fprintf (out, " (rndd) [seed=%lu]\n", seed);
   if (tot_wrong > 0)
     fprintf (out, "Incorrect roundings: %lu (basic %lu)\n",
              tot_wrong, tot_wrong_basic);
@@ -2038,6 +2035,35 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
             }
 	}
       
+      mpfr_abs (umax, umax, GMP_RNDN);
+      
+      if (rnd == GMP_RNDN)
+	{
+	  if (mpfr_cmp (umax, max_err_rndn) > 0)
+	    mpfr_set (max_err_rndn, umax, GMP_RNDN);
+	}
+      else if (rnd == GMP_RNDZ)
+	{
+	  if (mpfr_cmp (umax, max_err_rndz) > 0)
+	    mpfr_set (max_err_rndz, umax, GMP_RNDN);
+	}
+      else if (rnd == GMP_RNDU)
+	{
+	  if (mpfr_cmp (umax, max_err_rndu) > 0)
+	    mpfr_set (max_err_rndu, umax, GMP_RNDN);
+	}
+      else
+	{
+          assert (rnd == GMP_RNDD);
+	  if (mpfr_cmp (umax, max_err_rndd) > 0)
+	    mpfr_set (max_err_rndd, umax, GMP_RNDN);
+	}
+#ifdef CHECK_ULPS
+      check_ulp_error (out, name, rnd, prec, (rnd == GMP_RNDN) ?
+                       max_err_rndn : (rnd == GMP_RNDZ) ? max_err_rndz
+                       : (rnd == GMP_RNDU) ? max_err_rndu : max_err_rndd);
+#endif
+
       if (wrong_dir != 0 && verbose >= 3)
 	{
 	  fprintf (out, "      wrong directed rounding for x=");
@@ -2056,8 +2082,6 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 	  mpfr_out_str (out, 10, 3, umax_dir, MPFR_RNDA);
 	  fprintf (out, "]\n");
 	}
-      
-      mpfr_abs (umax, umax, GMP_RNDN);
       
       if (verbose >= 3)
 	{
@@ -2089,45 +2113,18 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
             }
 	}
 
-      if (rnd == GMP_RNDN)
-	{
-	  if (mpfr_cmp (umax, max_err_rndn) > 0)
-	    mpfr_set (max_err_rndn, umax, GMP_RNDN);
-	}
-      else if (rnd == GMP_RNDZ)
-	{
-	  if (mpfr_cmp (umax, max_err_rndz) > 0)
-	    mpfr_set (max_err_rndz, umax, GMP_RNDN);
-	}
-      else if (rnd == GMP_RNDU)
-	{
-	  if (mpfr_cmp (umax, max_err_rndu) > 0)
-	    mpfr_set (max_err_rndu, umax, GMP_RNDN);
-	}
-      else
-	{
-          assert (rnd == GMP_RNDD);
-	  if (mpfr_cmp (umax, max_err_rndd) > 0)
-	    mpfr_set (max_err_rndd, umax, GMP_RNDN);
-	}
-#ifdef CHECK_ULPS
-      check_ulp_error (out, name, rnd, prec, (rnd == GMP_RNDN) ?
-                       max_err_rndn : (rnd == GMP_RNDZ) ? max_err_rndz
-                       : (rnd == GMP_RNDU) ? max_err_rndu : max_err_rndd);
-#endif
       fflush (out);
     } /* For each rnd */
 
   fprintf (out, "Max. errors for %s [exp. %ld]: ", name, e1);
   mpfr_out_str (out, 10, 3, max_err_rndn, MPFR_RNDA);
-  fprintf (out, " (nearest), ");
-  mpfr_t max_err_dir;
-  mpfr_init (max_err_dir);
-  mpfr_max (max_err_dir, max_err_rndz, max_err_rndu, MPFR_RNDA);
-  mpfr_max (max_err_dir, max_err_dir, max_err_rndd, MPFR_RNDA);
-  mpfr_out_str (out, 10, 3, max_err_dir, MPFR_RNDA);
-  mpfr_clear (max_err_dir);
-  fprintf (out, " (directed)\n");
+  fprintf (out, " (rndn), ");
+  mpfr_out_str (out, 10, 3, max_err_rndz, MPFR_RNDA);
+  fprintf (out, " (rndz), ");
+  mpfr_out_str (out, 10, 3, max_err_rndu, MPFR_RNDA);
+  fprintf (out, " (rndu), ");
+  mpfr_out_str (out, 10, 3, max_err_rndn, MPFR_RNDA);
+  fprintf (out, " (rndd)\n");
 
   if (verbose >= 3)
     fprintf (out, "\n");
