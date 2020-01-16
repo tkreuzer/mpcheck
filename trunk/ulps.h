@@ -1,3 +1,8 @@
+/* this file was produced using the parse.sage script from the
+   sysdeps/x86_64/fpu/libm-test-ulps from glibc revision a8f0fc4,
+   and edited to match worst cases found by mpcheck:
+   * for lines without "was", it is the original glibc bound
+   * for lines with "was", the original glibc bound is indicated */
 typedef struct {
   char fn[16];
   char type[16];
