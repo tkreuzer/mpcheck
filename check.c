@@ -24,7 +24,7 @@
    where xxx is for example x86_64).
    This assumes the file ulps.h has been generated with the parse.sage
    script. */
-// #define CHECK_ULPS
+#define CHECK_ULPS
 
 #ifdef CHECK_ULPS
 #include "ulps.h"
@@ -34,7 +34,8 @@
 
 #define OUT 10 /* output base */
 
-mpfr_t    mpcheck_max_err_dir, mpcheck_max_err_near;
+mpfr_t    mpcheck_max_err_rndn, mpcheck_max_err_rndz, mpcheck_max_err_rndu,
+          mpcheck_max_err_rndd;
 mp_rnd_t  mpcheck_rnd_mode;
 char function_to_check[128] = "all"; /* default=all */
 unsigned long tot_wrong_errno = 0, tot_wrong_inexact = 0,
@@ -293,18 +294,28 @@ mpcheck_init (int argc, const char *const argv[],
   mpfr_set_emin (emin - prec + 1);
   mpfr_set_emax (emax);
   mpfr_set_default_prec (prec);
-  mpfr_inits (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
-  mpfr_set_ui (mpcheck_max_err_dir, 0, GMP_RNDN);
-  mpfr_set_ui (mpcheck_max_err_near, 0, GMP_RNDN);
+  mpfr_inits (mpcheck_max_err_rndn, mpcheck_max_err_rndz,
+              mpcheck_max_err_rndu, mpcheck_max_err_rndd, NULL);
+  mpfr_set_ui (mpcheck_max_err_rndn, 0, GMP_RNDN);
+  mpfr_set_ui (mpcheck_max_err_rndz, 0, GMP_RNDN);
+  mpfr_set_ui (mpcheck_max_err_rndu, 0, GMP_RNDN);
+  mpfr_set_ui (mpcheck_max_err_rndd, 0, GMP_RNDN);
 }
 
 void
 mpcheck_clear (FILE *out)
 {
   fprintf (out, "Max. errors : ");
-  mpfr_out_str (out, 10, 3,  mpcheck_max_err_near, MPFR_RNDA);
+  mpfr_out_str (out, 10, 3,  mpcheck_max_err_rndn, MPFR_RNDA);
+  mpfr_t mpcheck_max_err_dir;
+  mpfr_init (mpcheck_max_err_dir);
+  mpfr_max (mpcheck_max_err_dir, mpcheck_max_err_rndz, mpcheck_max_err_rndu,
+            GMP_RNDU);
+  mpfr_max (mpcheck_max_err_dir, mpcheck_max_err_dir, mpcheck_max_err_rndd,
+            GMP_RNDU);
   fprintf (out, " (nearest), ");
   mpfr_out_str (out, 10, 3, mpcheck_max_err_dir, MPFR_RNDA);
+  mpfr_clear (mpcheck_max_err_dir);
   fprintf (out, " (directed) [seed=%lu]\n", seed);
   if (tot_wrong > 0)
     fprintf (out, "Incorrect roundings: %lu (basic %lu)\n",
@@ -334,7 +345,8 @@ mpcheck_clear (FILE *out)
     fprintf (out, "Wrong underflow: %lu (suppressed %lu)\n",
              tot_wrong_underflow, suppressed_wrong_underflow);
 
-  mpfr_clears (mpcheck_max_err_dir, mpcheck_max_err_near, NULL);
+  mpfr_clears (mpcheck_max_err_rndn, mpcheck_max_err_rndz,
+               mpcheck_max_err_rndu, mpcheck_max_err_rndd, NULL);
 }
 
 static void
@@ -1047,7 +1059,8 @@ is_accepted (const char *name, int numarg, mpfr_t op1, mpfr_t op2)
 
 #ifdef CHECK_ULPS
 static void
-check_ulp_error (const char *func, mpfr_rnd_t rnd, int prec, mpfr_t max_err)
+check_ulp_error (FILE *out, const char *func, mpfr_rnd_t rnd, int prec,
+                 mpfr_t max_err)
 {
   assert (mpfr_fits_sint_p (max_err, GMP_RNDN));
   int err = mpfr_get_si (max_err, GMP_RNDN);
@@ -1092,8 +1105,10 @@ check_ulp_error (const char *func, mpfr_rnd_t rnd, int prec, mpfr_t max_err)
     return;
   if (err > err_bound)
     {
-      printf ("****** glibc error bound %d exceeded for func=%s, prec=%d, rnd=%s\n",
-              err_bound, func, prec, mpfr_print_rnd_mode (rnd));
+      fprintf (out, "****** glibc error bound %d exceeded (", err_bound);
+      mpfr_out_str (out, 10, 3, max_err, MPFR_RNDA);
+      fprintf (out, ") for func=%s, prec=%d, rnd=%s [seed=%lu]\n",
+               func, prec, mpfr_print_rnd_mode (rnd), seed);
     }
 }
 #endif
@@ -1103,11 +1118,12 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 	const char *const name,
 	 void (*func) (void*,const void*, const void*, const void*))
 {
-  static int print_done = 0;
-  int reduction_done;
-  gmp_randstate_t state;
-  mpfr_t op1, op2, op3, result, result_lib, result_more_prec, rmax, rlibmax;
-  mpfr_t u, umax, umax_dir, op1max_dir, op2max_dir, op3max_dir, max_err_near, max_err_dir;
+   static int print_done = 0;
+   int reduction_done;
+   gmp_randstate_t state;
+   mpfr_t op1, op2, op3, result, result_lib, result_more_prec, rmax, rlibmax;
+   mpfr_t u, umax, umax_dir, op1max_dir, op2max_dir, op3max_dir;
+   mpfr_t max_err_rndn, max_err_rndz, max_err_rndu, max_err_rndd;
    mpfr_t op1max, op2max, op3max, range_min, range_max;
    mpfr_t xdplus, xdminus, last_x, last_result;
    void *rop1, *rop2, *rop3, *rresult;
@@ -1156,7 +1172,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
    if (e3 == LONG_MAX-3)   e3 = emax / 2 + 1;
 
    mpfr_inits2 (prec, op1, op2, op3, result, result_lib, u, umax, umax_dir,
-                max_err_near, max_err_dir, op1max_dir, op2max_dir, op3max_dir,
+                max_err_rndn, max_err_rndz, max_err_rndu, max_err_rndd,
+                op1max_dir, op2max_dir, op3max_dir,
                 op1max, op2max, op3max, range_min, range_max, rmax, rlibmax,
 	       xdplus, xdminus, last_x, last_result, NULL);
   mpfr_init2 (result_more_prec, prec+32);
@@ -1166,8 +1183,10 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
   rop3 = (*new) (prec);
   rresult = (*new) (prec);
 
-  mpfr_set_ui (max_err_near, 0, GMP_RNDN);
-  mpfr_set_ui (max_err_dir, 0, GMP_RNDN);
+  mpfr_set_ui (max_err_rndn, 0, GMP_RNDN);
+  mpfr_set_ui (max_err_rndz, 0, GMP_RNDN);
+  mpfr_set_ui (max_err_rndu, 0, GMP_RNDN);
+  mpfr_set_ui (max_err_rndd, 0, GMP_RNDN);
 
   mpcheck_set_range (range_min, ref->min);
   mpcheck_set_range (range_max, ref->max);
@@ -2072,35 +2091,55 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
 
       if (rnd == GMP_RNDN)
 	{
-	  if (mpfr_cmp (umax, max_err_near) > 0)
-	    mpfr_set (max_err_near, umax, GMP_RNDN);
+	  if (mpfr_cmp (umax, max_err_rndn) > 0)
+	    mpfr_set (max_err_rndn, umax, GMP_RNDN);
+	}
+      else if (rnd == GMP_RNDZ)
+	{
+	  if (mpfr_cmp (umax, max_err_rndz) > 0)
+	    mpfr_set (max_err_rndz, umax, GMP_RNDN);
+	}
+      else if (rnd == GMP_RNDU)
+	{
+	  if (mpfr_cmp (umax, max_err_rndu) > 0)
+	    mpfr_set (max_err_rndu, umax, GMP_RNDN);
 	}
       else
 	{
-	  if (mpfr_cmp (umax, max_err_dir) > 0)
-            mpfr_set (max_err_dir, umax, GMP_RNDN);
+          assert (rnd == GMP_RNDD);
+	  if (mpfr_cmp (umax, max_err_rndd) > 0)
+	    mpfr_set (max_err_rndd, umax, GMP_RNDN);
 	}
+#ifdef CHECK_ULPS
+      check_ulp_error (out, name, rnd, prec, (rnd == GMP_RNDN) ?
+                       max_err_rndn : (rnd == GMP_RNDZ) ? max_err_rndz
+                       : (rnd == GMP_RNDU) ? max_err_rndu : max_err_rndd);
+#endif
       fflush (out);
     } /* For each rnd */
 
   fprintf (out, "Max. errors for %s [exp. %ld]: ", name, e1);
-  mpfr_out_str (out, 10, 3, max_err_near, MPFR_RNDA);
+  mpfr_out_str (out, 10, 3, max_err_rndn, MPFR_RNDA);
   fprintf (out, " (nearest), ");
+  mpfr_t max_err_dir;
+  mpfr_init (max_err_dir);
+  mpfr_max (max_err_dir, max_err_rndz, max_err_rndu, MPFR_RNDA);
+  mpfr_max (max_err_dir, max_err_dir, max_err_rndd, MPFR_RNDA);
   mpfr_out_str (out, 10, 3, max_err_dir, MPFR_RNDA);
+  mpfr_clear (max_err_dir);
   fprintf (out, " (directed)\n");
+
   if (verbose >= 3)
     fprintf (out, "\n");
 
-#ifdef CHECK_ULPS
-  check_ulp_error (name, GMP_RNDN, prec, max_err_near);
-  check_ulp_error (name, GMP_RNDZ, prec, max_err_dir);
-#endif
-
-  if (mpfr_cmp (max_err_near, mpcheck_max_err_near) > 0)
-    mpfr_set (mpcheck_max_err_near, max_err_near, GMP_RNDN);
-  
-  if (mpfr_cmp (max_err_dir, mpcheck_max_err_dir) > 0)
-    mpfr_set (mpcheck_max_err_dir, max_err_dir, GMP_RNDN);
+  if (mpfr_cmp (max_err_rndn, mpcheck_max_err_rndn) > 0)
+    mpfr_set (mpcheck_max_err_rndn, max_err_rndn, GMP_RNDN);
+  if (mpfr_cmp (max_err_rndz, mpcheck_max_err_rndz) > 0)
+    mpfr_set (mpcheck_max_err_rndz, max_err_rndz, GMP_RNDN);
+  if (mpfr_cmp (max_err_rndu, mpcheck_max_err_rndu) > 0)
+    mpfr_set (mpcheck_max_err_rndu, max_err_rndu, GMP_RNDN);
+  if (mpfr_cmp (max_err_rndd, mpcheck_max_err_rndd) > 0)
+    mpfr_set (mpcheck_max_err_rndd, max_err_rndd, GMP_RNDN);
   
   (*del) (rop1);
   (*del) (rop2);
@@ -2108,7 +2147,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
   (*del) (rresult);
   gmp_randclear (state);
   mpfr_clears (op1, op2, op3, result, result_lib, u, umax, umax_dir,
-               max_err_near, max_err_dir, op1max_dir, op2max_dir, op3max_dir,
+               max_err_rndn, max_err_rndz, max_err_rndu, max_err_rndd,
+               op1max_dir, op2max_dir, op3max_dir,
 	       op1max, op2max, op3max, range_min, range_max, rmax, rlibmax,
                xdplus, xdminus, last_x, last_result, NULL);
   mpfr_clear (result_more_prec);
