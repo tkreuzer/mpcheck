@@ -61,7 +61,7 @@ entry_t max_ulps[] = {
 {"log1p", "float", "RNDZ", 2},
 {"exp2", "float128", "RNDZ", 1},
 {"y0", "float128", "RNDD", 4},
-{"cbrt", "ldouble", "RNDD", 1},
+{"cbrt", "ldouble", "RNDD", 2}, /* was 1 */
 {"cosh", "float", "RNDN", 1},
 {"j0", "double", "RNDN", 2},
 {"exp2", "float", "RNDZ", 1},
