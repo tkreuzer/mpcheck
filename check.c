@@ -1088,12 +1088,29 @@ check_ulp_error (FILE *out, const char *func, mpfr_rnd_t rnd, int prec,
                   err_bound = max_ulps[i].err;
                 }
             }
-          else /* directed rounding: we use the largest bound */
+          else if (rnd == GMP_RNDZ)
             {
-              if (strcmp (max_ulps[i].rnd, "RNDN") != 0)
+              if (strcmp (max_ulps[i].rnd, "RNDZ") == 0)
                 {
-                  if (max_ulps[i].err > err_bound)
-                    err_bound = max_ulps[i].err;
+                  assert (err_bound == -1);
+                  err_bound = max_ulps[i].err;
+                }
+            }
+          else if (rnd == GMP_RNDU)
+            {
+              if (strcmp (max_ulps[i].rnd, "RNDU") == 0)
+                {
+                  assert (err_bound == -1);
+                  err_bound = max_ulps[i].err;
+                }
+            }
+          else
+            {
+              assert (rnd == GMP_RNDD);
+              if (strcmp (max_ulps[i].rnd, "RNDD") == 0)
+                {
+                  assert (err_bound == -1);
+                  err_bound = max_ulps[i].err;
                 }
             }
         }
