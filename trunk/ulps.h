@@ -12,7 +12,7 @@ typedef struct {
 entry_t max_ulps[] = {
 {"yn", "ldouble", "RNDZ", 5},
 {"cabs", "double", "RNDU", 1},
-{"tgamma", "float128", "RNDZ", 5},
+{"tgamma", "float128", "RNDZ", 6}, /* was 5 */
 {"carg", "double", "RNDD", 1},
 {"y1", "double", "RNDN", 3},
 {"expm1", "ldouble", "RNDD", 4},
@@ -25,7 +25,7 @@ entry_t max_ulps[] = {
 {"sin", "ldouble", "RNDZ", 2},
 {"lgamma", "float128", "RNDD", 8},
 {"sinh", "ldouble", "RNDD", 5},
-{"log", "float128", "RNDU", 1},
+{"log", "float128", "RNDU", 2}, /* was 1 */
 {"expm1", "float", "RNDZ", 2},
 {"sinh", "float", "RNDU", 3},
 {"jn", "double", "RNDZ", 5},
@@ -34,10 +34,10 @@ entry_t max_ulps[] = {
 {"lgamma", "ldouble", "RNDN", 4},
 {"cosh", "ldouble", "RNDD", 3},
 {"carg", "ldouble", "RNDD", 1},
-{"atan2", "float128", "RNDU", 2},
+{"atan2", "float128", "RNDU", 3}, /* was 2 */
 {"j1", "double", "RNDD", 3},
 {"carg", "float128", "RNDN", 2},
-{"tgamma", "ldouble", "RNDU", 5},
+{"tgamma", "ldouble", "RNDU", 6}, /* was 5 */
 {"hypot", "ldouble", "RNDU", 1},
 {"hypot", "double", "RNDZ", 1},
 {"tan", "ldouble", "RNDD", 3},
@@ -106,8 +106,8 @@ entry_t max_ulps[] = {
 {"y0", "float", "RNDD", 4},
 {"log2", "ldouble", "RNDN", 1},
 {"jn", "float128", "RNDN", 7},
-{"acosh", "double", "RNDU", 3}, /* was 2 */
-{"tgamma", "float128", "RNDU", 4},
+{"acosh", "double", "RNDU", 4}, /* was 2 */
+{"tgamma", "float128", "RNDU", 6}, /* was 4 */
 {"cbrt", "float128", "RNDZ", 1},
 {"acosh", "float128", "RNDN", 3}, /* was 2 */
 {"asinh", "float128", "RNDU", 4},
@@ -126,8 +126,8 @@ entry_t max_ulps[] = {
 {"exp10", "ldouble", "RNDN", 1},
 {"sinh", "ldouble", "RNDN", 2},
 {"expm1", "float128", "RNDD", 2},
-{"tgamma", "ldouble", "RNDZ", 5},
-{"acosh", "float128", "RNDU", 2},
+{"tgamma", "ldouble", "RNDZ", 6}, /* was 5 */
+{"acosh", "float128", "RNDU", 4}, /* was 2 */
 {"y1", "float", "RNDZ", 2},
 {"exp10", "double", "RNDN", 2},
 {"sincos", "float128", "RNDU", 3},
@@ -140,7 +140,7 @@ entry_t max_ulps[] = {
 {"acosh", "double", "RNDD", 2},
 {"exp2", "double", "RNDU", 1},
 {"asinh", "double", "RNDN", 2}, /* was 1 */
-{"tgamma", "float128", "RNDD", 5},
+{"tgamma", "float128", "RNDD", 6}, /* was 5 */
 {"atan2", "ldouble", "RNDN", 1},
 {"expm1", "ldouble", "RNDN", 2},
 {"exp2", "float128", "RNDU", 2},
@@ -151,14 +151,14 @@ entry_t max_ulps[] = {
 {"asin", "float", "RNDZ", 1},
 {"sincos", "double", "RNDU", 1},
 {"log2", "ldouble", "RNDU", 1},
-{"sinh", "double", "RNDD", 3},
+{"sinh", "double", "RNDD", 4}, /* was 3 */
 {"log2", "double", "RNDD", 3},
-{"tan", "float128", "RNDU", 1},
+{"tan", "float128", "RNDU", 2}, /* was 1 */
 {"hypot", "ldouble", "RNDN", 1},
 {"erf", "float128", "RNDN", 1},
 {"tanh", "float128", "RNDU", 3},
 {"sincos", "float", "RNDU", 1},
-{"atanh", "float128", "RNDZ", 2},
+{"atanh", "float128", "RNDZ", 3}, /* was 2 */
 {"cbrt", "ldouble", "RNDU", 1},
 {"erfc", "ldouble", "RNDN", 3},
 {"cos", "float", "RNDZ", 1},
@@ -178,10 +178,10 @@ entry_t max_ulps[] = {
 {"lgamma", "float128", "RNDN", 5},
 {"cabs", "double", "RNDN", 1},
 {"sin", "double", "RNDD", 1},
-{"log10", "double", "RNDU", 2},
+{"log10", "double", "RNDU", 3}, /* was 2 */
 {"exp2", "float128", "RNDD", 1},
 {"atan", "ldouble", "RNDZ", 1},
-{"exp10", "double", "RNDU", 2},
+{"exp10", "double", "RNDU", 4}, /* was 2 */
 {"cbrt", "float128", "RNDU", 1},
 {"carg", "float", "RNDZ", 2},
 {"erf", "float", "RNDD", 1},
@@ -189,7 +189,7 @@ entry_t max_ulps[] = {
 {"asinh", "float128", "RNDZ", 2},
 {"log", "float128", "RNDN", 1},
 {"erfc", "ldouble", "RNDD", 4},
-{"log2", "float128", "RNDZ", 1},
+{"log2", "float128", "RNDZ", 2}, /* was 1 */
 {"sincos", "double", "RNDD", 1},
 {"j1", "double", "RNDN", 1},
 {"log2", "double", "RNDU", 3},
@@ -207,7 +207,7 @@ entry_t max_ulps[] = {
 {"acos", "float128", "RNDN", 1},
 {"sinh", "double", "RNDU", 3},
 {"exp10", "float128", "RNDU", 3},
-{"atanh", "double", "RNDZ", 2},
+{"atanh", "double", "RNDZ", 3}, /* was 2 */
 {"expm1", "float", "RNDU", 1},
 {"pow", "ldouble", "RNDN", 1},
 {"erf", "ldouble", "RNDD", 1},
@@ -260,19 +260,19 @@ entry_t max_ulps[] = {
 {"cos", "float128", "RNDD", 3},
 {"expm1", "float", "RNDN", 1},
 {"erf", "double", "RNDN", 1},
-{"sin", "float128", "RNDZ", 2},
+{"sin", "float128", "RNDZ", 3}, /* was 2 */
 {"yn", "ldouble", "RNDN", 4},
 {"asinh", "ldouble", "RNDD", 5},
 {"asinh", "double", "RNDD", 3},
-{"tgamma", "float128", "RNDN", 5}, /* was 4 */
+{"tgamma", "float128", "RNDN", 6}, /* was 4 */
 {"yn", "float", "RNDN", 3},
 {"yn", "float128", "RNDU", 5},
 {"j0", "float", "RNDN", 2},
 {"y0", "float128", "RNDZ", 3},
 {"yn", "ldouble", "RNDU", 4},
-{"erfc", "ldouble", "RNDU", 5},
+{"erfc", "ldouble", "RNDU", 6}, /* was 5 */
 {"acos", "float", "RNDD", 1},
-{"acos", "ldouble", "RNDN", 1},
+{"acos", "ldouble", "RNDN", 2}, /* was 1 */
 {"atan", "float", "RNDU", 2},
 {"log2", "double", "RNDN", 2},
 {"hypot", "double", "RNDN", 1},
@@ -292,12 +292,12 @@ entry_t max_ulps[] = {
 {"atan", "ldouble", "RNDD", 1},
 {"acosh", "ldouble", "RNDD", 4},
 {"atan2", "ldouble", "RNDD", 1},
-{"sinh", "double", "RNDZ", 2},
+{"sinh", "double", "RNDZ", 4}, /* was 2 */
 {"log10", "float", "RNDD", 3},
 {"hypot", "float128", "RNDN", 1},
 {"sinh", "ldouble", "RNDZ", 4},
 {"j0", "float128", "RNDZ", 2},
-{"cos", "float128", "RNDU", 2},
+{"cos", "float128", "RNDU", 3}, /* was 2 */
 {"log2", "float128", "RNDD", 3},
 {"sincos", "ldouble", "RNDD", 3},
 {"j1", "float", "RNDZ", 2},
@@ -305,7 +305,7 @@ entry_t max_ulps[] = {
 {"cosh", "float128", "RNDU", 3},
 {"expm1", "double", "RNDU", 1},
 {"yn", "float", "RNDZ", 3},
-{"acosh", "double", "RNDZ", 2},
+{"acosh", "double", "RNDZ", 3}, /* was 2 */
 {"exp2", "float128", "RNDN", 1},
 {"log", "float", "RNDN", 1},
 {"gamma", "ldouble", "RNDZ", 7},
@@ -340,7 +340,7 @@ entry_t max_ulps[] = {
 {"erf", "ldouble", "RNDN", 1},
 {"acosh", "ldouble", "RNDU", 3},
 {"exp10", "ldouble", "RNDU", 2},
-{"acosh", "float128", "RNDZ", 2},
+{"acosh", "float128", "RNDZ", 4}, /* was 2 */
 {"tanh", "double", "RNDU", 3},
 {"cos", "double", "RNDD", 1},
 {"sincos", "ldouble", "RNDU", 3},
@@ -364,7 +364,7 @@ entry_t max_ulps[] = {
 {"j1", "ldouble", "RNDZ", 4},
 {"cosh", "double", "RNDU", 2},
 {"acos", "float128", "RNDD", 1},
-{"tgamma", "ldouble", "RNDN", 5},
+{"tgamma", "ldouble", "RNDN", 6}, /* was 5 */
 {"lgamma", "ldouble", "RNDU", 6},
 {"hypot", "double", "RNDU", 1},
 {"exp2", "double", "RNDN", 1},
@@ -392,7 +392,7 @@ entry_t max_ulps[] = {
 {"sincos", "float", "RNDZ", 1},
 {"exp2", "float", "RNDU", 1},
 {"log1p", "ldouble", "RNDN", 2},
-{"cos", "float128", "RNDZ", 1},
+{"cos", "float128", "RNDZ", 3}, /* was 1 */
 {"exp10", "float128", "RNDZ", 3},
 {"erf", "double", "RNDD", 1},
 {"asinh", "ldouble", "RNDN", 3},
@@ -407,7 +407,7 @@ entry_t max_ulps[] = {
 {"asin", "double", "RNDU", 1},
 {"acos", "float128", "RNDU", 1},
 {"acos", "float", "RNDN", 1},
-{"log2", "float128", "RNDU", 1},
+{"log2", "float128", "RNDU", 2}, /* was 1 */
 {"tan", "float128", "RNDN", 1},
 {"pow", "float128", "RNDN", 2},
 {"hypot", "double", "RNDD", 1},
@@ -435,7 +435,7 @@ entry_t max_ulps[] = {
 {"y0", "ldouble", "RNDU", 3},
 {"cos", "ldouble", "RNDD", 3},
 {"carg", "ldouble", "RNDN", 1},
-{"log2", "float128", "RNDN", 2},
+{"log2", "float128", "RNDN", 3}, /* was 2 */
 {"sincos", "ldouble", "RNDZ", 2},
 {"erf", "double", "RNDU", 2}, /* was 1 */
 {"carg", "float128", "RNDD", 2},
@@ -476,7 +476,7 @@ entry_t max_ulps[] = {
 {"exp2", "ldouble", "RNDU", 1},
 {"erfc", "float", "RNDD", 6},
 {"y1", "float128", "RNDZ", 2},
-{"log10", "float128", "RNDN", 1},
+{"log10", "float128", "RNDN", 2}, /* was 1 */
 {"exp", "ldouble", "RNDZ", 2},
 {"expm1", "ldouble", "RNDU", 4},
 {"sinh", "float128", "RNDZ", 3},
@@ -489,7 +489,7 @@ entry_t max_ulps[] = {
 {"sin", "float", "RNDD", 1},
 {"atan2", "double", "RNDD", 1},
 {"sinh", "float", "RNDD", 3},
-{"lgamma", "float128", "RNDZ", 5},
+{"lgamma", "float128", "RNDZ", 6}, /* was 5 */
 {"cabs", "double", "RNDZ", 1},
 {"acos", "double", "RNDD", 1},
 {"atan2", "float", "RNDN", 1},
@@ -509,10 +509,10 @@ entry_t max_ulps[] = {
 {"log1p", "double", "RNDZ", 2},
 {"cosh", "float128", "RNDZ", 2},
 {"asinh", "float128", "RNDN", 3},
-{"atan2", "float128", "RNDN", 1},
+{"atan2", "float128", "RNDN", 2}, /* was 1 */
 {"sin", "double", "RNDU", 1},
 {"yn", "float128", "RNDN", 5},
-{"tgamma", "ldouble", "RNDD", 5},
+{"tgamma", "ldouble", "RNDD", 6}, /* was 5 */
 {"sin", "ldouble", "RNDD", 3},
 {"jn", "double", "RNDU", 5},
 {"tan", "ldouble", "RNDU", 2},
@@ -544,7 +544,7 @@ entry_t max_ulps[] = {
 {"y0", "float", "RNDN", 1},
 {"jn", "ldouble", "RNDU", 5},
 {"pow", "ldouble", "RNDZ", 4},
-{"erfc", "double", "RNDU", 6}, /* was 5 */
+{"erfc", "double", "RNDU", 7}, /* was 5 */
 {"carg", "double", "RNDU", 1},
 {"j0", "float", "RNDZ", 2},
 {"erfc", "double", "RNDZ", 3},
@@ -583,7 +583,7 @@ entry_t max_ulps[] = {
 {"cos", "ldouble", "RNDN", 1},
 {"tgamma", "double", "RNDD", 5},
 {"atanh", "float", "RNDZ", 2},
-{"cbrt", "double", "RNDZ", 3},
+{"cbrt", "double", "RNDZ", 4}, /* was 3 */
 {"atanh", "double", "RNDU", 3},
 {"sin", "float128", "RNDN", 1},
 {"acosh", "double", "RNDN", 2},
