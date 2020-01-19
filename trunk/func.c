@@ -109,6 +109,9 @@ mpcheck_func_t  mpcheck_tab[] = {
   {"hypot", mpfr_hypot, 2, -RANGE_INF, RANGE_INF,NO_MONOTON,NO_SYMM,IN_POSNEG},
   {"pow", mpfr_pow, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
   {"agm", mpfr_agm, 2, RANGE_ZERO, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POS},
+  
+  {"fmod", mpfr_fmod, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
+  {"remainder", mpfr_remainder, 2, -RANGE_INF, RANGE_INF, NO_MONOTON, NO_SYMM, IN_POSNEG},
   {NULL, NULL, 0, 0, 0, 0, 0, 0}
 };
 
