@@ -119,10 +119,12 @@ static int set_rnd_mode (mpfr_rnd_t rnd) {
     switch (rnd) {
     case MPFR_RNDN: v = BF_RNDN; break;
     case MPFR_RNDZ: v = BF_RNDZ; break;
-    case MPFR_RNDA: v = BF_RNDU; break;
+    case MPFR_RNDU: v = BF_RNDU; break;
     case MPFR_RNDD: v = BF_RNDD; break;
+    case MPFR_RNDA: v = BF_RNDA; break;
     case MPFR_RNDF: v = BF_RNDF; break;
-    default: return 0;
+    default:
+        return 0;
     }
     bf_rnd = (bf_rnd & ~BF_RND_MASK) | v;
   return 1;
@@ -163,6 +165,14 @@ void my_libbf_mul (void *dest, const void *src1, const void *src2, const void *s
 void my_libbf_div (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src3;
   bf_status |= bf_div ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
+}
+void my_libbf_fmod (void *dest, const void *src1, const void *src2, const void *src3) {
+  (void) src3;
+  bf_status |= bf_rem ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd, BF_RNDZ);
+}
+void my_libbf_remainder (void *dest, const void *src1, const void *src2, const void *src3) {
+  (void) src3;
+  bf_status |= bf_rem ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd, BF_RNDN);
 }
 void my_libbf_pow (void *dest, const void *src1, const void *src2, const void *src3) {
   (void) src3;
@@ -213,6 +223,10 @@ void my_libbf_atan (void *dest, const void *src1, const void *src2, const void *
   (void) src3;
   bf_status |= bf_atan ((bf_t*) dest, (const bf_t*) src1, bf_prec, bf_rnd);
 }
+void my_libbf_atan2 (void *dest, const void *src1, const void *src2, const void *src3) {
+  (void) src3;
+  bf_status |= bf_atan2 ((bf_t*) dest, (const bf_t*) src1, (const bf_t*) src2, bf_prec, bf_rnd);
+}
 
 static mpcheck_user_func_t tab[] = {
   {"add", my_libbf_add, 0, 0},
@@ -240,6 +254,8 @@ static mpcheck_user_func_t tab[] = {
   {"tan", my_libbf_tan, 10, 0},
   {"atan", my_libbf_atan, 0, 0},
   {"atan", my_libbf_atan, 53, 0},
+  {"atan2", my_libbf_atan2, 0, 0},
+  {"atan2", my_libbf_atan2, 53, 0},
   {"asin", my_libbf_asin, 0, 0},
   {"asin", my_libbf_asin, -10, 0},
   {"acos", my_libbf_acos, 0, 0},
@@ -247,6 +263,8 @@ static mpcheck_user_func_t tab[] = {
   {"pow", my_libbf_pow, 0, 0},
   {"pow", my_libbf_pow, 5, 4},
   {"pow", my_libbf_pow, 16, 10},
+  {"fmod", my_libbf_fmod, 10, 0},
+  {"remainder", my_libbf_remainder, 10, 0},
   {NULL, NULL, 0, 0}
 };
 
@@ -280,6 +298,7 @@ int main (int argc, const char *argv[])
 
   prec = 64;
   exp_bits = 16;
+  assert(exp_bits >= BF_EXP_BITS_MIN && exp_bits <= BF_EXP_BITS_MAX);
   bf_rnd = bf_set_exp_bits(exp_bits) | BF_FLAG_SUBNORMAL;
   /* IEEE 754 convention for emin/emax */
   emin = -((slimb_t)1 << exp_bits) / 2 + 3;
