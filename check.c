@@ -1059,9 +1059,9 @@ static void
 check_ulp_error (FILE *out, const char *func, mpfr_rnd_t rnd, int prec,
                  mpfr_t max_err)
 {
-  assert (mpfr_fits_sint_p (max_err, GMP_RNDN));
-  int err = mpfr_get_si (max_err, GMP_RNDN);
-  int err_bound = -1; /* means not initialized */
+  assert (mpfr_fits_slong_p (max_err, GMP_RNDN));
+  long err = mpfr_get_si (max_err, GMP_RNDN);
+  long err_bound = -1; /* means not initialized */
   for (int i = 0; strlen (max_ulps[i].fn) != 0; i++)
     {
       int p;
@@ -1119,7 +1119,7 @@ check_ulp_error (FILE *out, const char *func, mpfr_rnd_t rnd, int prec,
     return;
   if (err > err_bound)
     {
-      fprintf (out, "****** glibc error bound %d exceeded (", err_bound);
+      fprintf (out, "****** glibc error bound %ld exceeded (", err_bound);
       mpfr_out_str (out, 10, 3, max_err, MPFR_RNDA);
       fprintf (out, ") for func=%s, prec=%d, rnd=%s [seed=%lu]\n",
                func, prec, mpfr_print_rnd_mode (rnd), seed);

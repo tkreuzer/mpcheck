@@ -7,7 +7,7 @@ typedef struct {
   char fn[16];
   char type[16];
   char rnd[16];
-  int err;
+  long err;
 } entry_t;
 entry_t max_ulps[] = {
 {"yn", "ldouble", "RNDZ", 5},
