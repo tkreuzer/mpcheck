@@ -1219,7 +1219,8 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
         }
       /* we should ensure that 2^(e1-1) <= op1 < 2^e1 below */
       mpfr_urandomb (op1, state);
-      mpfr_set_exp (op1, 0);
+      if (!mpfr_zero_p (op1))
+        mpfr_set_exp (op1, 0);
       mpfr_mul_2si (op1, op1, e1, GMP_RNDN);
       /* we should ensure that 2^(e2-1) <= op1 < 2^e2 below */
       if (ref->NumArg >= 2)
@@ -1235,7 +1236,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
           mpfr_mul_2si (op3, op3, e3, GMP_RNDN);
         }
       if (ref->NumArg == 1)
-	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
+        inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mp_rnd_t))
                   ref->mpfr)) (result, op1, GMP_RNDN);
       else if (ref->NumArg == 2)
 	inex = (*((int (*)(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mp_rnd_t))
