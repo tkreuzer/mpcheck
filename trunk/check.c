@@ -2141,7 +2141,7 @@ mpcheck (FILE *out, mp_exp_t e1, mp_exp_t e2, mp_exp_t e3,
   fprintf (out, " (rndz), ");
   mpfr_out_str (out, 10, 3, max_err_rndu, MPFR_RNDA);
   fprintf (out, " (rndu), ");
-  mpfr_out_str (out, 10, 3, max_err_rndn, MPFR_RNDA);
+  mpfr_out_str (out, 10, 3, max_err_rndd, MPFR_RNDA);
   fprintf (out, " (rndd)\n");
 
   if (verbose >= 3)
