@@ -322,7 +322,7 @@ void my_pari_eint (void *dest, const void *src1, const void *src2) {
   GEN tmp;
   /* Definition of eint in MPFR doesn't match eint1 in Pari:
      for x >= 0: mpfr_eint (x) = -Re(pari_eint1(-x)),
-     for x < 0:  mpfr_eint (x) = pari_eint1(-x). */
+     for x < 0:  mpfr_eint (x) = -pari_eint1(-x). */
   if (signe ((GEN) src1) >= 0)
     {
       tmp = gneg ((GEN) src1);
@@ -334,6 +334,7 @@ void my_pari_eint (void *dest, const void *src1, const void *src2) {
     {
       tmp = gneg ((GEN) src1);
       tmp = eint1 (tmp, nbits2prec (prec));
+      tmp = gneg (tmp);
     }
   gaffect (tmp, (GEN) dest);
   avma = st;
@@ -441,6 +442,8 @@ int main (int argc, const char *argv[])
   mpfr_t x,y;
   void *fp;
   gmp_randstate_t state;
+
+  printf ("Using MPFR %s (GMP %s)\n", mpfr_get_version (), gmp_version);
 
   /* Check if Pari may work */
   if (sizeof (long) != sizeof (unsigned long)

@@ -24,7 +24,7 @@
    where xxx is for example x86_64).
    This assumes the file ulps.h has been generated with the parse.sage
    script. */
-#define CHECK_ULPS
+// #define CHECK_ULPS
 
 #ifdef CHECK_ULPS
 #include "ulps.h"
