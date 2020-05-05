@@ -14,7 +14,7 @@ mpcheck_float128_SOURCES = check.c func.c mpcheck.h mpcheck-float128.c
 mpcheck_opencl_SOURCES = check.c func.c mpcheck.h mpcheck-opencl.c
 mpcheck_opencl_double_SOURCES = check.c func.c mpcheck.h mpcheck-opencl-double.c
 
-EXTRA_DIST = VERSION rnd_mode.c native.c
+EXTRA_DIST = VERSION rnd_mode.c native.c ulps.h
 
 check: mpcheck-double mpcheck-float mpcheck-longdouble
 	./mpcheck-double
