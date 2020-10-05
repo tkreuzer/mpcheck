@@ -1115,8 +1115,8 @@ check_ulp_error (FILE *out, const char *func, mpfr_rnd_t rnd, int prec,
             }
         }
     }
-  if (err_bound == -1) /* add, sub, ..., sincos1 */
-    return;
+  if (err_bound == -1) /* add, sub, ..., sincos1: assume 0 */
+    err_bound = 0;
   if (err > err_bound)
     {
       fprintf (out, "****** glibc error bound %ld exceeded (", err_bound);

@@ -10,11 +10,14 @@ cd build
 make -j4 >& /dev/null
 ln -s /usr/lib/x86_64-linux-gnu/libgmp.so.10 .
 ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 .
+# the following is needed for mpcheck-float128
 ln -s /usr/lib/x86_64-linux-gnu/libquadmath.so.0 .
 ./testrun.sh $HOME/svn/mpcheck/mpcheck-float --num=$1 --verbose=3
 echo ""
 ./testrun.sh $HOME/svn/mpcheck/mpcheck-double --num=$1 --verbose=3
 echo ""
 ./testrun.sh $HOME/svn/mpcheck/mpcheck-longdouble --num=$1 --verbose=3
+echo ""
+./testrun.sh $HOME/svn/mpcheck/mpcheck-float128 --num=$1 --verbose=3
 cd /tmp
 /bin/rm -fr $d
